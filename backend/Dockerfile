@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 8000
 
 # Start the FastAPI app with Gunicorn and Uvicorn worker
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "main:app", "--log-level", "debug"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "classEngine.main:app", "--log-level", "debug"]

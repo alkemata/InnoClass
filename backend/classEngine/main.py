@@ -19,10 +19,15 @@ ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 # Dependency Injection for Elasticsearch client
 def get_elasticsearch_client() -> Elasticsearch:
     try:
-        es = Elasticsearch(ELASTICSEARCH_URL,verify_certs=False)
+        es = Elasticsearch(
+            ELASTICSEARCH_URL,
+            basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+        )
         yield es
     except ConnectionError as e:
         raise HTTPException(status_code=500, detail=f"Error initializing Elasticsearch client: {e}")
+    except AuthenticationError as e:
+        raise HTTPException(status_code=401, detail=f"Authentication error: {e}")
     finally:
         if 'es' in locals():
             es.close()

@@ -1,0 +1,26 @@
+1️⃣ Start Elasticsearch (and keep it running)
+
+docker-compose up -d elasticsearch
+This starts Elasticsearch without starting FastAPI.
+
+2️⃣ Start FastAPI
+
+docker-compose up -d fastapi-app
+This starts only the FastAPI container.
+
+3️⃣ Stop FastAPI Without Stopping Elasticsearch
+
+docker-compose stop fastapi-app
+
+4️⃣ Restart FastAPI Later
+
+docker-compose start fastapi-app
+
+5️⃣ Stop Elasticsearch (if needed)
+
+docker-compose stop elasticsearch
+
+6️⃣ Completely Shut Down Everything
+If you want to stop and remove all containers:
+
+docker-compose down

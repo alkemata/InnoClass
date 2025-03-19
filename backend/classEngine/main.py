@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from elasticsearch import Elasticsearch, ElasticsearchException
+from elasticsearch import Elasticsearch, exceptions
+from elasticsearch.exceptions import ElasticsearchException
 
 app = FastAPI()
 

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-import elasticsearch as es
+import elasticsearch
 
 app = FastAPI()
 
@@ -13,12 +13,12 @@ def read_root():
 def get_status():
     try:
         # Create an Elasticsearch client instance.
-        es = es.Elasticsearch("http://localhost:9200")
+        es = elasticsearch.Elasticsearch("http://localhost:9200")
         
         # Retrieve the cluster health information.
         health = es.cluster.health()
         return health
-    except es.ElasticsearchException as e:
+    except elasticsearch.ElasticsearchException as e:
         # If there's an error connecting to Elasticsearch or retrieving health data,
         # raise an HTTP 500 error with a message.
         raise HTTPException(status_code=500, detail=f"Error connecting to Elasticsearch: {e}")

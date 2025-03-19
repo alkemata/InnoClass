@@ -6,7 +6,7 @@ from typing import Optional
 app = FastAPI()
 
 # Configuration (consider using environment variables for production)
-ELASTICSEARCH_URL = "http://localhost:9200"
+ELASTICSEARCH_URL = "http://elasticsearch:9200"
 
 # Dependency Injection for Elasticsearch client
 def get_elasticsearch_client() -> Elasticsearch:

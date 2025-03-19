@@ -1,2 +1,5 @@
 sentence-transformers
 elasticsearch
+fastapi
+uvicorn
+gunicorn

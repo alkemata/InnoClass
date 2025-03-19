@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import ElasticsearchException # Corrected import
+from elasticsearch.exceptions import ConnectionError, NotFoundError, RequestError
 from typing import Optional
 
 app = FastAPI()
@@ -13,7 +13,7 @@ def get_elasticsearch_client() -> Elasticsearch:
     try:
         es = Elasticsearch(ELASTICSEARCH_URL)
         yield es
-    except ElasticsearchException as e:
+    except ConnectionError as e:
         raise HTTPException(status_code=500, detail=f"Error initializing Elasticsearch client: {e}")
     finally:
         if 'es' in locals():
@@ -30,7 +30,7 @@ def get_status(es: Elasticsearch = Depends(get_elasticsearch_client)):
     try:
         health = es.cluster.health()
         return health
-    except ElasticsearchException as e:
+    except (ConnectionError, RequestError) as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving Elasticsearch cluster health: {e}")
 
 #Example of a search endpoint.
@@ -42,5 +42,5 @@ def search_index(index: str, query: Optional[str] = None, es: Elasticsearch = De
         else:
             results = es.search(index=index)
         return results
-    except ElasticsearchException as e:
+    except (ConnectionError, RequestError, NotFoundError) as e:
         raise HTTPException(status_code=500, detail=f"Error searching Elasticsearch index '{index}': {e}")

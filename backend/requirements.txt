@@ -3,3 +3,4 @@ elasticsearch
 fastapi
 uvicorn
 gunicorn
+python-dotenv

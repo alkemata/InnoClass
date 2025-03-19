@@ -1,13 +1,18 @@
 from fastapi import FastAPI, HTTPException, Depends
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import ConnectionError, NotFoundError, RequestError
+from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationError
 from typing import Optional
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load environment variables from .env
 
 app = FastAPI()
 
-# Configuration (consider using environment variables for production)
-ELASTICSEARCH_URL = "https://elasticsearch:9200"
-
+# Configuration from environment variables
+ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL", "http://elasticsearch:9200") #Default added incase no .env
+ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
+ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 # Dependency Injection for Elasticsearch client
 def get_elasticsearch_client() -> Elasticsearch:
     try:

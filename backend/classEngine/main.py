@@ -6,12 +6,12 @@ from typing import Optional
 app = FastAPI()
 
 # Configuration (consider using environment variables for production)
-ELASTICSEARCH_URL = "http://elasticsearch:9200"
+ELASTICSEARCH_URL = "https://elasticsearch:9200"
 
 # Dependency Injection for Elasticsearch client
 def get_elasticsearch_client() -> Elasticsearch:
     try:
-        es = Elasticsearch(ELASTICSEARCH_URL)
+        es = Elasticsearch(ELASTICSEARCH_URL,verify_certs=False)
         yield es
     except ConnectionError as e:
         raise HTTPException(status_code=500, detail=f"Error initializing Elasticsearch client: {e}")

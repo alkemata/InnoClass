@@ -9,19 +9,23 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+    networks:
+      - es_network
+    restart: always  # Ensures Elasticsearch runs continuously
 
   fastapi-app:
     build: .
     container_name: fastapi-app
     volumes:
-      - ./classEngine:/app  # Mounts the FastAPI source code directory
-    working_dir: /app
+      - ./classEngine:/app  # Mounts classEngine source code
+    working_dir: /app  # Ensures the working directory is correct
     depends_on:
       - elasticsearch
     ports:
-      - "8000:8000"  # Expose FastAPI service
+      - "8000:8000"
     networks:
       - es_network
+    restart: "no"  # Prevents automatic restart; manual start/stop
 
 networks:
   es_network:

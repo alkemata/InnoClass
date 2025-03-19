@@ -1,3 +1,6 @@
+import logging
+logging.basicConfig(level=logging.INFO)
+logging.info("FastAPI app starting")
 from fastapi import FastAPI, HTTPException, Depends
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationError

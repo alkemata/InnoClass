@@ -5,7 +5,8 @@ from fastapi import FastAPI, HTTPException, Depends
 from elasticsearch import Elasticsearch
 import elasticsearch
 print(f"Elasticsearch version: {elasticsearch.__version__}")
-from Elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationError
+from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationError
+from elastic_transport import AuthorizationException
 from typing import Optional
 import os
 from dotenv import load_dotenv

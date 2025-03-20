@@ -22,7 +22,7 @@ ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 def get_elasticsearch_client() -> Elasticsearch:
     ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER", "elastic")
     ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD", "changeme")
-    print(ELASTICSEARCH_USER)
+    print('NAME: '+ELASTICSEARCH_USER)
     print(ELASTICSEARCH_PASSWORD)
     try:
         es = Elasticsearch(

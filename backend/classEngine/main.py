@@ -15,7 +15,7 @@ load_dotenv()  # Load environment variables from .env
 app = FastAPI()
 
 # Configuration from environment variables
-ELASTICSEARCH_URL = os.environ.get("https://elasticsearch:9200") #Default added incase no .env
+ELASTICSEARCH_URL = "https://elasticsearch:9200" #Default added incase no .env
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 logging.info('NAME: '+ELASTICSEARCH_USER)

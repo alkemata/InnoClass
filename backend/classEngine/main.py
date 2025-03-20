@@ -6,7 +6,7 @@ from elasticsearch import Elasticsearch
 import elasticsearch
 print(f"Elasticsearch version: {elasticsearch.__version__}")
 from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError
-from elastic_transport import AuthorizationException
+from elastic_transport.exceptions import AuthorizationException
 from typing import Optional
 import os
 from dotenv import load_dotenv

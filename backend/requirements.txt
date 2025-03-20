@@ -1,5 +1,6 @@
 sentence-transformers
 elasticsearch
+elastic_transport
 fastapi
 uvicorn
 gunicorn

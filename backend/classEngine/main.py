@@ -3,8 +3,9 @@ logging.basicConfig(level=logging.INFO)
 logging.info("FastAPI app starting")
 from fastapi import FastAPI, HTTPException, Depends
 from elasticsearch import Elasticsearch
-print(f"Elasticsearch version: {Elasticsearch.__version__}")
-from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationError
+import elasticsearch
+print(f"Elasticsearch version: {elasticsearch.__version__}")
+from Elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationError
 from typing import Optional
 import os
 from dotenv import load_dotenv

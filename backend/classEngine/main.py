@@ -5,7 +5,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from elasticsearch import Elasticsearch
 import elasticsearch
 print(f"Elasticsearch version: {elasticsearch.__version__}")
-from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationError
+from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError
 from elastic_transport import AuthorizationException
 from typing import Optional
 import os
@@ -21,16 +21,18 @@ ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 # Dependency Injection for Elasticsearch client
 def get_elasticsearch_client() -> Elasticsearch:
+    ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER", "elastic")
+    ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD", "changeme")
+
     try:
         es = Elasticsearch(
             ELASTICSEARCH_URL,
             basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+            verify_certs=False, # Use with caution
         )
         yield es
-    except ConnectionError as e:
+    except (ConnectionError, AuthorizationException) as e:
         raise HTTPException(status_code=500, detail=f"Error initializing Elasticsearch client: {e}")
-    except AuthenticationError as e:
-        raise HTTPException(status_code=401, detail=f"Authentication error: {e}")
     finally:
         if 'es' in locals():
             es.close()

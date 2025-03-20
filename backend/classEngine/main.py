@@ -18,12 +18,11 @@ app = FastAPI()
 ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL", "http://elasticsearch:9200") #Default added incase no .env
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
+logging.info('NAME: '+ELASTICSEARCH_USER)
+   logging.info(ELASTICSEARCH_PASSWORD)
 # Dependency Injection for Elasticsearch client
 def get_elasticsearch_client() -> Elasticsearch:
-    ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER", "elastic")
-    ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD", "changeme")
-    logging.info('NAME: '+ELASTICSEARCH_USER)
-    logging.info(ELASTICSEARCH_PASSWORD)
+
     try:
         es = Elasticsearch(
             ELASTICSEARCH_URL,

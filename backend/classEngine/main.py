@@ -5,8 +5,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from elasticsearch import Elasticsearch
 import elasticsearch
 print(f"Elasticsearch version: {elasticsearch.__version__}")
-from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError
-from elastic_transport.exceptions import AuthorizationException
+from elasticsearch.exceptions import ConnectionError, RequestError, NotFoundError, AuthenticationException
 from typing import Optional
 import os
 from dotenv import load_dotenv
@@ -31,7 +30,7 @@ def get_elasticsearch_client() -> Elasticsearch:
             verify_certs=False, # Use with caution
         )
         yield es
-    except (ConnectionError, AuthorizationException) as e:
+    except (ConnectionError, AuthenticationException) as e:
         raise HTTPException(status_code=500, detail=f"Error initializing Elasticsearch client: {e}")
     finally:
         if 'es' in locals():

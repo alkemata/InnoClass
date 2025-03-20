@@ -19,7 +19,7 @@ ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL", "http://elasticsearch:92
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 logging.info('NAME: '+ELASTICSEARCH_USER)
-   logging.info(ELASTICSEARCH_PASSWORD)
+logging.info(ELASTICSEARCH_PASSWORD)
 # Dependency Injection for Elasticsearch client
 def get_elasticsearch_client() -> Elasticsearch:
 

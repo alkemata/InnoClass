@@ -16,4 +16,4 @@ EXPOSE 8000
 ARG BUILD_ENV=server
 
 # Start script based on BUILD_ENV value
-CMD ["./entrypoint.sh"]
+CMD ["chmod +x ./entrypoint.sh;./entrypoint.sh"]

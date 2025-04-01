@@ -163,7 +163,7 @@ def index_data_from_file2():
         if record is None: continue # Skip if error reading line
         original_text = record.get(TEXT_KEY2)
         if not original_text or not isinstance(original_text, str):
-            print(f"Warning: Missing or invalid text key '{TEXT_KEY}' in record: {record}")
+            print(f"Warning: Missing or invalid text key '{TEXT_KEY2}' in record: {record}")
             continue
 
         cleaned = clean_text(original_text)
@@ -343,7 +343,7 @@ if __name__ == "__main__":
             print(f"  Score: {hit['_score']:.4f}")
             # Extract original text safely
             original_data = hit['_source'].get('original_data', {})
-            hit_text = original_data.get(TEXT_KEY, "N/A")
+            hit_text = original_data.get(TEXT_KEY1, "N/A")
             print(f"  Original Text: {hit_text[:200]}...") # Display snippet
             print(f"  Cleaned Text: {hit['_source'].get('cleaned_text', 'N/A')[:200]}...")
             print("-" * 10)

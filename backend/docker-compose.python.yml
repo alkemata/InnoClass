@@ -16,6 +16,7 @@ services:
 
   fastapi-app:
     build:
+      context: .
       args:
         BUILD_ENV: python
     container_name: fastapi-app

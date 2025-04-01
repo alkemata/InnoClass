@@ -12,7 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose the port FastAPI will run on
 EXPOSE 8000
 ARG BUILD_ENV=server
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x entrypoint.sh
 # Start script based on BUILD_ENV value
-CMD ["/app/entrypoint.sh"]
+CMD ["entrypoint.sh"]

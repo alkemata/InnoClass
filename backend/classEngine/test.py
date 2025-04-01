@@ -169,6 +169,7 @@ def index_data_from_file2():
             continue
 
         cleaned = clean_text(original_text)
+        print(cleaned)
         batch_texts.append(cleaned)
         batch_original_data.append(record) # Store the whole original dict
 
@@ -259,7 +260,7 @@ def perform_hybrid_search(query_text, k=5, num_candidates=50):
             }
         }
     }
-
+    # TODO: improper syntax for elasticsearch 8.6
     # 4. Combine using Reciprocal Rank Fusion (RRF) - Requires ES 8.x+
     # Adjust rank constants (rrf_window_size, rrf_rank_constant) as needed
     search_body = {

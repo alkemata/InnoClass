@@ -7,6 +7,7 @@ from elasticsearch import Elasticsearch, helpers
 import os
 import pickle
 import pandas as pd
+import numpy as np
 
 # --- Configuration ---
 FILE1_PATH = './data/sg_test1.dat'

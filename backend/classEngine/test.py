@@ -11,16 +11,18 @@ FILE2_PATH = '.data/toto.dat'
 TEXT_KEY1 = 'prompt'  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = 'extracted_text'
 
-ELASTICSEARCH_HOSTS = ["http://elasticsearch:9200"] # Or ["https://user:password@host:port"]
+ELASTICSEARCH_HOSTS = ["http://elasticsearch:9200"]
+ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
+ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 INDEX_NAME = "hybrid_search_index"
 SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
 # --- Initialize Elasticsearch Client ---
 try:
     es_client = Elasticsearch(
-        hosts=ELASTICSEARCH_HOSTS,
-        # Add basic_auth=('user', 'password') if needed
-        # Add ca_certs='/path/to/ca.crt' for HTTPS if needed
+        hosts=ELASTICSEARCH_URL,
+            basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+            verify_certs=False, # Use with caution
         request_timeout=60
     )
     # Test connection

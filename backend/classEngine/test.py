@@ -5,6 +5,7 @@ from tqdm import tqdm  # Optional: for progress bars
 from sentence_transformers import SentenceTransformer
 from elasticsearch import Elasticsearch, helpers
 import os
+import pickle
 
 # --- Configuration ---
 FILE1_PATH = './data/sg_test1.dat'
@@ -84,7 +85,7 @@ def read_dataframe(filepath):
     try:
         with open(filepath, 'rb') as f:
             df = pickle.load(f)
-        print(df)
+        print("sdgs read")
         if isinstance(df, pd.DataFrame):
             return df.to_dict(orient='records')
         else:

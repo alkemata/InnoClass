@@ -84,7 +84,7 @@ def read_dataframe(filepath):
     try:
         with open(filepath, 'rb') as f:
             df = pickle.load(f)
-
+        print(df)
         if isinstance(df, pd.DataFrame):
             return df.to_dict(orient='records')
         else:

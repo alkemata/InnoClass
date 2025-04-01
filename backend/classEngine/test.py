@@ -38,6 +38,8 @@ try:
 except Exception as e:
     print(f"Error connecting to Elasticsearch: {e}")
     exit()
+    health = es.cluster.health()
+    print("Health:"+str(health))
 
 # --- Load SBERT Model ---
 try:

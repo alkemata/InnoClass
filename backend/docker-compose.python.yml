@@ -17,7 +17,7 @@ services:
   fastapi-app:
     build:
       args:
-        BUILD_ENV: server
+        BUILD_ENV: python
     container_name: fastapi-app
     volumes:
       - ./classEngine:/app

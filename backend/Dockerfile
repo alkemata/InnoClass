@@ -14,4 +14,4 @@ EXPOSE 8000
 ARG BUILD_ENV=server
 
 # Start the FastAPI app with Gunicorn and Uvicorn worker
-CMD ["entrypoint.sh"]
+CMD ["./entrypoint.sh"]

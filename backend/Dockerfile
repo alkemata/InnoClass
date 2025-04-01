@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the source code
 COPY classEngine ./classEngine
-RUN chmod +x entrypoint.sh
+RUN chmod +x ./classEngine/entrypoint.sh
 
 # Expose the port FastAPI will run on
 EXPOSE 8000
@@ -16,4 +16,4 @@ EXPOSE 8000
 ARG BUILD_ENV=server
 
 # Start script based on BUILD_ENV value
-CMD ["./entrypoint.sh"]
+CMD ["./classEngine/entrypoint.sh"]

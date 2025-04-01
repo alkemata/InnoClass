@@ -11,7 +11,7 @@ FILE2_PATH = '.data/toto.dat'
 TEXT_KEY1 = 'prompt'  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = 'extracted_text'
 
-ELASTICSEARCH_HOSTS = ["http://localhost:9200"] # Or ["https://user:password@host:port"]
+ELASTICSEARCH_HOSTS = ["http://elasticsearch:9200"] # Or ["https://user:password@host:port"]
 INDEX_NAME = "hybrid_search_index"
 SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 

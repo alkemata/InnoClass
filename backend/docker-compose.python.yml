@@ -13,6 +13,8 @@ services:
     networks:
       - es_network
     restart: always
+    volumes:
+      - ./database:/usr/share/elasticsearch/data # Mount the "database" directory
 
   fastapi-app:
     build:

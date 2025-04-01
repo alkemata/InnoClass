@@ -171,7 +171,6 @@ def index_data_from_file2():
             continue
 
         cleaned = clean_text(original_text)
-        print(cleaned)
         batch_texts.append(cleaned)
         batch_original_data.append(record) # Store the whole original dict
 

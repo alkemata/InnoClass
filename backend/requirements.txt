@@ -5,3 +5,4 @@ fastapi
 uvicorn
 gunicorn
 python-dotenv
+pandas

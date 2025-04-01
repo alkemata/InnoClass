@@ -274,6 +274,9 @@ def perform_hybrid_search(query_text, k=5, num_candidates=50):
         "size": k,
         "_source": ["original_data", "cleaned_text"]
     }
+    search_body ={
+        "queries": [{"knn": knn_query}]
+                }   
 
     # --- Alternative: Simple Boolean Combination (Less sophisticated scoring) ---
     # Uncomment this block and comment out the RRF block above if using older ES or prefer bool logic

@@ -21,7 +21,7 @@ SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 # --- Initialize Elasticsearch Client ---
 try:
     es_client = Elasticsearch(
-        hosts=ELASTICSEARCH_URL,
+        hosts=ELASTICSEARCH_HOSTS,
             basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
             verify_certs=False, # Use with caution
         request_timeout=60

@@ -12,6 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose the port FastAPI will run on
 EXPOSE 8000
 ARG BUILD_ENV=server
-RUN chmod +x entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 # Start the FastAPI app with Gunicorn and Uvicorn worker
 CMD ["./entrypoint.sh"]

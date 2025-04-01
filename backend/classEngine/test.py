@@ -12,7 +12,7 @@ FILE2_PATH = '.data/toto.dat'
 TEXT_KEY1 = 'prompt'  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = 'extracted_text'
 print("connecting to elasticsearch")
-ELASTICSEARCH_HOSTS = "http://elasticsearch:9200"
+ELASTICSEARCH_HOSTS = "https://elasticsearch:9200"
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 print("username: "+ELASTICSEARCH_USER)
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")

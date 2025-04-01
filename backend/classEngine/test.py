@@ -235,7 +235,10 @@ def perform_hybrid_search(query_text, k=5, num_candidates=50):
     # 1. Clean and embed the query text
     cleaned_query = clean_text(query_text)
     query_embedding = model.encode(cleaned_query)
-
+    if np.isnan(query_embedding).any():
+        print("Warning: NaN values detected in embeddings.")
+    else:
+        print("Embeddings generated successfully.")
     # 2. Define KNN search part
     knn_query = {
         "field": "embedding",
@@ -257,16 +260,18 @@ def perform_hybrid_search(query_text, k=5, num_candidates=50):
     # 4. Combine using Reciprocal Rank Fusion (RRF) - Requires ES 8.x+
     # Adjust rank constants (rrf_window_size, rrf_rank_constant) as needed
     search_body = {
-        "query": keyword_query, # Standard query part
-        "knn": knn_query,       # KNN query part
+        "queries": [
+            {"knn": knn_query},
+            {"query": keyword_query}
+        ],
         "rank": {
             "rrf": {
-                "window_size": num_candidates + k, # Should be >= knn.k + query.size
-                "rank_constant": 20 # Controls influence of lower-ranked results
+                "window_size": num_candidates + k,
+                "rank_constant": 20
             }
         },
-        "size": k, # Number of final results to return
-        "_source": ["original_data", "cleaned_text"] # Specify fields to retrieve
+        "size": k,
+        "_source": ["original_data", "cleaned_text"]
     }
 
     # --- Alternative: Simple Boolean Combination (Less sophisticated scoring) ---

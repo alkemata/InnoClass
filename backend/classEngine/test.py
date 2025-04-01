@@ -347,7 +347,7 @@ if __name__ == "__main__":
             print(f"  Score: {hit['_score']:.4f}")
             # Extract original text safely
             original_data = hit['_source'].get('original_data', {})
-            hit_text = original_data.get(TEXT_KEY1, "N/A")
+            hit_text = original_data.get(TEXT_KEY2, "N/A")
             print(f"  Original Text: {hit_text[:200]}...") # Display snippet
             print(f"  Cleaned Text: {hit['_source'].get('cleaned_text', 'N/A')[:200]}...")
             print("-" * 10)

@@ -4,13 +4,14 @@ import string
 from tqdm import tqdm  # Optional: for progress bars
 from sentence_transformers import SentenceTransformer
 from elasticsearch import Elasticsearch, helpers
+import os
 
 # --- Configuration ---
 FILE1_PATH = './data/sg_test1.dat'
 FILE2_PATH = '.data/toto.dat'
 TEXT_KEY1 = 'prompt'  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = 'extracted_text'
-
+print("connecting to elasticsearch")
 ELASTICSEARCH_HOSTS = ["http://elasticsearch:9200"]
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")

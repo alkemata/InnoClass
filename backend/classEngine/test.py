@@ -11,7 +11,7 @@ import pandas as pd
 # --- Configuration ---
 FILE1_PATH = './data/sg_test1.dat'
 FILE2_PATH = '.data/toto.dat'
-TEXT_KEY1 = 'prompt'  # The key in your JSON dictionaries holding the text
+TEXT_KEY1 = 'Prompt'  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = 'extracted_text'
 print("connecting to elasticsearch")
 ELASTICSEARCH_HOSTS = "https://elasticsearch:9200"

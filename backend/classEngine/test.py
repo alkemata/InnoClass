@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from elasticsearch import Elasticsearch, helpers
 import os
 import pickle
-import pandas
+import pandas as pd
 
 # --- Configuration ---
 FILE1_PATH = './data/sg_test1.dat'

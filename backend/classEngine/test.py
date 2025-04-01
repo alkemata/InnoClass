@@ -330,7 +330,6 @@ if __name__ == "__main__":
     query_count = 0
     for record in read_dataframe(FILE1_PATH):
         if record is None: continue
-        print(record)
         query_text_original = record.get(TEXT_KEY1)
 
         if not query_text_original or not isinstance(query_text_original, str):

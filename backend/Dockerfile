@@ -6,8 +6,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entrypoint script
-COPY entrypoint.sh . # Copy the script *before* the RUN commands
+# Copy entrypoint.sh from classEngine directory
+COPY classEngine/entrypoint.sh . # Corrected COPY instruction
 RUN chmod +x entrypoint.sh
 
 # Copy the source code
@@ -19,4 +19,4 @@ EXPOSE 8000
 ARG BUILD_ENV=server
 
 # Start script based on BUILD_ENV value
-CMD ["./entrypoint.sh"] # Corrected the path to the script
+CMD ["./entrypoint.sh"]

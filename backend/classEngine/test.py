@@ -14,7 +14,7 @@ TEXT_KEY2 = 'extracted_text'
 print("connecting to elasticsearch")
 ELASTICSEARCH_HOSTS = ["http://elasticsearch:9200"]
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
-print(ELASTICSEARCH_USER)
+print("username: "+ELASTICSEARCH_USER)
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 INDEX_NAME = "hybrid_search_index"
 SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model

@@ -8,10 +8,11 @@ import os
 import pickle
 import pandas as pd
 import numpy as np
+import gzip
 
 # --- Configuration ---
 FILE1_PATH = './data/sg_test1.dat'
-FILE2_PATH = './data/test.dat'
+FILE2_PATH = './data/test.dat.gz'
 TEXT_KEY1 = 'Prompt'  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = 'extracted_text'
 print("connecting to elasticsearch")
@@ -61,18 +62,21 @@ def clean_text(text):
     text = re.sub(r'\s+', ' ', text).strip() # Remove extra whitespace
     return text
 
-def read_jsonl(filepath):
-    """Reads a JSONL file and yields dictionaries line by line."""
-    try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            for line in f:
-                try:
-                    yield json.loads(line.strip())
-                except json.JSONDecodeError:
-                    print(f"Warning: Skipping invalid JSON line in {filepath}: {line.strip()}")
-    except FileNotFoundError:
-        print(f"Error: File not found at {filepath}")
-        yield None # Indicate error
+def read_jsonl(filename):
+    """
+    Loads a gzipped JSON Lines (jsonl) file and returns a list of dictionaries.
+
+    Parameters:
+        filename (str): The filename of the gzipped jsonl file.
+
+    Returns:
+        list: A list of dictionaries read from the file.
+    """
+    result = []
+    with gzip.open(filename, 'rt', encoding='utf-8') as f:
+        for line in f:
+            result.append(json.loads(line))
+    return result
 
 def read_dataframe(filepath):
     """

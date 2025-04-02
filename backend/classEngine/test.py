@@ -34,11 +34,11 @@ try:
     if not es_client.ping():
         raise ValueError("Connection to Elasticsearch failed!")
     print("Successfully connected to Elasticsearch.")
+    health = es_client.cluster.health()
+    print("Health:"+str(health))
 except Exception as e:
     print(f"Error connecting to Elasticsearch: {e}")
     exit()
-    health = es.cluster.health()
-    print("Health:"+str(health))
 
 # --- Load SBERT Model ---
 try:
@@ -358,5 +358,5 @@ if __name__ == "__main__":
     print(f"\n--- Search finished. Processed {query_count} queries from {FILE1_PATH}. ---")
     # You can now work with the `search_results_all` dictionary if needed
     # e.g., save it to a file
-    # with open("search_results.json", "w", encoding="utf-8") as f_out:
-    #     json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)
+    with open("search_results.json", "w", encoding="utf-8") as f_out:
+         json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)

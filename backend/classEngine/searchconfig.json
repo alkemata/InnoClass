@@ -1,4 +1,4 @@
 {
-    "filename_sdg" : "sg_test1.dat",
-    "filename_texts" : "test.dat.gz"
+    "filename_sdg" : "./data/sg_test1.dat",
+    "filename_texts" : "./data/test.dat.gz"
 }

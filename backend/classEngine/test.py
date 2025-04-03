@@ -26,8 +26,8 @@ def load_config(filepath):
 config=load_config("./data/searchconfig")
 
 # --- Configuration ---
-FILE1_PATH = './data/sg_test1.dat'
-FILE2_PATH = './data/test.dat.gz'
+FILE1_PATH = config["filename_sdg"]
+FILE2_PATH = config["filename_texts"]
 TEXT_KEY1 = 'Prompt'  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = 'extracted_text'
 print("connecting to elasticsearch")

@@ -23,7 +23,7 @@ def load_config(filepath):
         print(f"Invalid JSON in: {filepath}")
         return {}
 
-config=load_config("./data/searchconfig")
+config=load_config("searchconfig.json")
 
 # --- Configuration ---
 FILE1_PATH = config["filename_sdg"]

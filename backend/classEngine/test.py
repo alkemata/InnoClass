@@ -10,6 +10,21 @@ import pandas as pd
 import numpy as np
 import gzip
 
+def load_config(filepath):
+    """Loads configuration from a JSON file."""
+    try:
+        with open(filepath, "r") as f:
+            config = json.load(f)
+        return config
+    except FileNotFoundError:
+        print(f"Config file not found: {filepath}")
+        return {}
+    except json.JSONDecodeError:
+        print(f"Invalid JSON in: {filepath}")
+        return {}
+
+config=load_config("./data/searchconfig")
+
 # --- Configuration ---
 FILE1_PATH = './data/sg_test1.dat'
 FILE2_PATH = './data/test.dat.gz'

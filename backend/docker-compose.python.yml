@@ -16,12 +16,12 @@ services:
     volumes:
       - ./database:/usr/share/elasticsearch/data # Mount the "database" directory
 
-  fastapi-app:
+  embedsearch:
     build:
       context: .
       args:
         BUILD_ENV: python
-    container_name: fastapi-app
+    container_name: embedsearch
     volumes:
       - ./classEngine:/app
     working_dir: /app

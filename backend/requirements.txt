@@ -6,4 +6,3 @@ uvicorn
 gunicorn
 python-dotenv
 pandas
-gzip

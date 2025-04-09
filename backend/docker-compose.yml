@@ -36,25 +36,6 @@ services:
       - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD} # Use variable from .env
     restart: "no"
 
-  backend-app:
-    build:
-      args:
-        BUILD_ENV: server
-    container_name: fastapibackend-app
-    volumes:
-      - ./classEngine:/app
-    working_dir: /app
-    depends_on:
-      - elasticsearch
-    ports:
-      - "8000:8000"
-    networks:
-      - es_network
-    environment:
-      - ELASTICSEARCH_USER=${ELASTICSEARCH_USER} # Use variable from .env
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD} # Use variable from .env
-    restart: "no"
-
 networks:
   es_network:
     driver: bridge

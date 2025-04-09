@@ -349,6 +349,7 @@ if __name__ == "__main__":
     for record in read_dataframe(FILE1_PATH):
         if record is None: continue
         query_text_original = record.get(TEXT_KEY1)
+        id_prompt=record.get("Target ID")
 
         if not query_text_original or not isinstance(query_text_original, str):
              print(f"Warning: Skipping record due to missing/invalid text in {FILE1_PATH}: {record}")
@@ -367,7 +368,7 @@ if __name__ == "__main__":
             print(f"  Original Text: {hit_text[:200]}...") # Display snippet
             print(f"  Cleaned Text: {hit['_source'].get('cleaned_text', 'N/A')[:200]}...")
             print("-" * 10)
-            search_results_all[query_text_original].append({
+            search_results_all[id_prompt].append({
                 'score': hit['_score'],
                 'original_data': original_data
             })
@@ -375,5 +376,5 @@ if __name__ == "__main__":
     print(f"\n--- Search finished. Processed {query_count} queries from {FILE1_PATH}. ---")
     # You can now work with the `search_results_all` dictionary if needed
     # e.g., save it to a file
-    with open("search_results.json", "w", encoding="utf-8") as f_out:
+    with open("./data/search_results.json", "w", encoding="utf-8") as f_out:
          json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)

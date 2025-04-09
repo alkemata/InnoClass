@@ -23,7 +23,7 @@ def load_config(filepath):
         print(f"Invalid JSON in: {filepath}")
         return {}
 
-config=load_config("searchconfig.json")
+config=load_config("./data/searchconfig.json")
 
 # --- Configuration ---
 FILE1_PATH = config["filename_sdg"]
@@ -88,7 +88,7 @@ def read_jsonl(filename):
         list: A list of dictionaries read from the file.
     """
     result = []
-    with gzip.open(filename, 'rt', encoding='utf-8') as f:
+    with gzip.open("./data/"+filename, 'rt', encoding='utf-8') as f:
         for line in f:
             result.append(json.loads(line))
     return result
@@ -104,7 +104,7 @@ def read_dataframe(filepath):
         list of dict: A list of dictionaries representing the DataFrame, or None if an error occurs.
     """
     try:
-        with open(filepath, 'rb') as f:
+        with open("./data/"+filepath, 'rb') as f:
             df = pickle.load(f)
         print("sdgs read")
         if isinstance(df, pd.DataFrame):
@@ -353,7 +353,7 @@ if __name__ == "__main__":
              continue
 
         query_count += 1
-        results = perform_hybrid_search(query_text_original, k=5, num_candidates=50) # Find top 5 results
+        results = perform_hybrid_search(query_text_original, k=10, num_candidates=50) # Find top 5 results
 
         print(f"Found {len(results)} results:")
         search_results_all[query_text_original] = [] # Store results if needed

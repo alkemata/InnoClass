@@ -13,15 +13,12 @@ services:
     networks:
       - es_network
     restart: always
-    volumes:
-      - ./database:/usr/share/elasticsearch/data # Mount the "database" directory
 
-  embedsearch:
+  backend-app:
     build:
-      context: .
       args:
-        BUILD_ENV: python
-    container_name: embedsearch
+        BUILD_ENV: server
+    container_name: fastapibackend-app
     volumes:
       - ./classEngine:/app
     working_dir: /app

@@ -252,9 +252,9 @@ def index_data_from_file2():
 
 # --- Hybrid Search (File 1) ---
 
-def perform_hybrid_search(query_text, k=5, num_candidates=50):
+def perform_hybrid_search(query_text, k=5, num_candidates=100):
     """Performs hybrid search using KNN and BM25 with RRF."""
-    print(f"\n--- Searching for text similar to: '{query_text[:100]}...' ---")
+    #print(f"\n--- Searching for text similar to: '{query_text[:100]}...' ---")
 
     # 1. Clean and embed the query text
     cleaned_query = clean_text(query_text)
@@ -297,30 +297,8 @@ def perform_hybrid_search(query_text, k=5, num_candidates=50):
         "size": k,
         "_source": ["original_data", "cleaned_text"]
     }
-    search_body ={"knn": knn_query}
+    #search_body ={"knn": knn_query}
  
-
-    # --- Alternative: Simple Boolean Combination (Less sophisticated scoring) ---
-    # Uncomment this block and comment out the RRF block above if using older ES or prefer bool logic
-    # search_body = {
-    #     "query": {
-    #         "bool": {
-    #             "should": [ # Combine scores from both clauses
-    #                 {"match": {"cleaned_text": {"query": cleaned_query, "boost": 0.2}}}, # Keyword match (adjust boost)
-    #             ]
-    #         }
-    #     },
-    #     "knn": { # KNN query adds to the score based on vector similarity
-    #          "field": "embedding",
-    #          "query_vector": query_embedding.tolist(),
-    #          "k": k,
-    #          "num_candidates": num_candidates,
-    #          "boost": 0.8 # Adjust boost relative to keyword match
-    #     },
-    #     "size": k,
-    #     "_source": ["original_data", "cleaned_text"]
-    # }
-    # print("Using Boolean Combination for Hybrid Search.")
 
     # 5. Execute Search
     try:

@@ -36,8 +36,9 @@ print("connecting to elasticsearch")
 ELASTICSEARCH_HOSTS = "https://elasticsearch:9200"
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
+SBERT_MODEL_NAME="multi-qa-mpnet-base-dot-v1"
 INDEX_NAME = "hybrid_search_index"
-SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
+#SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
 # --- Initialize Elasticsearch Client ---
 try:

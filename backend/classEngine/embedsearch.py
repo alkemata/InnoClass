@@ -283,20 +283,20 @@ def perform_hybrid_search(query_text, k=5, num_candidates=100):
     # TODO: improper syntax for elasticsearch 8.6
     # 4. Combine using Reciprocal Rank Fusion (RRF) - Requires ES 8.x+
     # Adjust rank constants (rrf_window_size, rrf_rank_constant) as needed
-    search_body = {
+search_body = {
+    "rank": {
+        "rrf": {
+            "window_size": num_candidates + k,
+            "rank_constant": 20
+        },
         "queries": [
             {"knn": knn_query},
             {"query": keyword_query}
-        ],
-        "rank": {
-            "rrf": {
-                "window_size": num_candidates + k,
-                "rank_constant": 20
-            }
-        },
-        "size": k,
-        "_source": ["original_data", "cleaned_text"]
-    }
+        ]
+    },
+    "size": k,
+    "_source": ["original_data", "cleaned_text"]
+}
     #search_body ={"knn": knn_query}
  
 

@@ -36,11 +36,12 @@ print("connecting to elasticsearch")
 ELASTICSEARCH_HOSTS = "https://elasticsearch:9200"
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
-SBERT_MODEL_NAME="multi-qa-mpnet-base-dot-v1"
+SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'
+#SBERT_MODEL_NAME="multi-qa-mpnet-base-dot-v1"
 INDEX_NAME = "hybrid_search_index"
 #SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
-# --- Initialize Elasticsearch Client ---
+# --- Initialize Elasticsearch Clienlst ---
 try:
     es_client = Elasticsearch(
         ELASTICSEARCH_HOSTS,
@@ -362,13 +363,13 @@ if __name__ == "__main__":
         print(f"Found {len(results)} results:")
         search_results_all[id_prompt] = [] # Store results if needed
         for hit in results:
-            print(f"  Score: {hit['_score']:.4f}")
+            #print(f"  Score: {hit['_score']:.4f}")
             # Extract original text safely
             original_data = hit['_source'].get('original_data', {})
             hit_text = original_data.get(TEXT_KEY2, "N/A")
-            print(f"  Original Text: {hit_text[:200]}...") # Display snippet
-            print(f"  Cleaned Text: {hit['_source'].get('cleaned_text', 'N/A')[:200]}...")
-            print("-" * 10)
+            #print(f"  Original Text: {hit_text[:200]}...") # Display snippet
+            #print(f"  Cleaned Text: {hit['_source'].get('cleaned_text', 'N/A')[:200]}...")
+            #print("-" * 10)
             search_results_all[id_prompt].append({
                 'score': hit['_score'],
                 'original_data': original_data

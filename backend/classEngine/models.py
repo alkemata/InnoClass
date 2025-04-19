@@ -6,7 +6,7 @@ fake_users_db = {
         "role": "admin"
     },
     "user": {
-        "username": "user",
+        "username": "user1",
         "hashed_password": "$2b$12$abcdefghijk0987654321abcdefg",  # bcrypt hash of "userpass"
         "role": "user"
     }

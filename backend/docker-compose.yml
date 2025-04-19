@@ -97,7 +97,7 @@ services:
     volumes:
       - ./frontend:/app
       - ./frontend/dist:/app/dist
-    command: sh -c "npm install && npm run build"
+    command: sh -c "ls -l && npm install && npm run build"
     restart: "no"
 
   frontend-server:

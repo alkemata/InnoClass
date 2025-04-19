@@ -82,7 +82,7 @@ services:
     environment:
       - ELASTICSEARCH_USER=${ELASTICSEARCH_USER} # Use variable from .env
       - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD} # Use variable from .env
-    restart: "yes"
+    restart: "always"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`api-server.innoclass.alkemata.com`)"

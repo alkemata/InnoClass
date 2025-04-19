@@ -95,8 +95,8 @@ services:
     container_name: frontend-builder
     working_dir: /app
     volumes:
-      - ./frontend:/app
-      - ./frontend/dist:/app/dist
+      - ./classEngine/frontend:/app
+      - ./classEngine/frontend/dist:/app/dist
     command: sh -c "ls -l && npm install && npm run build"
     restart: "no"
 

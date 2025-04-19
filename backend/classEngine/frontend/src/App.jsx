@@ -34,7 +34,7 @@ export default function App() {
 // components/ProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
 
-export default function ProtectedRoute({ children, role }) {
+export function ProtectedRoute({ children, role }) {
   const token = localStorage.getItem("token");
   if (!token) return <Navigate to="/login" />;
 
@@ -48,7 +48,7 @@ export default function ProtectedRoute({ children, role }) {
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
+export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ export default function LoginPage() {
 }
 
 // pages/UserPage.jsx
-export default function UserPage() {
+export function UserPage() {
   return (
     <div className="p-6">
       <h1 className="text-xl">User Page</h1>
@@ -103,7 +103,7 @@ export default function UserPage() {
 }
 
 // pages/AdminPage.jsx
-export default function AdminPage() {
+export function AdminPage() {
   return (
     <div className="p-6">
       <h1 className="text-xl">Admin Page</h1>

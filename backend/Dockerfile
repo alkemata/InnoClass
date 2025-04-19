@@ -13,7 +13,7 @@ RUN ls -l
 # Expose the port FastAPI will run on
 EXPOSE 8000
 
-ARG BUILD_ENV=server
+#ARG BUILD_ENV=server
 
 # Start script based on BUILD_ENV value
 CMD ["./entrypoint.sh"]

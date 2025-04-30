@@ -49,11 +49,10 @@ try:
             request_timeout=60
     )
     # Test connection
-    if not es_client.ping():
-        raise ValueError("Connection to Elasticsearch failed!")
-    print("Successfully connected to Elasticsearch.")
-    health = es_client.cluster.health()
-    print("Health:"+str(health))
+    if es_client.ping():
+        print("Successfully connected to Elasticsearch.")
+        health = es_client.cluster.health()
+        print("Health:"+str(health))
 except Exception as e:
     print(f"Error connecting to Elasticsearch: {e}")
     traceback.print_exc()

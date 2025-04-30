@@ -34,6 +34,7 @@ print("connecting to elasticsearch")
 ELASTICSEARCH_HOSTS = "http://elasticsearch:9200"
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
+print(ELASTICSEARCH_PASSWORD)
 SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'
 #SBERT_MODEL_NAME="multi-qa-mpnet-base-dot-v1"
 INDEX_NAME = "hybrid_search_index"

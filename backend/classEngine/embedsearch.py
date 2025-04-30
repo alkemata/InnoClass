@@ -41,6 +41,7 @@ SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'
 INDEX_NAME = "hybrid_search_index"
 #SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
+print(ELASTICSEARCH_USER)
 # --- Initialize Elasticsearch Clienlst ---
 for _ in range(10):
     try:
@@ -54,10 +55,11 @@ for _ in range(10):
         if es_client.ping():
             print("Successfully connected to Elasticsearch.")
             break
-        time.sleep(10)
+
     except Exception as e:
         print(f"retry - Error connecting to Elasticsearch: {e}")
         #traceback.print_exc()
+        time.sleep(5)
 else:
     print("Failed to connect after multiple retries")
     exit()

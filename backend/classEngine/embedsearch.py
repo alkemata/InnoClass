@@ -52,13 +52,12 @@ for _ in range(10):
         )
         # Test connection
         if es_client.ping():
-            break
             print("Successfully connected to Elasticsearch.")
             break
     except Exception as e:
-        print(f"Error connecting to Elasticsearch: {e}")
-        traceback.print_exc()
-        time.sleep(5)
+        print(f"retry - Error connecting to Elasticsearch: {e}")
+        #traceback.print_exc()
+        time.sleep(10)
 else:
     print("Failed to connect after multiple retries")
     exit()

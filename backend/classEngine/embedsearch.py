@@ -45,7 +45,7 @@ try:
         ELASTICSEARCH_HOSTS,
             basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
             verify_certs=False, # Use with caution
-        #request_timeout=60
+            request_timeout=60
     )
     # Test connection
     if not es_client.ping():

@@ -28,8 +28,6 @@ config=load_config("./data/searchconfig.json")
 # --- Configuration ---
 FILE1_PATH = config["filename_sdg"]
 FILE2_PATH = config["filename_texts"]
-print(FILE2_PATH)
-print(FILE1_PATH)
 TEXT_KEY1 = config['Prompt']  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = config['extracted_text']
 print("connecting to elasticsearch")

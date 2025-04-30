@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import gzip
 import traceback
+import time
 
 def load_config(filepath):
     """Loads configuration from a JSON file."""
@@ -41,23 +42,29 @@ INDEX_NAME = "hybrid_search_index"
 #SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
 # --- Initialize Elasticsearch Clienlst ---
-try:
-    es_client = Elasticsearch(
-        ELASTICSEARCH_HOSTS,
-            basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
-            verify_certs=False, # Use with caution
-            request_timeout=60
-    )
-    # Test connection
-    if es_client.ping():
-        print("Successfully connected to Elasticsearch.")
-        health = es_client.cluster.health()
-        print("Health:"+str(health))
-except Exception as e:
-    print(f"Error connecting to Elasticsearch: {e}")
-    traceback.print_exc()
+for _ in range(10):
+    try:
+        es_client = Elasticsearch(
+            ELASTICSEARCH_HOSTS,
+                basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+                verify_certs=False, # Use with caution
+                request_timeout=60
+        )
+        # Test connection
+        if es_client.ping():
+            break
+            print("Successfully connected to Elasticsearch.")
+            break
+    except Exception as e:
+        print(f"Error connecting to Elasticsearch: {e}")
+        traceback.print_exc()
+        time.sleep(5)
+else:
+    print("Failed to connect after multiple retries")
     exit()
 
+health = es_client.cluster.health()
+print("Health:"+str(health))
 # --- Load SBERT Model ---
 try:
     print(f"Loading SBERT model: {SBERT_MODEL_NAME}...")

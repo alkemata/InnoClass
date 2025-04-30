@@ -41,28 +41,25 @@ SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'
 INDEX_NAME = "hybrid_search_index"
 #SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
-print(ELASTICSEARCH_USER)
+time.sleep(20)
 # --- Initialize Elasticsearch Clienlst ---
-for _ in range(10):
-    try:
-        es_client = Elasticsearch(
-            ELASTICSEARCH_HOSTS,
-                basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
-                verify_certs=False, # Use with caution
-                request_timeout=60
-        )
-        # Test connection
-        if es_client.ping():
-            print("Successfully connected to Elasticsearch.")
-            break
+try:
+    es_client = Elasticsearch(
+        ELASTICSEARCH_HOSTS,
+            basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+            verify_certs=False, # Use with caution
+            request_timeout=60
+    )
+    # Test connection
+    if es_client.ping():
+        print("Successfully connected to Elasticsearch.")
 
-    except Exception as e:
-        print(f"retry - Error connecting to Elasticsearch: {e}")
-        #traceback.print_exc()
-        time.sleep(5)
-else:
-    print("Failed to connect after multiple retries")
+except Exception as e:
+    print(f"retry - Error connecting to Elasticsearch: {e}")
+    #traceback.print_exc()
     exit()
+    
+
 
 health = es_client.cluster.health()
 print("Health:"+str(health))

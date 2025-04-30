@@ -33,7 +33,7 @@ print(FILE1_PATH)
 TEXT_KEY1 = config['Prompt']  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = config['extracted_text']
 print("connecting to elasticsearch")
-ELASTICSEARCH_HOSTS = "https://elasticsearch:9200"
+ELASTICSEARCH_HOSTS = "http://elasticsearch:9200"
 ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
 ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'

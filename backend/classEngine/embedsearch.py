@@ -234,7 +234,7 @@ def index_data_from_file2():
             batch_original_data = []
 
             # Bulk index periodically to avoid memory issues
-            if len(docs_to_index) >= 500: # Index every 500 docs
+            if len(docs_to_index) >= 40: # Index every 500 docs
                  print(f"Bulk indexing {len(docs_to_index)} documents...")
                  try:
                      helpers.bulk(es_client, docs_to_index)

@@ -201,6 +201,7 @@ def index_data_from_file2():
     batch_size = 100 # Process N records at a time for embedding
 
     for record in read_jsonl(FILE2_PATH):
+        print("dealing with record")
         if record is None: continue # Skip if error reading line
         original_text = record.get(TEXT_KEY2)
         if not original_text or not isinstance(original_text, str):
@@ -301,6 +302,7 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
     knn_hits = knn_resp["hits"]["hits"]
     knn_ids    = [h["_id"] for h in knn_hits]
     knn_scores = {h["_id"]: h["_score"] for h in knn_hits}
+    print(knn_scores)
 
     # 3. Fuse with RRF
     rrf_scores = reciprocal_rank_fusion([bm25_ids, knn_ids], K=K)
@@ -360,7 +362,7 @@ if __name__ == "__main__":
             print("Warning: NaN values detected in embeddings.")
         else:
             print("Embeddings generated successfully.")
-        results = hybrid_search_with_rrf(es_client,INDEX_NAME,query_text_original, query_embedding,k=10, num_candidates=50) # Find top 5 results
+        results = hybrid_search_with_rrf(es_client,INDEX_NAME,query_text_original, query_embedding,k=10, num_candidates=50) # Find top 50 results
         print(f"Found {len(results)} results:")
         search_results_all[id_prompt] = results # Store results if needed
 

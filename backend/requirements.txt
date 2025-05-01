@@ -1,5 +1,5 @@
 sentence-transformers
-elasticsearch=8.14.0
+elasticsearch==8.14.0
 elastic_transport
 fastapi
 uvicorn

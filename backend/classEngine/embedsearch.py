@@ -69,7 +69,7 @@ except Exception as e:
     exit()
     
 try:
-    es.cluster.put_settings(body={
+    es_client.cluster.put_settings(body={
     "persistent": {
         "ingest.geoip.downloader.enabled": False
     }

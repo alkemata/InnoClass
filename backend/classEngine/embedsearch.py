@@ -41,7 +41,7 @@ SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'
 INDEX_NAME = "hybrid_search_index"
 #SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
-time.sleep(5)
+time.sleep(10)
 # --- Initialize Elasticsearch Clienlst ---
 try:
     es_client = Elasticsearch(

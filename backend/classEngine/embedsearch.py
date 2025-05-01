@@ -59,7 +59,12 @@ except Exception as e:
     #traceback.print_exc()
     exit()
     
-
+try:
+    info = es_client.info()
+    version = info['version']['number']
+    print(f"Elasticsearch version: {version}")
+except Exception as e:
+    print(f"Error retrieving version: {e}")
 
 health = es_client.cluster.health()
 print("Health:"+str(health))

@@ -11,6 +11,29 @@ import numpy as np
 import gzip
 import traceback
 import time
+from collections import defaultdict
+
+def reciprocal_rank_fusion(rank_lists, K=60):
+    """
+    Fuse multiple ranked lists using Reciprocal Rank Fusion (RRF).
+    
+    Args:
+      rank_lists: List of lists, where each sublist is 
+                  doc IDs sorted by relevance (highest first).
+      K:          Rank-constant (higher → more weight to lower-ranked docs).
+    
+    Returns:
+      A list of (doc_id, rrf_score) tuples sorted by descending rrf_score.
+    """
+    rrf_scores = defaultdict(float)
+    
+    for ranked in rank_lists:
+        for rank, doc_id in enumerate(ranked, start=1):
+            rrf_scores[doc_id] += 1.0 / (K + rank)
+    
+    # Sort documents by their accumulated RRF score
+    fused = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+    return fused
 
 def load_config(filepath):
     """Loads configuration from a JSON file."""
@@ -261,11 +284,52 @@ def index_data_from_file2():
 
 # --- Hybrid Search (File 1) ---
 
-def perform_hybrid_search(query_text, k=5, num_candidates=100):
-    """
+def hybrid_search_with_rrf(es_client, index, query_text, embedding,
+                           k=5, num_candidates=100, K=60):
+    # 1. BM25 search (standard)
+    bm25_resp = es_client.search(
+        index=index,
+        body={
+            "query": {"match": {"cleaned_text": {"query": query_text}}},
+            "size": num_candidates
+        }
+    )
+    bm25_ids = [hit["_id"] for hit in bm25_resp["hits"]["hits"]]
+
+    # 2. kNN search (vector)
+    knn_resp = es_client.search(
+        index=index,
+        body={
+            "knn": {
+                "field": "embedding",
+                "query_vector": embedding,
+                "k": num_candidates,
+                "num_candidates": num_candidates
+            },
+            "size": num_candidates,
+            "_source": False
+        }
+    )
+    knn_ids = [hit["_id"] for hit in knn_resp["hits"]["hits"]]
+
+    # 3. Fuse with RRF
+    fused = reciprocal_rank_fusion([bm25_ids, knn_ids], K=K)
+    top_ids = [doc_id for doc_id, _ in fused[:k]]
+
+    # 4. Fetch full documents for the top IDs
+    mget_resp = es_client.mget(
+        index=index,
+        body={"ids": top_ids},
+        _source=["original_data", "cleaned_text"]
+    )
+    return mget_resp["docs"]
+
+
+""" def perform_hybrid_search(query_text, k=5, num_candidates=100):
+    
     Performs a hybrid search combining kNN (vector) and BM25 (standard) using
     Reciprocal Rank Fusion (RRF) in Elasticsearch 8.9+.
-    """
+    
 
     # 1. Clean and embed the query text
     cleaned_query = clean_text(query_text)
@@ -313,7 +377,7 @@ def perform_hybrid_search(query_text, k=5, num_candidates=100):
         print(f"Error during search: {e}")
         if hasattr(e, "info") and "error" in e.info:
             print(json.dumps(e.info["error"], indent=2))
-        return []
+        return [] """
 
 # --- Main Execution ---
 if __name__ == "__main__":
@@ -338,8 +402,8 @@ if __name__ == "__main__":
 
         query_count += 1
         results = perform_hybrid_search(query_text_original, k=10, num_candidates=50) # Find top 5 results
-
-        print(f"Found {len(results)} results:")
+        print(results)
+"""        print(f"Found {len(results)} results:")
         search_results_all[id_prompt] = [] # Store results if needed
         for hit in results:
             #print(f"  Score: {hit['_score']:.4f}")
@@ -352,7 +416,7 @@ if __name__ == "__main__":
             search_results_all[id_prompt].append({
                 'score': hit['_score'],
                 'original_data': original_data
-            })
+            })"""
 
     print(f"\n--- Search finished. Processed {query_count} queries from {FILE1_PATH}. ---")
     # You can now work with the `search_results_all` dictionary if needed

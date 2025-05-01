@@ -297,7 +297,6 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
     knn_hits = knn_resp["hits"]["hits"]
     knn_ids    = [h["_id"] for h in knn_hits]
     knn_scores = {h["_id"]: h["_score"] for h in knn_hits}
-    print(knn_scores)
 
     # 3. Fuse with RRF
     rrf_scores = reciprocal_rank_fusion([bm25_ids, knn_ids], K=K)
@@ -347,7 +346,7 @@ if __name__ == "__main__":
         id_prompt=record.get("Target ID")
 
         if not query_text_original or not isinstance(query_text_original, str):
-             print(f"Warning: Skipping record due to missing/invalid text in {FILE1_PATH}: {record}")
+             print(f"Warning: Skipping record due to missing/invalid text in {FILE1_PATH}")
              continue
 
         query_count += 1

@@ -203,7 +203,7 @@ def index_data_from_file2():
     docs_to_index = []
     batch_texts = []
     batch_original_data = []
-    batch_size = 100 # Process N records at a time for embedding
+    batch_size = 50 # Process N records at a time for embedding
 
     for record in read_jsonl(FILE2_PATH):
         if record is None: continue # Skip if error reading line

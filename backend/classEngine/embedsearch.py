@@ -270,18 +270,15 @@ def perform_hybrid_search(query_text, k=5, num_candidates=100):
     else:
         print("Embeddings generated successfully.")
 
-    # 2. Define the kNN retriever
     knn_retriever = {
         "knn": {
             "field": "embedding",
-            "query_vector": query_embedding.tolist(),
-            "k": k,
+            "query_vector": query_embedding,
+            "k": num_candidates,
             "num_candidates": num_candidates
         }
     }
-
-    # 3. Define the standard (BM25) retriever
-    standard_retriever = {
+    bm25_retriever = {
         "standard": {
             "query": {
                 "match": {
@@ -293,33 +290,20 @@ def perform_hybrid_search(query_text, k=5, num_candidates=100):
         }
     }
 
-    # 4. Build the RRF retriever body
-    search_body = {
-        "retriever": {
-            "rrf": {
-                "retrievers": [
-                    knn_retriever,
-                    standard_retriever
-                ],
-                # How many top docs from each retriever to fuse
-                "rank_window_size": num_candidates,  
-                # Higher → more weight to lower‐ranked docs
-                "rank_constant": 20                  
-            }
-        },
-        # Return only the top k fused results
-        "size": k,
-        # Only include needed fields in the response
-        "_source": ["original_data", "cleaned_text"]
-    }
-
     # 5. Execute the search
     try:
         response = es_client.search(
             index=INDEX_NAME,
-            body=search_body
+            retriever={
+                "rrf": {
+                    "retrievers": [knn_retriever, bm25_retriever],
+                    "rank_window_size": num_candidates,
+                    "rank_constant": 20
+                }
+            },
+            size=k,
+            _source=["original_data", "cleaned_text"]
         )
-        return response["hits"]["hits"]
     except Exception as e:
         print(f"Error during search: {e}")
         if hasattr(e, "info") and "error" in e.info:

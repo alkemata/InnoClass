@@ -197,81 +197,72 @@ def setup_elasticsearch_index():
 
 # --- Indexing Data (File 2) ---
 
+import gc
+from elasticsearch import helpers
+
 def index_data_from_file2():
     """Reads file2, cleans text, generates embeddings, and indexes into Elasticsearch."""
     print(f"\n--- Indexing data from {FILE2_PATH} ---")
-    docs_to_index = []
+    batch_size = 100  # Embedding and indexing batch size
+
     batch_texts = []
     batch_original_data = []
-    batch_size = 50 # Process N records at a time for embedding
 
     for record in read_jsonl(FILE2_PATH):
-        if record is None: continue # Skip if error reading line
+        if record is None:
+            continue  # Skip if error reading line
+
         original_text = record.get(TEXT_KEY2)
-        if not original_text or not isinstance(original_text, str) or original_text=='':
+        if not original_text or not isinstance(original_text, str):
             print(f"Warning: Missing or invalid text key '{TEXT_KEY2}' in record: {record}")
             continue
 
         cleaned = clean_text(original_text)
         batch_texts.append(cleaned)
-        batch_original_data.append(record) # Store the whole original dict
+        batch_original_data.append(record)
 
         if len(batch_texts) >= batch_size:
-            print(f"Generating embeddings for batch of {len(batch_texts)}...")
-            embeddings = generate_embeddings(batch_texts)
-            for i, text in enumerate(batch_texts):
-                doc = {
-                    "_index": INDEX_NAME,
-                    "_source": {
-                        "cleaned_text": text,
-                        "embedding": embeddings[i].tolist(), # Convert numpy array to list
-                        "original_data": batch_original_data[i]
-                    }
-                }
-                docs_to_index.append(doc)
-            # Clear batches
+            _process_and_index_batch(batch_texts, batch_original_data)
             batch_texts = []
             batch_original_data = []
+            gc.collect()
 
-            # Bulk index periodically to avoid memory issues
-            if len(docs_to_index) >= 40: # Index every 500 docs
-                 print(f"Bulk indexing {len(docs_to_index)} documents...")
-                 try:
-                     helpers.bulk(es_client, docs_to_index)
-                     print("Bulk indexing successful.")
-                 except Exception as e:
-                     print(f"Error during bulk indexing: {e}")
-                 docs_to_index = [] # Clear indexed docs list
-
-    # Process any remaining records in the last batch
+    # Final batch
     if batch_texts:
-        print(f"Generating embeddings for final batch of {len(batch_texts)}...")
-        embeddings = generate_embeddings(batch_texts)
-        for i, text in enumerate(batch_texts):
-            doc = {
-                "_index": INDEX_NAME,
-                "_source": {
-                    "cleaned_text": text,
-                    "embedding": embeddings[i].tolist(),
-                    "original_data": batch_original_data[i]
-                }
-            }
-            docs_to_index.append(doc)
+        _process_and_index_batch(batch_texts, batch_original_data)
+        gc.collect()
 
-    # Final bulk index
-    if docs_to_index:
-        print(f"Bulk indexing remaining {len(docs_to_index)} documents...")
-        try:
-            helpers.bulk(es_client, docs_to_index)
-            print("Final bulk indexing successful.")
-        except Exception as e:
-            print(f"Error during final bulk indexing: {e}")
-
-    # Refresh index to make changes searchable
     print("Refreshing index...")
     es_client.indices.refresh(index=INDEX_NAME)
     print("Indexing complete.")
 
+def _process_and_index_batch(batch_texts, batch_original_data):
+    """Generates embeddings and indexes the batch."""
+    print(f"Generating embeddings for batch of {len(batch_texts)}...")
+    try:
+        embeddings = generate_embeddings(batch_texts)
+    except Exception as e:
+        print(f"Error generating embeddings: {e}")
+        return
+
+    docs_to_index = []
+    for i, text in enumerate(batch_texts):
+        doc = {
+            "_index": INDEX_NAME,
+            "_source": {
+                "cleaned_text": text,
+                "embedding": embeddings[i].tolist(),
+                "original_data": batch_original_data[i]
+            }
+        }
+        docs_to_index.append(doc)
+
+    print(f"Bulk indexing {len(docs_to_index)} documents...")
+    try:
+        helpers.bulk(es_client, docs_to_index)
+        print("Bulk indexing successful.")
+    except Exception as e:
+        print(f"Error during bulk indexing: {e}")
 
 # --- Hybrid Search (File 1) ---
 

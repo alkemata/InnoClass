@@ -403,7 +403,7 @@ if __name__ == "__main__":
         query_count += 1
         results = perform_hybrid_search(query_text_original, k=10, num_candidates=50) # Find top 5 results
         print(results)
-"""        print(f"Found {len(results)} results:")
+    """        print(f"Found {len(results)} results:")
         search_results_all[id_prompt] = [] # Store results if needed
         for hit in results:
             #print(f"  Score: {hit['_score']:.4f}")

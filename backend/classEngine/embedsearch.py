@@ -332,12 +332,7 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
     
 
     # 1. Clean and embed the query text
-    cleaned_query = clean_text(query_text)
-    query_embedding = model.encode(cleaned_query)
-    if np.isnan(query_embedding).any():
-        print("Warning: NaN values detected in embeddings.")
-    else:
-        print("Embeddings generated successfully.")
+
 
     knn_retriever = {
         "knn": {
@@ -401,7 +396,13 @@ if __name__ == "__main__":
              continue
 
         query_count += 1
-        results = hybrid_search_with_rrf(query_text_original, k=10, num_candidates=50) # Find top 5 results
+        cleaned_query = clean_text(query_text_original)
+        query_embedding = model.encode(cleaned_query)
+        if np.isnan(query_embedding).any():
+            print("Warning: NaN values detected in embeddings.")
+        else:
+            print("Embeddings generated successfully.")
+        results = hybrid_search_with_rrf(es_client,INDEX_NAME,query_text_original, query_embedding,k=10, num_candidates=50) # Find top 5 results
         print(results)
     """        print(f"Found {len(results)} results:")
         search_results_all[id_prompt] = [] # Store results if needed

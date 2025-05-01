@@ -208,7 +208,7 @@ def index_data_from_file2():
     for record in read_jsonl(FILE2_PATH):
         if record is None: continue # Skip if error reading line
         original_text = record.get(TEXT_KEY2)
-        if not original_text or not isinstance(original_text, str):
+        if not original_text or not isinstance(original_text, str) or original_text=='':
             print(f"Warning: Missing or invalid text key '{TEXT_KEY2}' in record: {record}")
             continue
 

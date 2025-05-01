@@ -257,8 +257,10 @@ def index_data_from_file2():
 # --- Hybrid Search (File 1) ---
 
 def perform_hybrid_search(query_text, k=5, num_candidates=100):
-    """Performs hybrid search using KNN and BM25 with RRF."""
-    #print(f"\n--- Searching for text similar to: '{query_text[:100]}...' ---")
+    """
+    Performs a hybrid search combining kNN (vector) and BM25 (standard) using
+    Reciprocal Rank Fusion (RRF) in Elasticsearch 8.9+.
+    """
 
     # 1. Clean and embed the query text
     cleaned_query = clean_text(query_text)
@@ -267,55 +269,61 @@ def perform_hybrid_search(query_text, k=5, num_candidates=100):
         print("Warning: NaN values detected in embeddings.")
     else:
         print("Embeddings generated successfully.")
-    # 2. Define KNN search part
-    knn_query = {
-        "field": "embedding",
-        "query_vector": query_embedding.tolist(),
-        "k": k,
-        "num_candidates": num_candidates # Higher value increases accuracy but uses more resources
+
+    # 2. Define the kNN retriever
+    knn_retriever = {
+        "knn": {
+            "field": "embedding",
+            "query_vector": query_embedding.tolist(),
+            "k": k,
+            "num_candidates": num_candidates
+        }
     }
 
-    # 3. Define Keyword search part (BM25)
-    keyword_query = {
-        "match": {
-            "cleaned_text": {
-                "query": cleaned_query
-                # Add options like "fuzziness": "AUTO" if needed
+    # 3. Define the standard (BM25) retriever
+    standard_retriever = {
+        "standard": {
+            "query": {
+                "match": {
+                    "cleaned_text": {
+                        "query": cleaned_query
+                    }
+                }
             }
         }
     }
-    # TODO: improper syntax for elasticsearch 8.6
-    # 4. Combine using Reciprocal Rank Fusion (RRF) - Requires ES 8.x+
-    # Adjust rank constants (rrf_window_size, rrf_rank_constant) as needed
+
+    # 4. Build the RRF retriever body
     search_body = {
         "retriever": {
             "rrf": {
-                "window_size": num_candidates + k,
-                "rank_constant": 20
-            },
-            "queries": [
-                {"knn": knn_query},
-                {"query": keyword_query}
-            ]
+                "retrievers": [
+                    knn_retriever,
+                    standard_retriever
+                ],
+                # How many top docs from each retriever to fuse
+                "rank_window_size": num_candidates,  
+                # Higher → more weight to lower‐ranked docs
+                "rank_constant": 20                  
+            }
         },
+        # Return only the top k fused results
         "size": k,
+        # Only include needed fields in the response
         "_source": ["original_data", "cleaned_text"]
     }
-    #search_body ={"knn": knn_query}
- 
 
-    # 5. Execute Search
+    # 5. Execute the search
     try:
         response = es_client.search(
             index=INDEX_NAME,
             body=search_body
         )
-        return response['hits']['hits']
+        return response["hits"]["hits"]
     except Exception as e:
         print(f"Error during search: {e}")
-        # Try to provide more specific error info if possible
-        if hasattr(e, 'info') and 'error' in e.info:
-            print(f"Elasticsearch error details: {json.dumps(e.info['error'], indent=2)}")
+        if hasattr(e, "info") and "error" in e.info:
+            print(json.dumps(e.info["error"], indent=2))
         return []
 
 # --- Main Execution ---

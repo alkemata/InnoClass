@@ -14,26 +14,12 @@ import time
 from collections import defaultdict
 
 def reciprocal_rank_fusion(rank_lists, K=60):
-    """
-    Fuse multiple ranked lists using Reciprocal Rank Fusion (RRF).
-    
-    Args:
-      rank_lists: List of lists, where each sublist is 
-                  doc IDs sorted by relevance (highest first).
-      K:          Rank-constant (higher → more weight to lower-ranked docs).
-    
-    Returns:
-      A list of (doc_id, rrf_score) tuples sorted by descending rrf_score.
-    """
+    """Compute RRF scores for each doc across multiple rank lists."""
     rrf_scores = defaultdict(float)
-    
     for ranked in rank_lists:
         for rank, doc_id in enumerate(ranked, start=1):
             rrf_scores[doc_id] += 1.0 / (K + rank)
-    
-    # Sort documents by their accumulated RRF score
-    fused = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
-    return fused
+    return rrf_scores
 
 def load_config(filepath):
     """Loads configuration from a JSON file."""
@@ -285,8 +271,8 @@ def index_data_from_file2():
 # --- Hybrid Search (File 1) ---
 
 def hybrid_search_with_rrf(es_client, index, query_text, embedding,
-                           k=5, num_candidates=100, K=60):
-    # 1. BM25 search (standard)
+                               k=5, num_candidates=100, K=60):
+    # 1. BM25 search
     bm25_resp = es_client.search(
         index=index,
         body={
@@ -294,9 +280,11 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
             "size": num_candidates
         }
     )
-    bm25_ids = [hit["_id"] for hit in bm25_resp["hits"]["hits"]]
+    bm25_hits = bm25_resp["hits"]["hits"]
+    bm25_ids    = [h["_id"] for h in bm25_hits]
+    bm25_scores = {h["_id"]: h["_score"] for h in bm25_hits}
 
-    # 2. kNN search (vector)
+    # 2. kNN search
     knn_resp = es_client.search(
         index=index,
         body={
@@ -310,69 +298,39 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
             "_source": False
         }
     )
-    knn_ids = [hit["_id"] for hit in knn_resp["hits"]["hits"]]
+    knn_hits = knn_resp["hits"]["hits"]
+    knn_ids    = [h["_id"] for h in knn_hits]
+    knn_scores = {h["_id"]: h["_score"] for h in knn_hits}
 
     # 3. Fuse with RRF
-    fused = reciprocal_rank_fusion([bm25_ids, knn_ids], K=K)
-    top_ids = [doc_id for doc_id, _ in fused[:k]]
+    rrf_scores = reciprocal_rank_fusion([bm25_ids, knn_ids], K=K)
+    # pick top-k by fusion score
+    top_ids = sorted(rrf_scores, key=lambda doc_id: rrf_scores[doc_id], reverse=True)[:k]
 
-    # 4. Fetch full documents for the top IDs
+    # 4. Bulk-fetch the needed fields
     mget_resp = es_client.mget(
         index=index,
         body={"ids": top_ids},
-        _source=["original_data", "cleaned_text"]
+        _source=["cleaned_text", "original_data.id"]
     )
-    return mget_resp["docs"]
+    docs = mget_resp["docs"]
 
+    # 5. Build the final list of dicts
+    results = []
+    for doc in docs:
+        doc_id = doc["_id"]
+        src    = doc.get("_source", {})
+        results.append({
+            "doc_id":         doc_id,
+            "fusion_score":   rrf_scores.get(doc_id, 0.0),
+            "bm25_score":     bm25_scores.get(doc_id, 0.0),
+            "knn_score":      knn_scores.get(doc_id, 0.0),
+            "cleaned_text":   src.get("cleaned_text"),
+            "original_id":    (src.get("original_data") or {}).get("id")
+        })
 
-""" def perform_hybrid_search(query_text, k=5, num_candidates=100):
-    
-    Performs a hybrid search combining kNN (vector) and BM25 (standard) using
-    Reciprocal Rank Fusion (RRF) in Elasticsearch 8.9+.
-    
+    return results
 
-    # 1. Clean and embed the query text
-
-
-    knn_retriever = {
-        "knn": {
-            "field": "embedding",
-            "query_vector": query_embedding,
-            "k": num_candidates,
-            "num_candidates": num_candidates
-        }
-    }
-    bm25_retriever = {
-        "standard": {
-            "query": {
-                "match": {
-                    "cleaned_text": {
-                        "query": cleaned_query
-                    }
-                }
-            }
-        }
-    }
-
-    # 5. Execute the search
-    try:
-        response = es_client.search(
-            index=INDEX_NAME,
-            retriever={
-                "rrf": {
-                    "retrievers": [knn_retriever, bm25_retriever],
-                    "rank_window_size": num_candidates,
-                    "rank_constant": 20
-                }
-            },
-            size=k,
-            _source=["original_data", "cleaned_text"]
-        )
-    except Exception as e:
-        print(f"Error during search: {e}")
-        if hasattr(e, "info") and "error" in e.info:
-            print(json.dumps(e.info["error"], indent=2))
-        return [] """
 
 # --- Main Execution ---
 if __name__ == "__main__":

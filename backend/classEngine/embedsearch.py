@@ -401,7 +401,7 @@ if __name__ == "__main__":
              continue
 
         query_count += 1
-        results = ybrid_search_with_rrf(query_text_original, k=10, num_candidates=50) # Find top 5 results
+        results = hybrid_search_with_rrf(query_text_original, k=10, num_candidates=50) # Find top 5 results
         print(results)
     """        print(f"Found {len(results)} results:")
         search_results_all[id_prompt] = [] # Store results if needed

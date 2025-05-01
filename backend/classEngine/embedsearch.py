@@ -69,6 +69,11 @@ except Exception as e:
     exit()
     
 try:
+    es.cluster.put_settings(body={
+    "persistent": {
+        "ingest.geoip.downloader.enabled": False
+    }
+    })
     info = es_client.info()
     version = info['version']['number']
     print(f"Elasticsearch version: {version}")
@@ -201,7 +206,6 @@ def index_data_from_file2():
     batch_size = 100 # Process N records at a time for embedding
 
     for record in read_jsonl(FILE2_PATH):
-        print("dealing with record")
         if record is None: continue # Skip if error reading line
         original_text = record.get(TEXT_KEY2)
         if not original_text or not isinstance(original_text, str):

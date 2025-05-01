@@ -203,7 +203,7 @@ from elasticsearch import helpers
 def index_data_from_file2():
     """Reads file2, cleans text, generates embeddings, and indexes into Elasticsearch."""
     print(f"\n--- Indexing data from {FILE2_PATH} ---")
-    batch_size = 20  # Embedding and indexing batch size
+    batch_size = 10  # Embedding and indexing batch size
 
     batch_texts = []
     batch_original_data = []

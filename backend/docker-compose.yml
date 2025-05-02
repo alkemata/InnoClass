@@ -54,12 +54,13 @@ services:
       - ./database:/usr/share/elasticsearch/data # Mount the "database" directory
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.13.2
+    image: docker.elastic.co/kibana/kibana:8.14.0
     container_name: kibana
     ports:
       - "5601:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_HOST=0.0.0.0
     depends_on:
       - elasticsearch
     networks:
@@ -69,7 +70,7 @@ services:
       - "traefik.http.routers.kibana.rule=Host(`kibana.innoclass.alkemata.com`)"
       - "traefik.http.routers.kibana.entrypoints=websecure"
       - "traefik.http.routers.kibana.tls.certresolver=myresolver"
-      - "traefik.http.services.kibana.loadbalancer.server.port=3000"
+      - "traefik.http.services.kibana.loadbalancer.server.port=5601"
 
   embedsearch:
     build:

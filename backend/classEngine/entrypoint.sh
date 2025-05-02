@@ -7,5 +7,5 @@ if [ "$BUILD_ENV" = "server" ]; then
 else
     echo "Running python command"
     # Your default command here
-    exec python embedsearch.py
+    exec python -u embedsearch.py
 fi

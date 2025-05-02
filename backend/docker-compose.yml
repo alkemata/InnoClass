@@ -42,7 +42,6 @@ services:
       - xpack.security.enabled=true
       - xpack.security.transport.ssl.enabled=false
       - xpack.security.enrollment.enabled=true
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ulimits:
       memlock:
         soft: -1

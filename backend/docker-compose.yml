@@ -60,8 +60,7 @@ services:
     ports:
       - "5601:5601"
     environment:
-      - ELASTICSEARCH_USERNAME=elastic
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD} 
+      - elastic/kibana/kibana-service-token = AAEAAWVsYXN0aWMva2liYW5hL2tpYmFuYS1zZXJ2aWNlLXRva2VuOnJQbVBBTDBOVERxZUM0Ulk4eEpCOFE
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - SERVER_HOST=0.0.0.0
       - SERVER_SSL_ENABLED=false 

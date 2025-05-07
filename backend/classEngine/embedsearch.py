@@ -407,7 +407,7 @@ if __name__ == "__main__":
                 print(f"Warning: Missing or invalid text key  in record: {TEXT_KEY2}")
                 continue
             joined_clean_sents = prep_text(original_text)
-            tokenized_text = tokenizer_(joined_clean_sents, return_tensors="pt", truncation=True, max_length=512)
+            tokenized_text = tokenizer(joined_clean_sents, return_tensors="pt", truncation=True, max_length=512)
             text_logits = model(**tokenized_text).logits
             predictions = torch.softmax(text_logits, dim=1).tolist()[0]
             predictions = [round(a, 3) for a in predictions]

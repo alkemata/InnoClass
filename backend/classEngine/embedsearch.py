@@ -18,6 +18,7 @@ import torch
 #import string
 import nltk
 from nltk.tokenize import sent_tokenize
+print(nltk.__version__)
 nltk.download('punkt')
 
 def reciprocal_rank_fusion(rank_lists, K=60):

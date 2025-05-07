@@ -393,7 +393,6 @@ if __name__ == "__main__":
         # e.g., save it to a file
         with open("./data/search_results.json", "w", encoding="utf-8") as f_out:
             json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)
-    results=[]
 
 
     if config["mode"]=="sdgbert":
@@ -401,6 +400,7 @@ if __name__ == "__main__":
         print("=============== sg-BERT mode")
         tokenizer = AutoTokenizer.from_pretrained("sadickam/sdgBERT")
         model = AutoModelForSequenceClassification.from_pretrained("sadickam/sdgBERT")
+        results=[]
         for record in read_jsonl(FILE2_PATH):
             original_text = record.get(TEXT_KEY2)
             if not original_text or not isinstance(original_text, str):

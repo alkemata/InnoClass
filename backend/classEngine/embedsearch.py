@@ -411,6 +411,8 @@ if __name__ == "__main__":
             predictions = torch.softmax(text_logits, dim=1).tolist()[0]
             predictions = [round(a, 3) for a in predictions]
             results=results.append({"id":record.get("id"),"text":record.get(TEXT_KEY2),"prediction":predictions})
-            print(results)
+            print(record.get("id") +"=========")
+            print(predictions)
+
         with open("./data/classif_results.json", "w", encoding="utf-8") as f_out:
             json.dump(results, f_out, indent=2, ensure_ascii=False)

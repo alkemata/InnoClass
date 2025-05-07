@@ -411,7 +411,7 @@ if __name__ == "__main__":
             text_logits = model(**tokenized_text).logits
             predictions = torch.softmax(text_logits, dim=1).tolist()[0]
             predictions = [round(a, 3) for a in predictions]
-            results=results.append({"id":record.get("id"),"text":record.get(TEXT_KEY2),"prediction":predictions})
+            results.append({"id":record.get("id"),"text":record.get(TEXT_KEY2),"prediction":predictions})
             print(record.get("id") +"=========")
             print(predictions)
 

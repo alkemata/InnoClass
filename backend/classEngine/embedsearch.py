@@ -403,7 +403,7 @@ if __name__ == "__main__":
         for record in read_jsonl(FILE2_PATH):
             original_text = record.get(TEXT_KEY2)
             if not original_text or not isinstance(original_text, str):
-                print(f"Warning: Missing or invalid text key '{TEXT_KEY2}' in record: {record}")
+                print(f"Warning: Missing or invalid text key  in record: {record}")
                 continue
             joined_clean_sents = prep_text(original_text)
             tokenized_text = tokenizer_(joined_clean_sents, return_tensors="pt", truncation=True, max_length=512)

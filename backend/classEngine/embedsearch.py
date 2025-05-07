@@ -12,6 +12,13 @@ import gzip
 import traceback
 import time
 from collections import defaultdict
+import regex as re
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+#import string
+import nltk
+from nltk.tokenize import sent_tokenize
+nltk.download('punkt')
 
 def reciprocal_rank_fusion(rank_lists, K=60):
     """Compute RRF scores for each doc across multiple rank lists."""
@@ -327,41 +334,78 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
 
     return results
 
+# for sdgbert
+def prep_text(text):
+    """
+    function for preprocessing text
+    """
+
+    # remove trailing characters (\s\n) and convert to lowercase
+    clean_sents = [] # append clean con sentences
+    sent_tokens = sent_tokenize(str(text))
+    for sent_token in sent_tokens:
+        word_tokens = [str(word_token).strip().lower() for word_token in sent_token.split()]
+        #word_tokens = [word_token for word_token in word_tokens if word_token not in punctuations]
+        clean_sents.append(' '.join((word_tokens)))
+    joined = ' '.join(clean_sents).strip(' ')
+    joined = re.sub(r'`', "", joined)
+    joined = re.sub(r'"', "", joined)
+    return joined
 
 # --- Main Execution ---
 if __name__ == "__main__":
-    # 1. Setup Index
-    setup_elasticsearch_index()
+    if config["mode"]=="semsearch":
+        # 1. Setup Index
+        setup_elasticsearch_index()
 
-    # 2. Index data from file2
-    index_data_from_file2()
+        # 2. Index data from file2
+        index_data_from_file2()
 
-    # 3. Read file1 and search for each item
-    print(f"\n--- Starting search process using {FILE1_PATH} as queries ---")
-    search_results_all = {}
-    query_count = 0
-    for record in read_dataframe(FILE1_PATH):
-        if record is None: continue
-        query_text_original = record.get(TEXT_KEY1)
-        id_prompt=record.get("Target ID")
+        # 3. Read file1 and search for each item
+        print(f"\n--- Starting search process using {FILE1_PATH} as queries ---")
+        search_results_all = {}
+        query_count = 0
+        for record in read_dataframe(FILE1_PATH):
+            if record is None: continue
+            query_text_original = record.get(TEXT_KEY1)
+            id_prompt=record.get("Target ID")
 
-        if not query_text_original or not isinstance(query_text_original, str):
-             print(f"Warning: Skipping record due to missing/invalid text in {FILE1_PATH}")
-             continue
+            if not query_text_original or not isinstance(query_text_original, str):
+                print(f"Warning: Skipping record due to missing/invalid text in {FILE1_PATH}")
+                continue
 
-        query_count += 1
-        cleaned_query = clean_text(query_text_original)
-        query_embedding = model.encode(cleaned_query)
-        if np.isnan(query_embedding).any():
-            print("Warning: NaN values detected in embeddings.")
-        else:
-            print("Embeddings generated successfully.")
-        results = hybrid_search_with_rrf(es_client,INDEX_NAME,query_text_original, query_embedding,k=10, num_candidates=50) # Find top 50 results
-        print(f"Found {len(results)} results:")
-        search_results_all[id_prompt] = results # Store results if needed
+            query_count += 1
+            cleaned_query = clean_text(query_text_original)
+            query_embedding = model.encode(cleaned_query)
+            if np.isnan(query_embedding).any():
+                print("Warning: NaN values detected in embeddings.")
+            else:
+                print("Embeddings generated successfully.")
+            results = hybrid_search_with_rrf(es_client,INDEX_NAME,query_text_original, query_embedding,k=10, num_candidates=50) # Find top 50 results
+            print(f"Found {len(results)} results:")
+            search_results_all[id_prompt] = results # Store results if needed
 
-    print(f"\n--- Search finished. Processed {query_count} queries from {FILE1_PATH}. ---")
-    # You can now work with the `search_results_all` dictionary if needed
-    # e.g., save it to a file
-    with open("./data/search_results.json", "w", encoding="utf-8") as f_out:
-         json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)
+        print(f"\n--- Search finished. Processed {query_count} queries from {FILE1_PATH}. ---")
+        # You can now work with the `search_results_all` dictionary if needed
+        # e.g., save it to a file
+        with open("./data/search_results.json", "w", encoding="utf-8") as f_out:
+            json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)
+    results=[]
+    if config["mode"]=="sdgbert":
+        from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        tokenizer = AutoTokenizer.from_pretrained("sadickam/sdgBERT")
+        model = AutoModelForSequenceClassification.from_pretrained("sadickam/sdgBERT")
+        for record in read_jsonl(FILE2_PATH):
+            original_text = record.get(TEXT_KEY2)
+            if not original_text or not isinstance(original_text, str):
+                print(f"Warning: Missing or invalid text key '{TEXT_KEY2}' in record: {record}")
+                continue
+            joined_clean_sents = prep_text(original_text)
+            tokenized_text = tokenizer_(joined_clean_sents, return_tensors="pt", truncation=True, max_length=512)
+            text_logits = model(**tokenized_text).logits
+            predictions = torch.softmax(text_logits, dim=1).tolist()[0]
+            predictions = [round(a, 3) for a in predictions]
+            results=results.append({"id":record.get("id"),"text":record.get(TEXT_KEY2),"prediction":predictions})
+            print(results)
+        with open("./data/classif_results.json", "w", encoding="utf-8") as f_out:
+            json.dump(results, f_out, indent=2, ensure_ascii=False)

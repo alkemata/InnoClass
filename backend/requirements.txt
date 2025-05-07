@@ -6,3 +6,5 @@ uvicorn
 gunicorn
 python-dotenv
 pandas
+torch
+nltk

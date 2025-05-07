@@ -48,56 +48,7 @@ FILE1_PATH = config["filename_sdg"]
 FILE2_PATH = config["filename_texts"]
 TEXT_KEY1 = config['Prompt']  # The key in your JSON dictionaries holding the text
 TEXT_KEY2 = config['extracted_text']
-print("connecting to elasticsearch")
-ELASTICSEARCH_HOSTS = "http://elasticsearch:9200"
-ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
-ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
-SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'
-#SBERT_MODEL_NAME="multi-qa-mpnet-base-dot-v1"
-INDEX_NAME = "hybrid_search_index"
-#SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
 
-time.sleep(10)
-# --- Initialize Elasticsearch Clienlst ---
-try:
-    es_client = Elasticsearch(
-        ELASTICSEARCH_HOSTS,
-            basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
-            verify_certs=False, # Use with caution
-            request_timeout=60
-    )
-    # Test connection
-    if es_client.ping():
-        print("Successfully connected to Elasticsearch.")
-
-except Exception as e:
-    print(f"retry - Error connecting to Elasticsearch: {e}")
-    #traceback.print_exc()
-    exit()
-    
-try:
-    es_client.cluster.put_settings(body={
-    "persistent": {
-        "ingest.geoip.downloader.enabled": False
-    }
-    })
-    info = es_client.info()
-    version = info['version']['number']
-    print(f"Elasticsearch version: {version}")
-except Exception as e:
-    print(f"Error retrieving version: {e}")
-
-health = es_client.cluster.health()
-print("Health:"+str(health))
-# --- Load SBERT Model ---
-try:
-    print(f"Loading SBERT model: {SBERT_MODEL_NAME}...")
-    model = SentenceTransformer(SBERT_MODEL_NAME)
-    EMBEDDING_DIM = model.get_sentence_embedding_dimension()
-    print(f"Model loaded successfully. Embedding dimension: {EMBEDDING_DIM}")
-except Exception as e:
-    print(f"Error loading SBERT model: {e}")
-    exit()
 
 # --- Helper Functions ---
 
@@ -355,6 +306,57 @@ def prep_text(text):
 # --- Main Execution ---
 if __name__ == "__main__":
     if config["mode"]=="semsearch":
+        print("=============== semantic search mode")
+        print("connecting to elasticsearch")
+        ELASTICSEARCH_HOSTS = "http://elasticsearch:9200"
+        ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
+        ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
+        SBERT_MODEL_NAME='AI-Growth-Lab/PatentSBERTa'
+        #SBERT_MODEL_NAME="multi-qa-mpnet-base-dot-v1"
+        INDEX_NAME = "hybrid_search_index"
+        #SBERT_MODEL_NAME = 'all-MiniLM-L6-v2' # Or any other SBERT model
+
+        time.sleep(10)
+        # --- Initialize Elasticsearch Clienlst ---
+        try:
+            es_client = Elasticsearch(
+                ELASTICSEARCH_HOSTS,
+                    basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+                    verify_certs=False, # Use with caution
+                    request_timeout=60
+            )
+            # Test connection
+            if es_client.ping():
+                print("Successfully connected to Elasticsearch.")
+
+        except Exception as e:
+            print(f"retry - Error connecting to Elasticsearch: {e}")
+            #traceback.print_exc()
+            exit()
+            
+        try:
+            es_client.cluster.put_settings(body={
+            "persistent": {
+                "ingest.geoip.downloader.enabled": False
+            }
+            })
+            info = es_client.info()
+            version = info['version']['number']
+            print(f"Elasticsearch version: {version}")
+        except Exception as e:
+            print(f"Error retrieving version: {e}")
+
+        health = es_client.cluster.health()
+        print("Health:"+str(health))
+        # --- Load SBERT Model ---
+        try:
+            print(f"Loading SBERT model: {SBERT_MODEL_NAME}...")
+            model = SentenceTransformer(SBERT_MODEL_NAME)
+            EMBEDDING_DIM = model.get_sentence_embedding_dimension()
+            print(f"Model loaded successfully. Embedding dimension: {EMBEDDING_DIM}")
+        except Exception as e:
+            print(f"Error loading SBERT model: {e}")
+            exit()
         # 1. Setup Index
         setup_elasticsearch_index()
 
@@ -391,8 +393,11 @@ if __name__ == "__main__":
         with open("./data/search_results.json", "w", encoding="utf-8") as f_out:
             json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)
     results=[]
+
+
     if config["mode"]=="sdgbert":
         from transformers import AutoTokenizer, AutoModelForSequenceClassification
+        print("=============== sg-BERT mode")
         tokenizer = AutoTokenizer.from_pretrained("sadickam/sdgBERT")
         model = AutoModelForSequenceClassification.from_pretrained("sadickam/sdgBERT")
         for record in read_jsonl(FILE2_PATH):

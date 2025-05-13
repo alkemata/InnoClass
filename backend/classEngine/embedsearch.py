@@ -18,6 +18,7 @@ import torch
 #import string
 import nltk
 from nltk.tokenize import sent_tokenize
+from utils import read_dataframe, read_jsonl, clean_text, load_config
 print(nltk.__version__)
 nltk.download('punkt')
 
@@ -29,85 +30,7 @@ def reciprocal_rank_fusion(rank_lists, K=60):
             rrf_scores[doc_id] += 1.0 / (K + rank)
     return rrf_scores
 
-def load_config(filepath):
-    """Loads configuration from a JSON file."""
-    try:
-        with open(filepath, "r") as f:
-            config = json.load(f)
-        return config
-    except FileNotFoundError:
-        print(f"Config file not found: {filepath}")
-        return {}
-    except json.JSONDecodeError:
-        print(f"Invalid JSON in: {filepath}")
-        return {}
 
-config=load_config("./data/searchconfig.json")
-
-# --- Configuration ---
-FILE1_PATH = config["filename_sdg"]
-FILE2_PATH = config["filename_texts"]
-TEXT_KEY1 = config['Prompt']  # The key in your JSON dictionaries holding the text
-TEXT_KEY2 = config['extracted_text']
-
-
-# --- Helper Functions ---
-
-def clean_text(text):
-    """Basic text cleaning: lowercase, remove punctuation, extra whitespace."""
-    if not isinstance(text, str):
-        return ""
-    text = text.lower()
-    # Keep basic punctuation that might be relevant for meaning in some models
-    # text = text.translate(str.maketrans('', '', string.punctuation))
-    text = re.sub(r'\s+', ' ', text).strip() # Remove extra whitespace
-    return text
-
-def read_jsonl(filename):
-    """
-    Loads a gzipped JSON Lines (jsonl) file and returns a list of dictionaries.
-
-    Parameters:
-        filename (str): The filename of the gzipped jsonl file.
-
-    Returns:
-        list: A list of dictionaries read from the file.
-    """
-    result = []
-    with gzip.open("./data/"+filename, 'rt', encoding='utf-8') as f:
-        for line in f:
-            result.append(json.loads(line))
-    return result
-
-def read_dataframe(filepath):
-    """
-    Reads a pandas DataFrame from a pickle file and converts it to a list of dictionaries.
-
-    Args:
-        filepath (str): The path to the pickle file.
-
-    Returns:
-        list of dict: A list of dictionaries representing the DataFrame, or None if an error occurs.
-    """
-    try:
-        with open("./data/"+filepath, 'rb') as f:
-            df = pickle.load(f)
-        print("sdgs read")
-        if isinstance(df, pd.DataFrame):
-            return df.to_dict(orient='records')
-        else:
-            print(f"Error: Pickle file does not contain a pandas DataFrame.")
-            return None
-
-    except FileNotFoundError:
-        print(f"Error: File not found at {filepath}")
-        return None
-    except pickle.UnpicklingError:
-        print(f"Error: Could not unpickle the file at {filepath}. It might be corrupted or not a pickle file.")
-        return None
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return None
 
 def generate_embeddings(texts, batch_size=32):
     """Generates embeddings for a list of texts using the loaded SBERT model."""
@@ -160,9 +83,9 @@ import gc
 from elasticsearch import helpers
 
 def index_data_from_file2():
-    """Reads file2, cleans text, generates embeddings, and indexes into Elasticsearch."""
+    """Reads file with texts, cleans text, generates embeddings, and indexes into Elasticsearch."""
     print(f"\n--- Indexing data from {FILE2_PATH} ---")
-    batch_size = 10  # Embedding and indexing batch size
+    batch_size = 10  # Embedding and indexing batch size, very sensitive parameter with respect to memory
 
     batch_texts = []
     batch_original_data = []
@@ -290,7 +213,8 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
 def prep_text(text):
     """
     function for preprocessing text
-    """
+    """n ---
+    FILE1_PATH = config["filename_sdg"]
 
     # remove trailing characters (\s\n) and convert to lowercase
     clean_sents = [] # append clean con sentences
@@ -306,7 +230,21 @@ def prep_text(text):
 
 # --- Main Execution ---
 if __name__ == "__main__":
-    if config["mode"]=="semsearch":
+    config=load_config("./data/searchconfig.json")
+
+    # --- Configuratio
+    FILE2_PATH = config["textfile"]
+    TEXT_KEY2 = config['extracted_text']
+    mode=config["mode"]
+    classes=config["classes"]
+    if classes=="goals":
+        FILE1_PATH="sdg_goals.dat"
+        TEXT_KEY1="Goal Title"
+    if classes=="targets":
+        FILE1_PATH="sdg_targets.dat"
+        TEXT_KEY1="Target Text"
+
+    if "semsearch" in config["mode"]:
         print("=============== semantic search mode")
         print("connecting to elasticsearch")
         ELASTICSEARCH_HOSTS = "http://elasticsearch:9200"
@@ -395,9 +333,9 @@ if __name__ == "__main__":
             json.dump(search_results_all, f_out, indent=2, ensure_ascii=False)
 
 
-    if config["mode"]=="sdgbert":
+    if "sdgbert" in config["mode"]:
         from transformers import AutoTokenizer, AutoModelForSequenceClassification
-        print("=============== sg-BERT mode")
+        print("=============== sg-BERT mode: classification by goals")
         tokenizer = AutoTokenizer.from_pretrained("sadickam/sdgBERT")
         model = AutoModelForSequenceClassification.from_pretrained("sadickam/sdgBERT")
         results=[]

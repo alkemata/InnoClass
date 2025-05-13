@@ -70,7 +70,7 @@ services:
     restart: always
 
   dagster:
-    image: dagster/dagit:latest
+    image: dagster/dagster:latest
     container_name: dagster
     volumes:
       - ./dagster_home:/opt/dagster/dagster_home

@@ -104,7 +104,7 @@ services:
     networks:
       - es_network
     depends_on:
-      docker_example_user_code:
+      dagster_project:
         condition: service_started
     labels:
       - "traefik.enable=true"

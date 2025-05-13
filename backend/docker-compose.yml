@@ -69,18 +69,43 @@ services:
       - es_network
     restart: always
 
-  dagster:
-    image: dagster/dagster:latest
-    container_name: dagster
-    volumes:
-      - ./dagster_home:/opt/dagster/dagster_home
-      - ./my_dagster_project:/my_dagster_project
+  dagster_project:
+    build:
+      context: .
+      dockerfile: ./dagster_project/Dockerfile_project
+    container_name: dagster_project
+    image: dagster_project
+    restart: always
     environment:
-      - DAGSTER_HOME=/opt/dagster/dagster_home
-    working_dir: /my_dagster_project
+      DAGSTER_CURRENT_IMAGE: 'dagster_project'
     networks:
       - es_network
-    restart: always
+
+  dagster_webserver:
+    build:
+      context: .
+      dockerfile: ./dagster_home/Dockerfile_dagster
+    entrypoint:
+      - dagster-webserver
+      - -h
+      - '0.0.0.0'
+      - -p
+      - '3000'
+      - -w
+      - workspace.yaml
+    container_name: dagster_webserver
+    expose:
+      - '3000'
+    ports:
+      - '3000:3000'
+    volumes: # Make docker client accessible so we can terminate containers from the webserver
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/io_manager_storage:/tmp/io_manager_storage
+    networks:
+      - es_network
+    depends_on:
+      docker_example_user_code:
+        condition: service_started
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dagster.rule=Host(`dagster.innoclass.alkemata.com`)"
@@ -90,6 +115,24 @@ services:
       - "traefik.http.routers.dagster.middlewares=dagster-auth"
       # Replace with your own credentials or reference .env variables
       - "traefik.http.middlewares.dagster-auth.basicauth.users=${DAGSTER_UI_USER}:${DAGSTER_UI_PASSWORD_HASH}"
+
+  dagster_daemon:
+    build:
+      context: .
+      dockerfile: ./dagster_home/Dockerfile_dagster
+    entrypoint:
+      - dagster-daemon
+      - run
+    container_name: dagster_daemon
+    restart: on-failure
+    volumes: # Make docker client accessible so we can launch containers using host docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/io_manager_storage:/tmp/io_manager_storage
+    networks:
+      - es_network
+    depends_on:
+      docker_example_user_code:
+        condition: service_started
 
   embedsearch:
     build:

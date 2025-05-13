@@ -1,4 +1,6 @@
 load_from:
-  - python_file:
-      relative_path: ../my_dagster_project/example_job.py
-      attribute: hello_job
+  # Each entry here corresponds to a service in the docker-compose file that exposes user code.
+  - grpc_server:
+      host: dagster_project
+      port: 4000
+      location_name: "dagster_project"

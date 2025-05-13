@@ -36,7 +36,7 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD} # Use variable from .env
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - bootstrap.memory_lock=true
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - xpack.security.enabled=true
@@ -51,9 +51,45 @@ services:
       - "9300:9300"
     networks:
       - es_network
-    restart: always
     volumes:
-      - ./database:/usr/share/elasticsearch/data # Mount the "database" directory
+      - ./database:/usr/share/elasticsearch/data
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    volumes:
+      - ./qdrant/storage:/qdrant/storage
+    ports:
+      - "6333:6333"
+    networks:
+      - es_network
+    restart: always
+
+  dagster:
+    image: dagster/dagit:latest
+    container_name: dagster
+    volumes:
+      - ./dagster_home:/opt/dagster/dagster_home
+      - ./my_dagster_project:/my_dagster_project
+    environment:
+      - DAGSTER_HOME=/opt/dagster/dagster_home
+    working_dir: /my_dagster_project
+    networks:
+      - es_network
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dagster.rule=Host(`dagster.innoclass.alkemata.com`)"
+      - "traefik.http.routers.dagster.entrypoints=websecure"
+      - "traefik.http.routers.dagster.tls.certresolver=myresolver"
+      - "traefik.http.services.dagster.loadbalancer.server.port=3000"
+      - "traefik.http.routers.dagster.middlewares=dagster-auth"
+      # Replace with your own credentials or reference .env variables
+      - "traefik.http.middlewares.dagster-auth.basicauth.users=${DAGSTER_UI_USER}:${DAGSTER_UI_PASSWORD_HASH}"
 
   embedsearch:
     build:
@@ -69,8 +105,8 @@ services:
     networks:
       - es_network
     environment:
-      - ELASTICSEARCH_USER=${ELASTICSEARCH_USER} # Use variable from .env
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD} # Use variable from .env
+      - ELASTICSEARCH_USER=${ELASTICSEARCH_USER}
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
     restart: "always"
 
   api-server:
@@ -84,13 +120,14 @@ services:
     working_dir: /app
     depends_on:
       - elasticsearch
+      - qdrant
     ports:
       - "8000:8000"
     networks:
       - es_network
     environment:
-      - ELASTICSEARCH_USER=${ELASTICSEARCH_USER} # Use variable from .env
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD} # Use variable from .env
+      - ELASTICSEARCH_USER=${ELASTICSEARCH_USER}
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
     restart: "always"
     labels:
       - "traefik.enable=true"

@@ -76,6 +76,8 @@ services:
     container_name: dagster_project
     image: dagster_project
     restart: always
+    expose:
+      - '4000'
     environment:
       DAGSTER_CURRENT_IMAGE: 'dagster_project'
     volumes:
@@ -98,7 +100,6 @@ services:
     container_name: dagster_webserver
     expose:
       - '3000'
-      - '4000'
     ports:
       - '3000:3000'
     volumes: # Make docker client accessible so we can terminate containers from the webserver

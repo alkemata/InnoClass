@@ -6,6 +6,7 @@ RUN pip install -r requirements.txt
 # Add code location code
 WORKDIR /opt/dagster/app
 COPY ./dagster_project /opt/dagster/app
+ENV DAGSTER_HOME=/opt/dagster/dagster_home/
 
 # Run dagster code server on port 4000
 EXPOSE 4000

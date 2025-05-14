@@ -96,7 +96,7 @@ services:
       - -p
       - '3000'
       - -w
-      - workspace.yaml
+      - /opt/dagster/dagster_home/workspace.yaml
     container_name: dagster_webserver
     expose:
       - '3000'
@@ -124,6 +124,8 @@ services:
     build:
       context: .
       dockerfile: ./dagster_home/Dockerfile_dagster
+    environment:
+      - DAGSTER_HOME=/opt/dagster/dagster_home
     entrypoint:
       - dagster-daemon
       - run

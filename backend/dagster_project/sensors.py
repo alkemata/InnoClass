@@ -3,10 +3,7 @@ from dagster import sensor, SensorEvaluationContext, RunRequest, SkipReason, Ass
 from assets import raw_file_asset
 
 @sensor(
-    asset_selection=AssetSelection.assets(raw_file_asset),
-    config_schema={
-        "file_name": Field(str, default_value="/opt/project_data/test.dat.gz", description="File to monitor")
-    }
+    asset_selection=AssetSelection.assets(raw_file_asset)
 )
 def file_update_sensor(context: SensorEvaluationContext):
     file_name = "/opt/project_data/test.dat.gz"

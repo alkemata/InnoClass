@@ -1,5 +1,6 @@
 FROM python:3.10-slim
 
+RUN mkdir -p /opt/project_data
 COPY ./dagster_project/requirements.txt .
 RUN pip install -r requirements.txt
 

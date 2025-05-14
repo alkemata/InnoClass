@@ -11,6 +11,7 @@ RUN pip install \
 ENV DAGSTER_HOME=/opt/dagster/dagster_home/
 
 RUN mkdir -p $DAGSTER_HOME
+RUN mkdir -p $DAGSTER_HOME/logs
 
 COPY ./dagster_home/dagster.yaml ./dagster_home/workspace.yaml $DAGSTER_HOME
 

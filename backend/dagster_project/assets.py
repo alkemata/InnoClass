@@ -25,8 +25,6 @@ def load_list(filename):
     return pd.DataFrame(result)
 
 @asset(config_schema={"file_name": str})
-
-
 def raw_file_asset(context: AssetExecutionContext) -> Output[pd.DataFrame]:
     file_name = context.op_config["file_name"]
     
@@ -41,7 +39,7 @@ def raw_file_asset(context: AssetExecutionContext) -> Output[pd.DataFrame]:
 
     return Output(value=df, metadata=metadata)
 
-    @asset_check(asset=raw_file_asset)
+@asset_check(asset=raw_file_asset)
 def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckResult:
     if "text" not in raw_file_asset.columns:
         return AssetCheckResult.failed(

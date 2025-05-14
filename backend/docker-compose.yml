@@ -79,7 +79,7 @@ services:
     environment:
       DAGSTER_CURRENT_IMAGE: 'dagster_project'
     volumes:
-      - ../classEngine/data:/opt/project_data
+      - ./classEngine/data:/opt/project_data
     networks:
       - es_network
 

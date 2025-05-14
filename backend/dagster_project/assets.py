@@ -38,7 +38,7 @@ class MyAssetConfig(Config):
 @asset
 def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
     file_name = config.file_name
-    contents = os.listdir("/opt/")
+    contents = os.listdir("/opt/project_data")
     print(contents)
     # Load file
     df = load_list(file_name)

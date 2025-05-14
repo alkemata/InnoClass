@@ -4,7 +4,7 @@ from dagster import (
     asset, AssetExecutionContext,
     Output, MetadataValue
 )
-from dagster import asset_check, AssetCheckResult, AssetCheckSeverity
+from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config
 
 FILE_PATH = "/opt/project_data/raw_data.dat.gz"
 
@@ -24,9 +24,12 @@ def load_list(filename):
             result.append(json.loads(line))
     return pd.DataFrame(result)
 
-@asset(config_schema={"file_name": str})
-def raw_file_asset(context: AssetExecutionContext) -> Output[pd.DataFrame]:
-    file_name = context.op_config["file_name"]
+class MyAssetConfig(Config):
+    file_name: str
+
+@asset
+def raw_file_asset(config: MyAssetConfigc) -> Output[pd.DataFrame]:
+    file_name = config.file_name
     
     # Load file
     df = load_file(file_name)

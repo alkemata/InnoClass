@@ -9,7 +9,7 @@ from assets import raw_file_asset
     }
 )
 def file_update_sensor(context: SensorEvaluationContext):
-    file_name = context.sensor_config["file_name"]
+    file_name = "/opt/project_data/test.dat.gz"
 
     if not os.path.exists(file_name):
         return SkipReason(f"File does not exist: {file_name}")

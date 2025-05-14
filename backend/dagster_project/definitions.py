@@ -1,7 +1,7 @@
 from dagster import Definitions
-from .assets import raw_file_asset
-from .sensors import file_update_sensor
-from .checks import text_column_not_empty
+from assets import raw_file_asset
+from sensors import file_update_sensor
+from checks import text_column_not_empty
 #from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
 

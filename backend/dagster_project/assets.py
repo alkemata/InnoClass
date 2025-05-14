@@ -53,11 +53,7 @@ def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
 @asset_check(asset=raw_file_asset)
 def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckResult:
     if "text" not in raw_file_asset.columns:
-        return AssetCheckResult.failed(
-            severity=AssetCheckSeverity.ERROR,
-            description="Missing 'text' column."
-        )
-    
+        return AssetCheckResult(passed=False)  
     if raw_file_asset["text"].isnull().any():
         return AssetCheckResult(passed=False)
     return AssetCheckResult(passed=True)

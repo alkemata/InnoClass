@@ -130,6 +130,7 @@ services:
     volumes: # Make docker client accessible so we can launch containers using host docker
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
+      - ./dagster_home/workspace.yaml:/workspace.yaml
     networks:
       - es_network
     depends_on:

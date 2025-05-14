@@ -59,11 +59,8 @@ def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckRe
         )
     
     if raw_file_asset["text"].isnull().any():
-        return AssetCheckResult.failed(
-            severity=AssetCheckSeverity.ERROR,
-            description="Some 'text' values are empty."
-        )
-    return AssetCheckResult.passed()
+        return AssetCheckResult(passed=False)
+    return AssetCheckResult(passed=True)
 
 # Keywords to search for in headings (allowing fuzzy matching with up to one error)
 keyword1 = ["scope of the invention","Description of the Related Art", "TECHNICAL SCOPE","Description of Related Art","REVEALING THE INVENTION","background of the invention", "background of the disclosure", "field of the invention", "technical field","summary","industrial applicability","field of the disclosure","background",  "prior art", "state of the art"]

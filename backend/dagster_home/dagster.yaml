@@ -22,7 +22,7 @@ run_launcher:
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - /tmp/io_manager_storage:/tmp/io_manager_storage
-        - ./dagster_home:/opt/dagster/dagster_home
+        - /home/codechallenge/InnoClass/backend/dagster_home:/opt/dagster/dagster_home
 
 run_storage:
   module: dagster.core.storage.runs

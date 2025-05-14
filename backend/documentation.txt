@@ -1,0 +1,1 @@
+docker network create es_network before starting docker-compose: global view from docker

@@ -218,3 +218,4 @@ services:
 networks:
   es_network:
     driver: bridge
+    external: true 

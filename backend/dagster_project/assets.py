@@ -25,7 +25,7 @@ def load_list(filename):
     return pd.DataFrame(result)
 
 class MyAssetConfig(Config):
-    file_name: str
+    file_name: str = FILE_PATH
 
 @asset
 def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:

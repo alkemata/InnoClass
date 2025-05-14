@@ -98,6 +98,7 @@ services:
     container_name: dagster_webserver
     expose:
       - '3000'
+      - '4000'
     ports:
       - '3000:3000'
     volumes: # Make docker client accessible so we can terminate containers from the webserver

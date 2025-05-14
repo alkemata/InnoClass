@@ -32,7 +32,7 @@ def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
     file_name = config.file_name
     
     # Load file
-    df = load_file(file_name)
+    df = load_list(file_name)
 
     # Attach metadata: number of lines
     metadata = {

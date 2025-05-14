@@ -195,8 +195,8 @@ services:
     volumes:
       - ./frontend:/app
     command: sh -c "npm install && node server.js"
-    ports:
-      - "3000:3000"
+    #ports:
+    #  - "3100:3000"
     depends_on:
       - frontend-builder
     restart: "no"

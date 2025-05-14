@@ -4,9 +4,5 @@ from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
 
 defs = Definitions(
-    assets=[],
-    jobs=[hello_job],
-    resources=[],
-    schedules=[],
-    sensors=[],
+    jobs=[hello_job]
 )

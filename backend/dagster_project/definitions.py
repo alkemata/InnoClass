@@ -1,5 +1,5 @@
 from dagster import Definitions
-from assets import raw_file_asset
+from .assets import raw_file_asset
 from .sensors import file_update_sensor
 from .checks import text_column_not_empty
 #from example_job import hello_job

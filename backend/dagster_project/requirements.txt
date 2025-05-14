@@ -1,0 +1,4 @@
+dagster
+dagster_docker
+gzip
+pandas

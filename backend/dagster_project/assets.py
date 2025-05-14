@@ -28,7 +28,7 @@ class MyAssetConfig(Config):
     file_name: str
 
 @asset
-def raw_file_asset(config: MyAssetConfigc) -> Output[pd.DataFrame]:
+def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
     file_name = config.file_name
     
     # Load file

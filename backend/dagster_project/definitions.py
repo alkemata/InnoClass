@@ -5,9 +5,6 @@ from assets import text_column_not_empty
 #from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
 
-defs = Definitions(
-    assets=[hello_job]
-)
 
 defs = Definitions(
     assets=[

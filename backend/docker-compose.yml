@@ -102,7 +102,8 @@ services:
       - '3000'
     ports:
       - '3000:3000'
-    volumes: # Make docker client accessible so we can terminate containers from the webserver
+    volumes:
+      - ./dagster_home:/opt/dagster/dagster_home    # ← share host dir
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
     networks:
@@ -131,10 +132,10 @@ services:
       - run
     container_name: dagster_daemon
     restart: on-failure
-    volumes: # Make docker client accessible so we can launch containers using host docker
+    volumes:
+      - ./dagster_home:/opt/dagster/dagster_home    # ← share host dir
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
-      - ./dagster_home/workspace.yaml:/workspace.yaml
     networks:
       - es_network
     depends_on:

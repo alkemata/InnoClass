@@ -150,7 +150,6 @@ services:
     environment:
       - ELASTICSEARCH_USER=${ELASTICSEARCH_USER}
       - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
-    restart: "always"
 
   api-server:
     build:
@@ -171,7 +170,7 @@ services:
     environment:
       - ELASTICSEARCH_USER=${ELASTICSEARCH_USER}
       - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
-    restart: "always"
+    restart: "no"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`api-server.innoclass.alkemata.com`)"
@@ -200,7 +199,7 @@ services:
       - "3000:3000"
     depends_on:
       - frontend-builder
-    restart: always
+    restart: no
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`innoclass.alkemata.com`)"

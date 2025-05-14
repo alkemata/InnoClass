@@ -1,5 +1,6 @@
 import os
 from dagster import sensor, SensorEvaluationContext, RunRequest, SkipReason, AssetSelection
+from assets import raw_file_asset
 
 @sensor(
     asset_selection=AssetSelection.assets(raw_file_asset),

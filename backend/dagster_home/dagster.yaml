@@ -17,11 +17,13 @@ run_launcher:
   module: dagster_docker
   class: DockerRunLauncher
   config:
+    docker_image: dagster_project
     network: es_network
     container_kwargs:
-      volumes: # Make docker client accessible to any launched containers as well
+      volumes:
         - /var/run/docker.sock:/var/run/docker.sock
         - /tmp/io_manager_storage:/tmp/io_manager_storage
+        - ./dagster_home:/opt/dagster/dagster_home
 
 run_storage:
   module: dagster.core.storage.runs

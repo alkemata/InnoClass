@@ -97,7 +97,7 @@ services:
     expose:
       - '3000'
     ports:
-      - '4000:3000'
+      - '3000:3000'
     volumes: # Make docker client accessible so we can terminate containers from the webserver
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
@@ -111,7 +111,7 @@ services:
       - "traefik.http.routers.dagster.rule=Host(`dagster.innoclass.alkemata.com`)"
       - "traefik.http.routers.dagster.entrypoints=websecure"
       - "traefik.http.routers.dagster.tls.certresolver=myresolver"
-      - "traefik.http.services.dagster.loadbalancer.server.port=4000"
+      - "traefik.http.services.dagster.loadbalancer.server.port=3000"
       - "traefik.http.routers.dagster.middlewares=dagster-auth"
       # Replace with your own credentials or reference .env variables
       - "traefik.http.middlewares.dagster-auth.basicauth.users=${DAGSTER_UI_USER}:${DAGSTER_UI_PASSWORD_HASH}"
@@ -176,7 +176,7 @@ services:
       - "traefik.http.routers.api.rule=Host(`api-server.innoclass.alkemata.com`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=myresolver"
-      - "traefik.http.services.api.loadbalancer.server.port=3000"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
 
   frontend-builder:
     image: node:18

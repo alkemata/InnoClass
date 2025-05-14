@@ -17,7 +17,6 @@ run_launcher:
   module: dagster_docker
   class: DockerRunLauncher
   config:
-    docker_image: dagster_project
     network: es_network
     container_kwargs:
       volumes:

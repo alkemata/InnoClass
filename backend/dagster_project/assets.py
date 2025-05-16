@@ -52,8 +52,6 @@ def extracted_data_asset(config: MyAssetConfig,context: dg.AssetExecutionContext
 
     # Attach metadata: number of lines
     metadata = {
-        "num_rows": MetadataValue.int(len(df)),
-        "file_name": MetadataValue.text(file_name)
         "stats": dg.MetadataValue.md(json.dumps(stats))
     }
     return Output(value=extracted, metadata=metadata)

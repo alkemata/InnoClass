@@ -8,7 +8,7 @@ from assets import text_column_not_empty
 
 defs = Definitions(
     assets=[
-        raw_file_asset,
+        raw_file_asset,extracted_data_asset,
     ],
     asset_checks=[
         text_column_not_empty,  # optional

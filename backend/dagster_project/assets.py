@@ -6,7 +6,7 @@ from dagster import (
     asset, AssetExecutionContext,
     Output, MetadataValue
 )
-from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config,AssetExecutionContext
+from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config
 import funcutils
 
 FILE_PATH = "/opt/project_data/raw_data.dat.gz"
@@ -39,8 +39,7 @@ def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckRe
 
 
 @asset
-def extracted_data_asset(config: MyAssetConfig,context: AssetExecutionContext,deps=[raw_file_asset],group_name="sales") -> Output[pd.DataFrame]:
-    context.log.info("Extracting data")
+def extracted_data_asset(config: MyAssetConfig,deps=[raw_file_asset],group_name="sales") -> Output[pd.DataFrame]:
     extracted=process_texts(traw_file_asset, keyword1, keyword2)
     stats=analyze_text_data(extracted)
 

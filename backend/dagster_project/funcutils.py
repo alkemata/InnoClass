@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 import spacy
 import json
 from typing import List, Optional
+from bs4 import BeautifulSoup  # Missing import
+import numpy as np          # Missing import
 
 nlp = spacy.blank('en')
 nlp.add_pipe('sentencizer')
@@ -30,7 +32,7 @@ def load_list(filename):
 keyword1 = ["scope of the invention","Description of the Related Art", "TECHNICAL SCOPE","Description of Related Art","REVEALING THE INVENTION","background of the invention", "background of the disclosure", "field of the invention", "technical field","summary","industrial applicability","field of the disclosure","background",  "prior art", "state of the art"]
 keyword2=["background","The present invention regards","herein described subject matter", "It is well known" "technology described herein", "field of the disclosure", "field of the invention", "subject of the invention", "belongs to the field", "invention is","invention relates to", "present invention refers to"]
 
-ef clean_sentences(s):
+def clean_sentences(s):
     if s.endswith('.'):
         # Remove all content in parentheses or brackets, including the symbols
         s = re.sub(r'\([^)]*\)', '', s)  # remove ( ... )

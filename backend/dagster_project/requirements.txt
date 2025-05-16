@@ -2,3 +2,4 @@ dagster
 dagster_docker
 pandas
 spacy
+beautifulsoup4

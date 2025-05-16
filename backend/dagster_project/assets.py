@@ -7,7 +7,7 @@ from dagster import (
     Output, MetadataValue
 )
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config
-import funcutils
+import funcutils as fu
 
 FILE_PATH = "/opt/project_data/raw_data.dat.gz"
 
@@ -20,7 +20,7 @@ class MyAssetConfig(Config):
 def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
     file_name = config.file_name
     # Load file
-    df = load_list(file_name)
+    df = fu.load_list(file_name)
 
     # Attach metadata: number of lines
     metadata = {
@@ -40,8 +40,8 @@ def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckRe
 
 @asset(deps=[raw_file_asset])
 def extracted_data_asset(config: MyAssetConfig,) -> Output[pd.DataFrame]:
-    extracted=process_texts(raw_file_asset, keyword1, keyword2)
-    stats=analyze_text_data(extracted)
+    extracted=fu.process_texts(raw_file_asset, keyword1, keyword2)
+    stats=fu.analyze_text_data(extracted)
 
     # Attach metadata: number of lines
     metadata = {

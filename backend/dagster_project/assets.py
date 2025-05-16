@@ -39,7 +39,7 @@ def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckRe
 
 
 @asset
-def extracted_data_asset(config: MyAssetConfig,deps=[raw_file_asset],group_name="sales") -> Output[pd.DataFrame]:
+def extracted_data_asset(config: MyAssetConfig,deps=[raw_file_asset]) -> Output[pd.DataFrame]:
     extracted=process_texts(traw_file_asset, keyword1, keyword2)
     stats=analyze_text_data(extracted)
 

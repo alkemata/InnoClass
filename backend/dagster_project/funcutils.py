@@ -185,20 +185,20 @@ def merge_sentence(processed_texts):
         else:
             merged[text_id] += "\n" + sentence
     # Convert to list of dictionaries as required.
-    return [{"id":text_id,"text":sentences, "status":""} for text_id, sentences in merged.items()
+    return [{"id":text_id,"text":sentences, "status":""} for text_id, sentences in merged.items()]
 
-    def analyze_text_data(data):
-    """
+def analyze_text_data(data):
+    """    
     Analyzes a list of dictionaries containing text data.
     
     Parameters:
-        data (list): A list where each element is a dictionary with an 'id'
-                     and a nested dictionary under 'data' that contains a 
-                     'sentence' and 'status'.
-                     
+            data (list): A list where each element is a dictionary with an 'id'
+                        and a nested dictionary under 'data' that contains a 
+                        'sentence' and 'status'.
+                        
     Returns:
-        stats (dict): A dictionary containing the mean, square-mean, min, and max word counts.
-        plot_widget (ipywidgets.Output): An ipywidget containing a histogram of the word counts.
+            stats (dict): A dictionary containing the mean, square-mean, min, and max word counts.
+            plot_widget (ipywidgets.Output): An ipywidget containing a histogram of the word counts.
     """
     word_counts = []
     nbr=0

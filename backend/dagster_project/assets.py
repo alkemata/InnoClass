@@ -1,8 +1,5 @@
 import pandas as pd
 import os
-import gzip
-import re
-import xml.etree.ElementTree as ET
 import json
 from typing import List, Optional
 from dagster import (
@@ -11,9 +8,6 @@ from dagster import (
 )
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config
 import funcutils
-
-nlp = spacy.blank('en')
-nlp.add_pipe('sentencizer')
 
 FILE_PATH = "/opt/project_data/raw_data.dat.gz"
 

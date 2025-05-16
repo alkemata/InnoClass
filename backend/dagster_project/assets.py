@@ -17,7 +17,7 @@ class MyAssetConfig(Config):
     file_name: str = FILE_PATH
 
 @asset
-def raw_file_asset(config: MyAssetConfig,group_name="ingestion") -> Output[pd.DataFrame]:
+def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
     file_name = config.file_name
     # Load file
     df = load_list(file_name)

@@ -10,7 +10,7 @@ from dagster import (
     Output, MetadataValue
 )
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config
-import .utils
+import funcutils
 
 nlp = spacy.blank('en')
 nlp.add_pipe('sentencizer')

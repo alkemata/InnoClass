@@ -156,8 +156,9 @@ def process_texts(texts, keyword1, keyword2, min_sentence_length=5):
         list of tuples: Each tuple is (text_id, sentence) for each extracted sentence.
     """
     results = []
+    print(texts)
     for item in texts:
-        print(texts)
+        print(item)
         sentences = extract_text_simple(item["original_text"], keyword1, keyword2)
         if len(sentences)==0:
             sentences=[""]

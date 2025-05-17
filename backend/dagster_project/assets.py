@@ -27,7 +27,7 @@ def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
         "num_rows": MetadataValue.int(len(df)),
         "file_name": MetadataValue.text(file_name)
     }
-    dg.MaterializeResult
+    print(df)
     return Output(value=df, metadata=metadata)
 
 @asset_check(asset=raw_file_asset)

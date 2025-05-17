@@ -42,7 +42,7 @@ def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckRe
 @asset(deps=[raw_file_asset])
 def extracted_data_asset(raw_file_asset,config: MyAssetConfig,) -> Output[pd.DataFrame]:
     
-    extracted=fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
+    extracted=fu.process_texts(raw_file_asset["text"], fu.keyword1, fu.keyword2)
     stats=fu.analyze_text_data(extracted)
 
     # Attach metadata: number of lines

@@ -17,7 +17,7 @@ class MyAssetConfig(Config):
     file_name: str = FILE_PATH
 
 @asset
-def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
+def raw_file_asset(config: MyAssetConfig) :
     file_name = config.file_name
     # Load file
     df = fu.load_list(file_name)
@@ -27,7 +27,6 @@ def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
         "num_rows": MetadataValue.int(len(df)),
         "file_name": MetadataValue.text(file_name)
     }
-    print(df)
     return Output(value=df, metadata=metadata)
 
 @asset_check(asset=raw_file_asset)

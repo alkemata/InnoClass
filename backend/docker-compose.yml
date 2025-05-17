@@ -184,7 +184,7 @@ services:
     container_name: frontend-server
     working_dir: /app
     volumes:
-      - ./frontend:/app
+      - ./classEngine/frontend:/app
     command: sh -c "npm install && node server.js"
     #ports:
     #  - "3100:3000"

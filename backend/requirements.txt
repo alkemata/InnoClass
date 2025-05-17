@@ -8,3 +8,4 @@ python-dotenv
 pandas
 torch
 nltk==3.8.1
+pydantic

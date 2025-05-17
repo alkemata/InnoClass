@@ -1,17 +1,18 @@
 {
-    "name": "react-jwt-auth",
-    "version": "1.0.0",
-    "private": true,
+    "name": "sdg-search-app",
+    "version": "0.0.1",
     "scripts": {
       "dev": "vite",
       "build": "vite build",
+      "preview": "vite preview",
       "serve": "node server.js"
     },
     "dependencies": {
-      "express": "^4.18.2",
       "react": "^18.2.0",
       "react-dom": "^18.2.0",
-      "react-router-dom": "^6.21.1"
+      "react-router-dom": "^6.21.1",
+      "axios": "^1.4.0",
+      "lucide-react": "^0.230.0"
     },
     "devDependencies": {
       "@vitejs/plugin-react": "^4.2.1",

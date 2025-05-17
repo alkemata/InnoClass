@@ -142,23 +142,6 @@ services:
       dagster_project:
         condition: service_started
 
-  embedsearch:
-    build:
-      context: .
-      args:
-        BUILD_ENV: python
-    container_name: embedsearch
-    volumes:
-      - ./classEngine:/app
-    working_dir: /app
-    depends_on:
-      - elasticsearch
-    networks:
-      - es_network
-    environment:
-      - ELASTICSEARCH_USER=${ELASTICSEARCH_USER}
-      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}
-
   api-server:
     build:
       context: .

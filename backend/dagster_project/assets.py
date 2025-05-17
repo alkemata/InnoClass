@@ -6,8 +6,16 @@ from dagster import (
     asset, AssetExecutionContext,
     Output, MetadataValue
 )
-from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config
+from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource
 import funcutils as fu
+
+from typing import Iterator, List, Tuple
+import sqlite3
+from itertools import islice
+
+from dagster import asset, Definitions, ResourceDefinition
+from sentence_transformers import SentenceTransformer
+from qdrant_client import QdrantClient
 
 FILE_PATH = "/opt/project_data/raw_data.dat.gz"
 
@@ -47,3 +55,47 @@ def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
         "stats": MetadataValue.md(json.dumps(stats))
     }
     return Output(value=extracted, metadata=metadata)
+
+class SBERT(ConfigurableResource):
+    model: str = "all-MiniLM-L6-v2"
+
+    def get_transformer():
+        return SentenceTransformer(model)
+
+# Qdrant client resource
+def qdrant_client_resource(_init_context) -> QdrantClient:
+    return QdrantClient(url="http://qdrant:6333", prefer_grpc=True)    
+
+@asset(required_resource_keys={"SBERT", "qdrant"}
+)
+def index_texts(context) -> None:
+    """
+    Stream a large text file line-by-line, embed each batch with SBERT,
+    and upsert into a Qdrant collection.
+    """
+    file_path: str = context.op_config["file_path"]
+    batch_size: int = context.op_config["batch_size"]
+    model: SentenceTransformer = SBERT
+    client: QdrantClient = qdrant
+
+    # (Re)create collection; adjust name as needed
+    client.recreate_collection(
+        collection_name="my_texts",
+        vectors_config={
+            "size": model.get_sentence_embedding_dimension(),
+            "distance": "Cosine",
+        },
+    )
+
+    # Stream, embed, upsert
+    with open(file_path, encoding="utf8") as f:
+        id_counter = 0
+        for batch in batcher((line.rstrip("\n") for line in f), batch_size):
+            embeddings = model.encode(batch, convert_to_numpy=True)
+            points = []
+            for text, emb in zip(batch, embeddings):
+                points.append({"id": id_counter, "vector": emb.tolist(), "payload": {"text": text}})
+                id_counter += 1
+            client.upsert(collection_name="my_texts", points=points)
+
+    context.log.info(f"Indexed {id_counter} texts into Qdrant.")

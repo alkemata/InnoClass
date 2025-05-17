@@ -192,8 +192,7 @@ def analyze_text_data(data):
     Analyzes a list of dictionaries containing text data.
     
     Parameters:
-            data (list): A list where each element is a dictionary with an 'id'
-                        and a nested dictionary under 'data' that contains a 
+            data (list): A list where each element is a dictionary with an 'id', a 
                         'sentence' and 'status'.
                         
     Returns:

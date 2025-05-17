@@ -212,10 +212,10 @@ def analyze_text_data(data):
     # Compute statistics
     stats = {
         'Nbr of entries': nbr,
-        'mean': word_counts.mean(),
-        'square_mean': np.mean(word_counts**2),
-        'min': word_counts.min(),
-        'max': word_counts.max()
+        'mean': word_counts.mean().item(),
+        'square_mean': np.mean(word_counts**2).item(),
+        'min': word_counts.min().item(),
+        'max': word_counts.max().item()
     }
     return stats
 
@@ -250,6 +250,7 @@ def compute_sentence_stats(df):
         'square_mean': square_mean_sentences
     }
 
+}
     return stats
 
 def merge_by_id(list1, list2):

@@ -157,6 +157,7 @@ def process_texts(texts, keyword1, keyword2, min_sentence_length=5):
     """
     results = []
     for item in texts:
+        print(item)
         sentences = extract_text_simple(item["original_text"], keyword1, keyword2)
         if len(sentences)==0:
             sentences=[""]

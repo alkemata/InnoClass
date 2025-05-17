@@ -219,39 +219,6 @@ def analyze_text_data(data):
     }
     return stats
 
-def compute_sentence_stats(df):
-    """
-    Computes statistics on the number of sentences per text_id.
-
-    Parameters:
-        df (pandas.DataFrame): DataFrame with columns 'text_id' and 'sentence'
-    
-    Returns:
-        stats (dict): Dictionary containing the following keys:
-                      - 'mean': average number of sentences per text_id
-                      - 'min': minimum number of sentences in any text_id
-                      - 'max': maximum number of sentences in any text_id
-                      - 'square_mean': mean of the squared sentence counts per text_id
-    """
-    # Group by text_id and count the sentences per group
-    sentence_counts = df.groupby('id')['sentence'].count()
-    
-    # Compute the required statistics
-    mean_sentences = sentence_counts.mean()
-    min_sentences = sentence_counts.min()
-    max_sentences = sentence_counts.max()
-    square_mean_sentences = np.mean(sentence_counts**2)
-    
-    # Prepare the results in a dictionary
-    stats = {
-        'mean': mean_sentences,
-        'min': min_sentences,
-        'max': max_sentences,
-        'square_mean': square_mean_sentences
-    }
-
-}
-    return stats
 
 def merge_by_id(list1, list2):
     # Create a lookup dictionary from list2 using 'id' as the key

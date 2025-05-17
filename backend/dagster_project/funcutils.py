@@ -204,7 +204,7 @@ def analyze_text_data(data):
     for entry in data:
         # Adjust the keys if your structure is different.
         nbr+=1
-        sentence = entry['text']
+        sentence = entry['sentence']
         count = len(sentence.split())
         word_counts.append(count)
     word_counts = np.array(word_counts)

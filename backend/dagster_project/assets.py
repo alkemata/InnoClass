@@ -40,9 +40,8 @@ def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckRe
 @asset(deps=[raw_file_asset])
 def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
     extracted=fu.process_texts(raw_file_asset.to_dict(orient='records'), fu.keyword1, fu.keyword2)
-    print(extracted)
     stats=fu.analyze_text_data(extracted)
-
+    print(stats)
     # Attach metadata: number of lines
     metadata = {
         "stats": MetadataValue.md(json.dumps(stats))

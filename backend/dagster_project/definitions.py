@@ -1,5 +1,5 @@
 from dagster import Definitions
-from assets import raw_file_asset,extracted_data_asset
+from assets import raw_file_asset,extracted_data_asset, prompts_asset
 from sensors import file_update_sensor
 from assets import text_column_not_empty
 from resources import SBERT, qdrant

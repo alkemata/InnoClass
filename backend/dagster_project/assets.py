@@ -3,7 +3,7 @@ import os
 import json
 from typing import List, Optional
 from dagster import (
-    asset, multi-asset AssetExecutionContext,
+    asset, multi_asset AssetExecutionContext,
     Output, MetadataValue
 )
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource

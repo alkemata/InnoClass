@@ -78,7 +78,7 @@ def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
 
  
 
-@asset(deps=extracted_data_asset,required_resource_keys={"SBERT", "qdrant"}
+@asset(deps=[extracted_data_asset],required_resource_keys={"SBERT", "qdrant"}
 )
 def index_texts(context) -> None:
     """

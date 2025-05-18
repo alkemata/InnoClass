@@ -6,7 +6,7 @@ from dagster import (
     asset, multi_asset, AssetExecutionContext,
     Output, MetadataValue
 )
-from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource
+from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource, AssetSpec
 import funcutils as fu
 
 from typing import Iterator, List, Tuple
@@ -35,7 +35,7 @@ def raw_file_asset(config: MyAssetConfig) :
     }
     return Output(value=df, metadata=metadata)
 
-@multi_asset(specs=[dg.AssetSpec("targets_asset"), dg.AssetSpec("goals_asset")])
+@multi_asset(specs=[AssetSpec("targets_asset"), AssetSpec("goals_asset")])
 def prompts_asset(config: MyAssetConfig) :
     file_name_targets = config.filename_prompts_targets
     file_name_goals= config.filename_prompts_goals

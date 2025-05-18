@@ -1,5 +1,6 @@
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
+from dagster import ConfigurableResource
 
 class SBERT(ConfigurableResource):
     model: str = "all-MiniLM-L6-v2"

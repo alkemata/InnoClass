@@ -2,7 +2,7 @@
     "name": "sdg-search-app",
     "version": "0.0.1",
     "scripts": {
-      "dev": "vite",
+      "dev": "vite --host 0.0.0.0 --port 9000",
       "build": "vite build",
       "preview": "vite preview",
       "serve": "node server.js"

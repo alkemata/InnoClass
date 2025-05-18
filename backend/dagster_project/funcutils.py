@@ -239,3 +239,33 @@ def merge_by_id(list1, list2):
         merged.append(merged_item)
     
     return merged
+
+# function used tor ead goals and targets files
+def read_dataframe(filepath):
+    """
+    Reads a pandas DataFrame from a pickle file and converts it to a list of dictionaries.
+
+    Args:
+        filepath (str): The path to the pickle file.
+
+    Returns:
+        list of dict: A list of dictionaries representing the DataFrame, or None if an error occurs.
+    """
+    try:
+        with open("./data/"+filepath, 'rb') as f:
+            df = pickle.load(f)
+        print("sdgs read")
+        if isinstance(df, pd.DataFrame):
+            return df.to_dict(orient='records')
+        else:
+            print(f"Error: Pickle file does not contain a pandas DataFrame.")
+            return None
+    except FileNotFoundError:
+        print(f"Error: File not found at {filepath}")
+        return None
+    except pickle.UnpicklingError:
+        print(f"Error: Could not unpickle the file at {filepath}. It might be corrupted or not a pickle file.")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None

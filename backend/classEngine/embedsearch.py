@@ -213,7 +213,7 @@ def hybrid_search_with_rrf(es_client, index, query_text, embedding,
 def prep_text(text):
     """
     function for preprocessing text
-    """n ---
+    """
     FILE1_PATH = config["filename_sdg"]
 
     # remove trailing characters (\s\n) and convert to lowercase

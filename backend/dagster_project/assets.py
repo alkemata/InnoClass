@@ -17,16 +17,15 @@ from dagster import asset, Definitions, ResourceDefinition
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 
-FILE_PATH = "/opt/project_data/raw_data.dat.gz"
-
-
 
 class MyAssetConfig(Config):
-    file_name: str = FILE_PATH
+    filename_texts: str = "/opt/project_data/raw_data.dat.gz"
+    filename_prompts_targets: str ="/opt/project_data/sdg_targets.dat"
+    filename_prompts_goals: str ="/opt/project_data/sdg_goals.dat"
 
 @asset
 def raw_file_asset(config: MyAssetConfig) :
-    file_name = config.file_name
+    file_name = config.filename_texts
     # Load file
     df = fu.load_list(file_name)
     # Attach metadata: number of lines
@@ -35,6 +34,27 @@ def raw_file_asset(config: MyAssetConfig) :
         "file_name": MetadataValue.text(file_name)
     }
     return Output(value=df, metadata=metadata)
+
+@multi_asset(specs=[dg.AssetSpec("targets_asset"), dg.AssetSpec("goals_asset")])
+def prompts_asset(config: MyAssetConfig) :
+    file_name_targets = config.filename_prompts_targets
+    file_name_goals= config.filename_prompts_goals
+    # Load file
+    df1 = fu.read_dataframe(file_name_targets)
+    df2 = fu.read_dataframe(file_name_goals)
+    # Attach metadata: number of lines
+    metadata1 = {
+        "num_rows": MetadataValue.int(len(df1)),
+        "file_name": MetadataValue.text(file_name_targets)
+    }
+    metadata2 = {
+        "num_rows": MetadataValue.int(len(df2)),
+        "file_name": MetadataValue.text(file_name_goalss)
+    }
+    yield dg.MaterializeResult(value=d1,asset_key="targets_asset", metadata=metadata1)
+    yield dg.MaterializeResult(value=d2,asset_key="goals_asset", metadata=metadata2)
+
+
 
 @asset_check(asset=raw_file_asset)
 def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckResult:
@@ -56,17 +76,9 @@ def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
     }
     return Output(value=extracted, metadata=metadata)
 
-class SBERT(ConfigurableResource):
-    model: str = "all-MiniLM-L6-v2"
+ 
 
-    def get_transformer():
-        return SentenceTransformer(model)
-
-# Qdrant client resource
-def qdrant_client_resource(_init_context) -> QdrantClient:
-    return QdrantClient(url="http://qdrant:6333", prefer_grpc=True)    
-
-@asset(required_resource_keys={"SBERT", "qdrant"}
+@asset(deps=extracted_data_asset,required_resource_keys={"SBERT", "qdrant"}
 )
 def index_texts(context) -> None:
     """

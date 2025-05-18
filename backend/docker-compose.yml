@@ -185,7 +185,7 @@ services:
     working_dir: /app
     volumes:
       - ./classEngine/frontend:/app
-    command: sh -c "npm install && node server.js"
+    command: sh -c "npm install && run dev"
     #ports:
     #  - "3100:3000"
     depends_on:

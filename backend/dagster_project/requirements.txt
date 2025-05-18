@@ -3,3 +3,5 @@ dagster_docker
 pandas
 spacy
 beautifulsoup4
+sentence-transformers
+qdrant-client

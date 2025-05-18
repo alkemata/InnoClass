@@ -172,7 +172,7 @@ services:
   frontend-builder:
     build:
       context: .
-      dockerfile: ./frontend/Dockerfile
+      dockerfile: ./ClassEngine/frontend/Dockerfile
     container_name: frontend-builder
     working_dir: /app
     volumes:
@@ -184,7 +184,7 @@ services:
   frontend-server:
     build:
       context: .
-      dockerfile: ./frontend/Dockerfile
+      dockerfile: ./ClassEngine/frontend/Dockerfile
     container_name: frontend-server
     working_dir: /app
     volumes:

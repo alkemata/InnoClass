@@ -1,7 +1,7 @@
 # Stage 1: install dependencies
 FROM node:18-alpine AS deps
 WORKDIR /app
-COPY ./classEngine/frontend/package.json package-lock.json ./
+COPY ./frontend/package.json package-lock.json ./
 RUN npm ci
 
 # Stage 2: dev environment

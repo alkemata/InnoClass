@@ -170,22 +170,26 @@ services:
       - "traefik.http.services.api.loadbalancer.server.port=8000"
 
   frontend-builder:
-    image: node:18
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
     container_name: frontend-builder
     working_dir: /app
     volumes:
       - ./classEngine/frontend:/app
       - ./classEngine/frontend/dist:/app/dist
-    command: sh -c "npm install && npm run build"
+    command: sh -c "npm run build"
     restart: "no"
 
   frontend-server:
-    image: node:18
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
     container_name: frontend-server
     working_dir: /app
     volumes:
       - ./classEngine/frontend:/app
-    command: sh -c "npm install && npm run dev"
+    command: sh -c "npm run dev"
     ports:
       - 9000:9000
     expose: 

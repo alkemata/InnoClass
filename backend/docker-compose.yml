@@ -186,8 +186,8 @@ services:
     volumes:
       - ./classEngine/frontend:/app
     command: sh -c "npm install && npm run dev"
-    #ports:
-    #  - "3100:3000"
+    ports:
+      - 9000:9000
     depends_on:
       - frontend-builder
     restart: "no"
@@ -196,7 +196,7 @@ services:
       - "traefik.http.routers.frontend.rule=Host(`innoclass.alkemata.com`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      - "traefik.http.services.frontend.loadbalancer.server.port=3100"
+      - "traefik.http.services.frontend.loadbalancer.server.port=9000"
 
 networks:
   es_network:

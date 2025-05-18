@@ -22,6 +22,8 @@ class MyAssetConfig(Config):
     filename_texts: str = "/opt/project_data/raw_data.dat.gz"
     filename_prompts_targets: str ="/opt/project_data/sdg_targets.dat"
     filename_prompts_goals: str ="/opt/project_data/sdg_goals.dat"
+    current_collection: str = "test"
+    batch_size: int=10
 
 @asset
 def raw_file_asset(config: MyAssetConfig) :
@@ -68,46 +70,84 @@ def text_column_not_empty(context, raw_file_asset: pd.DataFrame) -> AssetCheckRe
 @asset(deps=[raw_file_asset])
 def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
     extracted=fu.process_texts(raw_file_asset.to_dict(orient='records'), fu.keyword1, fu.keyword2)
+
     stats=fu.analyze_text_data(extracted)
-    print(stats)
     # Attach metadata: number of lines
     metadata = {
         "stats": MetadataValue.md(json.dumps(stats))
     }
+
     return Output(value=extracted, metadata=metadata)
 
- 
 
-@asset(deps=[extracted_data_asset],required_resource_keys={"SBERT", "qdrant"}
+@asset(deps=[extracted_data_asset,targets_asset,goals_asset],required_resource_keys={"SBERT", "qdrant"}
 )
-def index_texts(context) -> None:
+def index_texts(context,config: MyAssetConfig) -> None:
     """
     Stream a large text file line-by-line, embed each batch with SBERT,
     and upsert into a Qdrant collection.
     """
-    file_path: str = context.op_config["file_path"]
-    batch_size: int = context.op_config["batch_size"]
+    batch_size: int = config.batch_size
     model: SentenceTransformer = SBERT
     client: QdrantClient = qdrant
 
     # (Re)create collection; adjust name as needed
     client.recreate_collection(
-        collection_name="my_texts",
+        collection_name=config.current_collection,
         vectors_config={
-            "size": model.get_sentence_embedding_dimension(),
+            "size": SBERT.get_sentence_embedding_dimension(),
             "distance": "Cosine",
         },
     )
+    texts = extracted_data_asset['text'] 
+    ids = extracted_data_asset['text'] 
+    embeddings = model.encode(texts, batch_size=batch_size,convert_to_numpy=True)
+    points = [
+                {
+                    "id": int(ids),
+                    "vector": embeddgings.tolist(),
+                    "payload": {"class": ""}
+                }
+                for doc_id, text, emb in zip(ids, texts, embeddings)
+            ]
+    client.upsert(collection_name=config.current_collection, points=points)
 
-    # Stream, embed, upsert
-    with open(file_path, encoding="utf8") as f:
-        id_counter = 0
-        for batch in batcher((line.rstrip("\n") for line in f), batch_size):
-            embeddings = model.encode(batch, convert_to_numpy=True)
-            points = []
-            for text, emb in zip(batch, embeddings):
-                points.append({"id": id_counter, "vector": emb.tolist(), "payload": {"text": text}})
-                id_counter += 1
-            client.upsert(collection_name="my_texts", points=points)
+    context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
-    context.log.info(f"Indexed {id_counter} texts into Qdrant.")
+# 4. Asset: Run threshold search for 17 queries and persist scores
+# ------------------
+@asset(
+    config_schema={
+        "queries": list,
+        "threshold": float,
+        "limit": int,
+        "output_db_path": str,
+    },
+    required_resource_keys={"model", "qdrant"}
+)
+def search_and_store(context) -> str:
+    """
+    Encode a list of queries, run range searches in Qdrant,
+    and save (query_id, doc_id, score) triples to SQLite on disk.
+    """
+    queries: List[str] = context.op_config["queries"]
+    threshold: float = context.op_config["threshold"]
+    limit: int = context.op_config["limit"]
+    output_db: str = context.op_config["output_db_path"]
+
+    # Encode queries
+    q_embs = model.encode(queries, convert_to_numpy=True)
+    for q_idx, q_emb in enumerate(q_embs):
+        hits = client.search(
+            collection_name="my_texts",
+            query_vector=q_emb.tolist(),
+            limit=limit,
+            score_threshold=threshold,
+        )
+        rows: List[Tuple[int, int, float]] = [(q_idx, hit.id, hit.score) for hit in hits]
+        cur.executemany("INSERT OR IGNORE INTO results VALUES (?, ?, ?)", rows)
+        conn.commit()
+        context.log.info(f"Query {q_idx}: saved {len(rows)} hits.")
+
+    conn.close()
+    return output_db

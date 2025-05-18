@@ -192,6 +192,8 @@ services:
       - frontend-builder
       - traefik
     restart: "no"
+    networks:
+      - es_network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`innoclass.alkemata.com`)"

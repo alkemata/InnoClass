@@ -1,5 +1,5 @@
 # Stage 1: install dependencies
-FROM node:18-alpine AS deps
+FROM node:18-alpine
 WORKDIR /app
 COPY ./classEngine/frontend/package.json ./
 RUN npm install

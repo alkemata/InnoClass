@@ -1,14 +1,14 @@
-import React from 'react';
-import TopBar from './components/TopBar';
-import SearchPage from './pages/SearchPage';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import SearchPage from "./pages/SearchPage";
+import ResultsPage from "./pages/ResultsPage";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <TopBar />
-      <div className="p-4">
-        <SearchPage />
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<SearchPage />} />
+        <Route path="/results" element={<ResultsPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

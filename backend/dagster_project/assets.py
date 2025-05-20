@@ -114,14 +114,11 @@ def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,config: MyA
     qdrant_client: QdrantClient = qdrant_resource.get_client
     es_client: ElasticSearch= es_resource.get_client
 
-    # (Re)create collection; adjust name as needed
-    qdrant_client.recreate_collection(
+    if not qdrant_client.collection_exists(config.current_collection):
+        qdrant_client.create_collection(
         collection_name=config.current_collection,
-        vectors_config={
-            "size": model.get_sentence_embedding_dimension(),
-            "distance": "Cosine",
-        },
-    )
+        vectors_config=VectorParams(size=model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
+        )
     texts = extracted_data_asset['text'] 
     ids = extracted_data_asset['id'] 
     embeddings = model.encode(texts, batch_size=batch_size,convert_to_numpy=True)

@@ -1,4 +1,4 @@
-from dagster import Definitions, load_assets_from_modules(
+from dagster import Definitions, load_assets_from_modules
 
 from sensors import file_update_sensor
 from assets import text_column_not_empty

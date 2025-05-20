@@ -22,7 +22,7 @@ defs = Definitions(
     # Uncomment and customize if using resources like IO managers
     resources={
         "model": SBERT(),
-        "qdrant": qdrant(),
-        "es": es()
+        "qdrant_resource": qdrant(),
+        "es_resource": es()
     }
 )

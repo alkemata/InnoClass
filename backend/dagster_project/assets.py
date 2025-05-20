@@ -61,7 +61,7 @@ def prompts_asset(config: MyAssetConfig) :
                 "num_rows": MetadataValue.int(len(df1)), # Removed .tolist() - len() works directly on DataFrame
                 "file_name": MetadataValue.text(file_name_targets)
             }
-            yield MaterializeResult(value=df1, asset_key="targets_asset", metadata=metadata1)
+            yield MaterializeResult(asset_key="targets_asset", metadata=metadata1)
         else:
             # You can log here if you add context: AssetExecutionContext to the signature
             # context.log.warn(f"targets_asset could not be materialized due to empty DataFrame.")
@@ -72,7 +72,7 @@ def prompts_asset(config: MyAssetConfig) :
                 "num_rows": MetadataValue.int(len(df2)), # Removed .tolist() - len() works directly on DataFrame
                 "file_name": MetadataValue.text(file_name_goals)
             }
-            yield MaterializeResult(value=df2, asset_key="goals_asset", metadata=metadata2)
+            yield MaterializeResult(asset_key="goals_asset", metadata=metadata2)
         else:
             # context.log.warn(f"goals_asset could not be materialized due to empty DataFrame.")
             exit()

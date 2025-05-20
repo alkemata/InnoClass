@@ -43,7 +43,8 @@ def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
     # Attach metadata: number of lines
     metadata = {
         "num_rows": MetadataValue.int(len(df)),
-        "file_name": MetadataValue.text(file_name)
+        "file_name": MetadataValue.text(file_name),
+        "preview": MetadataValue.md(df.to_markdown())
     }
     return Output(value=df, metadata=metadata)
 

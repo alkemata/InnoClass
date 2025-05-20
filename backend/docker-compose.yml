@@ -80,6 +80,8 @@ services:
       - '4000'
     environment:
       DAGSTER_CURRENT_IMAGE: 'dagster_project'
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTICSEARCH_USER: ${ELASTICSEARCH_USER} 
     volumes:
       - ./classEngine/data:/opt/project_data
     networks:

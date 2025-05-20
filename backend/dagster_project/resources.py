@@ -9,7 +9,7 @@ class SBERT(ConfigurableResource):
         return SentenceTransformer(model)
 
 class qdrant(ConfigurableResource):
-    url: str = "http://qdrant:6333"
+    url: str = "http://qdrant:6334"
 
 #   Qdrant client resource
     def get_client(self) -> QdrantClient:

@@ -46,23 +46,38 @@ def raw_file_asset(config: MyAssetConfig) :
 def prompts_asset(config: MyAssetConfig) :
     file_name_targets = config.filename_prompts_targets
     file_name_goals= config.filename_prompts_goals
-    # Load file
+
+    df1: Optional[pd.DataFrame] = None # Initialize to None
+    df2: Optional[pd.DataFrame] = None # Initialize to None
+
     try:
         df1 = fu.read_dataframe(file_name_targets)
         df2 = fu.read_dataframe(file_name_goals)
+
+        # Attach metadata: number of lines
+        # Check if df1 and df2 are not None before trying to use them
+        if df1 is not None:
+            metadata1 = {
+                "num_rows": MetadataValue.int(len(df1)), # Removed .tolist() - len() works directly on DataFrame
+                "file_name": MetadataValue.text(file_name_targets)
+            }
+            yield MaterializeResult(value=df1, asset_key="targets_asset", metadata=metadata1)
+        else:
+            # You can log here if you add context: AssetExecutionContext to the signature
+            # context.log.warn(f"targets_asset could not be materialized due to empty DataFrame.")
+            pass # Or raise an error if an empty df is an explicit failure
+
+        if df2 is not None:
+            metadata2 = {
+                "num_rows": MetadataValue.int(len(df2)), # Removed .tolist() - len() works directly on DataFrame
+                "file_name": MetadataValue.text(file_name_goals)
+            }
+            yield MaterializeResult(value=df2, asset_key="goals_asset", metadata=metadata2)
+        else:
+            # context.log.warn(f"goals_asset could not be materialized due to empty DataFrame.")
+            pass # Or raise an error if an empty df is an explicit failure
     except Exception as e:
             print(f"Error loading File: {e}")   
-    # Attach metadata: number of lines
-    metadata1 = {
-        "num_rows": MetadataValue.int(len(df1.tolist())),
-        "file_name": MetadataValue.text(file_name_targets)
-    }
-    metadata2 = {
-        "num_rows": MetadataValue.int(len(df2.tolist())),
-        "file_name": MetadataValue.text(file_name_goals)
-    }
-    yield dg.MaterializeResult(value=df1,asset_key="targets_asset", metadata=metadata1)
-    yield dg.MaterializeResult(value=df2,asset_key="goals_asset", metadata=metadata2)
 
 
 

@@ -5,9 +5,9 @@ from assets import text_column_not_empty
 from resources import SBERT, qdrant,es
 #from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
-import dagster_project as assets
+import . as assets
 
-all_assets=oad_assets_from_modules([assets])
+all_assets=load_assets_from_modules([assets])
 
 defs = Definitions(
     assets=[

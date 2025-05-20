@@ -5,6 +5,7 @@ import re
 import xml.etree.ElementTree as ET
 import spacy
 import json
+import pickle
 from typing import List, Optional
 from bs4 import BeautifulSoup  # Missing import
 import numpy as np          # Missing import

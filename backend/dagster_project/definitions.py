@@ -21,8 +21,8 @@ defs = Definitions(
     ],
     # Uncomment and customize if using resources like IO managers
     resources={
-        "SBERT": SBERT,
-        "qdrant": qdrant,
-        "es": es
+        "SBERT": SBERT(),
+        "qdrant": qdrant(),
+        "es": es()
     }
 )

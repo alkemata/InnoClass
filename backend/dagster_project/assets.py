@@ -137,9 +137,9 @@ def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, q
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
         {
-            "id": uuid.UUID(doc_id).hex,
+            "id": uuid.UUID.fromString(doc_id),
             "vector": emb.tolist(),
-            "payload": {"epo_id": str(ids), "class": ""}
+            "payload": {"epo_id": str(doc_id), "class": ""}
         }
         for doc_id, text, emb in zip(ids, texts, embeddings)
     ]

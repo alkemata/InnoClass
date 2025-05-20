@@ -31,7 +31,10 @@ class MyAssetConfig(Config):
 def raw_file_asset(config: MyAssetConfig) :
     file_name = config.filename_texts
     # Load file
-    df = fu.load_list(file_name)
+    try:
+        df = fu.load_list(file_name)
+    except Exception as e:
+            print(f"Error loading File: {e}")    
     # Attach metadata: number of lines
     metadata = {
         "num_rows": MetadataValue.int(len(df)),
@@ -44,15 +47,18 @@ def prompts_asset(config: MyAssetConfig) :
     file_name_targets = config.filename_prompts_targets
     file_name_goals= config.filename_prompts_goals
     # Load file
-    df1 = fu.read_dataframe(file_name_targets)
-    df2 = fu.read_dataframe(file_name_goals)
+    try:
+        df1 = fu.read_dataframe(file_name_targets)
+        df2 = fu.read_dataframe(file_name_goals)
+    except Exception as e:
+            print(f"Error loading File: {e}")   
     # Attach metadata: number of lines
     metadata1 = {
-        "num_rows": MetadataValue.int(len(df1)),
+        "num_rows": MetadataValue.int(len(df1.tolist())),
         "file_name": MetadataValue.text(file_name_targets)
     }
     metadata2 = {
-        "num_rows": MetadataValue.int(len(df2)),
+        "num_rows": MetadataValue.int(len(df2.tolist())),
         "file_name": MetadataValue.text(file_name_goals)
     }
     yield dg.MaterializeResult(value=df1,asset_key="targets_asset", metadata=metadata1)

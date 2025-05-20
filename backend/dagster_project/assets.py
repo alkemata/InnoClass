@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import json
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from dagster import (
     asset, multi_asset, AssetExecutionContext,
     Output, MetadataValue, MaterializeResult
@@ -9,15 +9,10 @@ from dagster import (
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource, AssetSpec
 import funcutils as fu
 
-from typing import Iterator, List, Tuple
-import sqlite3
-from itertools import islice
-
-from dagster import asset, Definitions, ResourceDefinition
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient, models
 from elasticsearch import Elasticsearch, helpers
-from resources import SBERT, qdrant, es
+# from resources import SBERT, qdrant, es # Removed direct import, will access via context
 from qdrant_client.models import VectorParams, Distance
 import uuid
 
@@ -28,6 +23,9 @@ class MyAssetConfig(Config):
     filename_prompts_goals: str = "/opt/project_data/sdg_goals.dat"
     current_collection: str = "test"
     batch_size: int = 10
+    search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
+    threshold: float =0.6
+
 
 
 @asset
@@ -92,7 +90,6 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
     return result1, result2
 
 
-
 @asset_check(asset=raw_file_asset)
 def text_column_not_empty(raw_file_asset: pd.DataFrame) -> AssetCheckResult:
     if "text" not in raw_file_asset.columns:
@@ -102,9 +99,8 @@ def text_column_not_empty(raw_file_asset: pd.DataFrame) -> AssetCheckResult:
     return AssetCheckResult(passed=True)
 
 
-
 @asset(deps=[raw_file_asset])
-def extracted_data_asset(raw_file_asset: pd.DataFrame, config: MyAssetConfig) -> Output[List[dict]]: # Changed return type hint
+def extracted_data_asset(raw_file_asset: pd.DataFrame, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     extracted = fu.process_texts(raw_file_asset.to_dict(orient='records'), fu.keyword1, fu.keyword2)
 
     stats = fu.analyze_text_data(extracted)
@@ -113,19 +109,19 @@ def extracted_data_asset(raw_file_asset: pd.DataFrame, config: MyAssetConfig) ->
         "stats": MetadataValue.md(json.dumps(stats))
     }
 
-    return Output(value=extracted, metadata=metadata) # Ensure you return the processed data
+    return Output(value=extracted, metadata=metadata)  # Ensure you return the processed data
 
 
-@asset(deps=["extracted_data_asset", "targets_asset", "goals_asset"])
-def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, qdrant_resource: qdrant, config: MyAssetConfig, extracted_data_asset: List[dict]) -> None: # Added extracted_data_asset as argument
+@asset(deps=["extracted_data_asset"])
+def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted_data_asset: List[dict]) -> None:  # Added extracted_data_asset
     """
     Stream a large text file line-by-line, embed each batch with SBERT,
     and upsert into a Qdrant collection.
     """
     batch_size: int = config.batch_size
-    sbert_model: SentenceTransformer = model.get_transformer()
-    qdrant_client: QdrantClient = qdrant_resource.get_client()
-    es_client: Elasticsearch = es_resource.get_client()
+    sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
+    qdrant_client: QdrantClient = context.resources.qdrant.get_client()
+    es_client: Elasticsearch = context.resources.es.get_client()
 
     if not qdrant_client.collection_exists(config.current_collection):
         qdrant_client.create_collection(
@@ -133,13 +129,61 @@ def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, q
             vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
         )
 
-    texts = [item['sentence'] for item in extracted_data_asset] # Extract texts
-    ids = [item['id'] for item in extracted_data_asset]     # Extract ids
+    texts = [item['sentence'] for item in extracted_data_asset]  # Extract texts
+    ids = [item['id'] for item in extracted_asset]  # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-       models.PointStruct(id=idi,vector= emb.tolist(),payload= {"epo_id": str(docs_id), "class": ""}
-        )         for idi, text, emb,docs_id in zip(range(1,len(ids)),texts, embeddings, ids)
+        models.PointStruct(id=idi, vector=emb.tolist(), payload={"epo_id": str(docs_id), "class": ""})
+        for idi, text, emb, docs_id in zip(range(1, len(ids) + 1), texts, embeddings, ids) # Corrected the range
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
+
+
+
+# 4. Asset: Run threshold search for 17 queries and persist scores
+# ------------------
+@asset(
+    deps=["index_texts", "targets_asset", "goals_asset"],
+    config_schema={
+        "queries": List[str],
+        "threshold": float,
+        "limit": int,
+        "output_db_path": str,
+    })
+def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> str:
+    """
+    Encode a list of queries, run range searches in Qdrant,
+    and save scores to a CSV file.
+    """
+    queries = goals_asset.tolist()
+    threshold: float = config.threshold
+    limit: int = config.limit
+    output_file_path: str = config.search_results_file # Get output file from config
+
+    sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
+    qdrant_client: QdrantClient = context.resources.qdrant.get_client()
+
+    # Encode queries
+    q_embs = sbert_model.encode(queries, convert_to_numpy=True)
+    results = [] # List to store results before saving
+    for q_idx, q_emb in enumerate(q_embs):
+        hits = qdrant_client.search(
+            collection_name=config.current_collection,
+            query_vector=q_emb.tolist(),
+            score_threshold=threshold,
+        )
+        for hit in hits:
+            results.append({
+                "query_index": q_idx,
+                "hit_id": hit.id,
+                "score": hit.score,
+                "epo_id": hit.payload.get("epo_id"), # Extract epo_id from payload
+            })
+
+    # Convert results to DataFrame and save to CSV
+    df_results = pd.DataFrame(results)
+    df_results.to_csv(output_file_path, index=False) # save the results
+    context.log.info(f"Search results saved to {output_file_path}")
+    return output_file_path # Return file path

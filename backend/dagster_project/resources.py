@@ -5,14 +5,14 @@ from dagster import ConfigurableResource, EnvVar
 class SBERT(ConfigurableResource):
     model: str = "all-MiniLM-L6-v2"
 
-    def get_transformer():
+    def get_transformer(self):
         return SentenceTransformer(model)
 
 class qdrant(ConfigurableResource):
     url: str = "http://qdrant:6333"
 
 #   Qdrant client resource
-    def qdrant_client_resource(_init_context) -> QdrantClient:
+    def get_client(self) -> QdrantClient:
         return QdrantClient(url=url, prefer_grpc=True)   
 
 class es(ConfigurableResource):
@@ -20,7 +20,7 @@ class es(ConfigurableResource):
     ELASTICSEARCH_USER:str = EnvVar("ELASTICSEARCH_USER")
     ELASTICSEARCH_PASSWORD:str = EnvVar("ELASTICSEARCH_PASSWORD")
 
-    def es_resource(_init_context):
+    def get_client(self):
         return Elasticsearch(
                 url,
                     basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),

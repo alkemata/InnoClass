@@ -16,6 +16,7 @@ from itertools import islice
 from dagster import asset, Definitions, ResourceDefinition
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
+from elasticsearch import Elasticsearch, helpers
 
 
 class MyAssetConfig(Config):
@@ -51,10 +52,10 @@ def prompts_asset(config: MyAssetConfig) :
     }
     metadata2 = {
         "num_rows": MetadataValue.int(len(df2)),
-        "file_name": MetadataValue.text(file_name_goalss)
+        "file_name": MetadataValue.text(file_name_goals)
     }
-    yield dg.MaterializeResult(value=d1,asset_key="targets_asset", metadata=metadata1)
-    yield dg.MaterializeResult(value=d2,asset_key="goals_asset", metadata=metadata2)
+    yield dg.MaterializeResult(value=df1,asset_key="targets_asset", metadata=metadata1)
+    yield dg.MaterializeResult(value=df2,asset_key="goals_asset", metadata=metadata2)
 
 
 
@@ -82,20 +83,21 @@ def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
 
 @asset(deps=["extracted_data_asset","targets_asset","goals_asset"],required_resource_keys={"SBERT", "qdrant"}
 )
-def index_texts(context,config: MyAssetConfig) -> None:
+def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,context,config: MyAssetConfig) -> None:
     """
     Stream a large text file line-by-line, embed each batch with SBERT,
     and upsert into a Qdrant collection.
     """
     batch_size: int = config.batch_size
-    model: SentenceTransformer = SBERT
-    client: QdrantClient = qdrant
+    model: SentenceTransformer = model.get_transformer
+    qdrant_client: QdrantClient = qdrant_resource.get_client
+    es_client: ElasticSearch= es_resource.get_client
 
     # (Re)create collection; adjust name as needed
-    client.recreate_collection(
+    es_client.recreate_collection(
         collection_name=config.current_collection,
         vectors_config={
-            "size": SBERT.get_sentence_embedding_dimension(),
+            "size": model.get_sentence_embedding_dimension(),
             "distance": "Cosine",
         },
     )
@@ -105,18 +107,18 @@ def index_texts(context,config: MyAssetConfig) -> None:
     points = [
                 {
                     "id": int(ids),
-                    "vector": embeddgings.tolist(),
+                    "vector": embeddings.tolist(),
                     "payload": {"class": ""}
                 }
                 for doc_id, text, emb in zip(ids, texts, embeddings)
             ]
-    client.upsert(collection_name=config.current_collection, points=points)
+    es_client.upsert(collection_name=config.current_collection, points=points)
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
 # 4. Asset: Run threshold search for 17 queries and persist scores
 # ------------------
-@asset(
+""" @asset(
     config_schema={
         "queries": list,
         "threshold": float,
@@ -126,10 +128,10 @@ def index_texts(context,config: MyAssetConfig) -> None:
     required_resource_keys={"model", "qdrant"},
 )
 def search_and_store(context) -> str:
-    """
-    Encode a list of queries, run range searches in Qdrant,
-    and save (query_id, doc_id, score) triples to SQLite on disk.
-    """
+    
+     Encode a list of queries, run range searches in Qdrant,
+     and save (query_id, doc_id, score) triples to SQLite on disk.
+    
     queries: List[str] = context.op_config["queries"]
     threshold: float = context.op_config["threshold"]
     limit: int = context.op_config["limit"]
@@ -150,4 +152,4 @@ def search_and_store(context) -> str:
         context.log.info(f"Query {q_idx}: saved {len(rows)} hits.")
 
     conn.close()
-    return output_db
+    return output_db """

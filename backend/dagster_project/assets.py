@@ -17,6 +17,7 @@ from dagster import asset, Definitions, ResourceDefinition
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from elasticsearch import Elasticsearch, helpers
+from resources import SBERT, qdrant, es
 
 
 class MyAssetConfig(Config):

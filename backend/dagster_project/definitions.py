@@ -20,8 +20,8 @@ defs = Definitions(
     ],
     # Uncomment and customize if using resources like IO managers
     resources={
-        "SBERT": ResourceDefinition.hardcoded_resource(SBERT),
-        "qdrant": ResourceDefinition.hardcoded_resource(qdrant),
-        "es": ResourceDefinition.hardcoded_resource(es)
+        "SBERT": SBERT,
+        "qdrant": qdrant,
+        "es": es
     }
 )

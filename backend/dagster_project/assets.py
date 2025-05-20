@@ -110,9 +110,9 @@ def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,config: MyA
     and upsert into a Qdrant collection.
     """
     batch_size: int = config.batch_size
-    model: SentenceTransformer = model.get_transformer
-    qdrant_client: QdrantClient = qdrant_resource.get_client
-    es_client: ElasticSearch= es_resource.get_client
+    model: SentenceTransformer = model.get_transformer()
+    qdrant_client: QdrantClient = qdrant_resource.get_client()
+    es_client: ElasticSearch= es_resource.get_client()
 
     if not qdrant_client.collection_exists(config.current_collection):
         qdrant_client.create_collection(

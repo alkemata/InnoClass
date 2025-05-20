@@ -15,7 +15,7 @@ from itertools import islice
 
 from dagster import asset, Definitions, ResourceDefinition
 from sentence_transformers import SentenceTransformer
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 from elasticsearch import Elasticsearch, helpers
 from resources import SBERT, qdrant, es
 from qdrant_client.models import VectorParams, Distance
@@ -136,12 +136,8 @@ def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, q
     ids = [item['id'] for item in extracted_data_asset]     # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-       {
-            "id":idi,
-            "vector": emb.tolist(),
-            "payload": {"epo_id": str(docs_id), "class": ""}
-        }
-        for idi, text, emb,docs_id in zip(range(1,len(ids)),texts, embeddings, ids)
+       models.PointStruct(id=idi,vector= emb.tolist(),payload= {"epo_id": str(docs_id), "class": ""}
+        )         for idi, text, emb,docs_id in zip(range(1,len(ids)),texts, embeddings, ids)
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
 

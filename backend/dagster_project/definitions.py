@@ -21,7 +21,7 @@ defs = Definitions(
     ],
     # Uncomment and customize if using resources like IO managers
     resources={
-        "SBERT": SBERT(),
+        "model": SBERT(),
         "qdrant": qdrant(),
         "es": es()
     }

@@ -123,7 +123,7 @@ def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,config: MyA
         },
     )
     texts = extracted_data_asset['text'] 
-    ids = extracted_data_asset['text'] 
+    ids = extracted_data_asset['id'] 
     embeddings = model.encode(texts, batch_size=batch_size,convert_to_numpy=True)
     points = [
                 {
@@ -133,7 +133,7 @@ def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,config: MyA
                 }
                 for doc_id, text, emb in zip(ids, texts, embeddings)
             ]
-    es_client.upsert(collection_name=config.current_collection, points=points)
+    qdrant_client.upsert(collection_name=config.current_collection, points=points)
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 

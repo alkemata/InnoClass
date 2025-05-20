@@ -82,8 +82,7 @@ def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
     return Output(value=extracted, metadata=metadata)
 
 
-@asset(deps=["extracted_data_asset","targets_asset","goals_asset"],required_resource_keys={"SBERT", "qdrant"}
-)
+@asset(deps=["extracted_data_asset","targets_asset","goals_asset"])
 def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,context,config: MyAssetConfig) -> None:
     """
     Stream a large text file line-by-line, embed each batch with SBERT,

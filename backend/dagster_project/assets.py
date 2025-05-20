@@ -131,7 +131,7 @@ def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, q
             vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
         )
 
-    texts = [item['text'] for item in extracted_data_asset] # Extract texts
+    texts = [item['sentence'] for item in extracted_data_asset] # Extract texts
     ids = [item['id'] for item in extracted_data_asset]     # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [

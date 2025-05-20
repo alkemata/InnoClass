@@ -1,6 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from dagster import ConfigurableResource, EnvVar
+from elasticsearch import Elasticsearch, helpers
 
 class SBERT(ConfigurableResource):
     model_name: str = "all-MiniLM-L6-v2"

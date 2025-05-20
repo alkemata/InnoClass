@@ -23,19 +23,22 @@ from qdrant_client.models import VectorParams, Distance
 
 class MyAssetConfig(Config):
     filename_texts: str = "/opt/project_data/raw_data.dat.gz"
-    filename_prompts_targets: str ="/opt/project_data/sdg_targets.dat"
-    filename_prompts_goals: str ="/opt/project_data/sdg_goals.dat"
+    filename_prompts_targets: str = "/opt/project_data/sdg_targets.dat"
+    filename_prompts_goals: str = "/opt/project_data/sdg_goals.dat"
     current_collection: str = "test"
-    batch_size: int=10
+    batch_size: int = 10
+
 
 @asset
-def raw_file_asset(config: MyAssetConfig) :
+def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
     file_name = config.filename_texts
     # Load file
     try:
         df = fu.load_list(file_name)
     except Exception as e:
-            print(f"Error loading File: {e}")    
+        print(f"Error loading File: {e}")
+        raise  # Re-raise the exception to fail the asset
+
     # Attach metadata: number of lines
     metadata = {
         "num_rows": MetadataValue.int(len(df)),
@@ -43,13 +46,16 @@ def raw_file_asset(config: MyAssetConfig) :
     }
     return Output(value=df, metadata=metadata)
 
-@multi_asset(specs=[AssetSpec("targets_asset"), AssetSpec("goals_asset")])
-def prompts_asset(config: MyAssetConfig) :
-    file_name_targets = config.filename_prompts_targets
-    file_name_goals= config.filename_prompts_goals
 
-    df1: Optional[pd.DataFrame] = None # Initialize to None
-    df2: Optional[pd.DataFrame] = None # Initialize to None
+@multi_asset(specs=[AssetSpec("targets_asset"), AssetSpec("goals_asset")])
+def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], Optional[MaterializeResult]]:
+    file_name_targets = config.filename_prompts_targets
+    file_name_goals = config.filename_prompts_goals
+
+    df1: Optional[pd.DataFrame] = None  # Initialize to None
+    df2: Optional[pd.DataFrame] = None  # Initialize to None
+    result1: Optional[MaterializeResult] = None
+    result2: Optional[MaterializeResult] = None
 
     try:
         df1 = fu.read_dataframe(file_name_targets)
@@ -57,55 +63,59 @@ def prompts_asset(config: MyAssetConfig) :
 
         # Attach metadata: number of lines
         # Check if df1 and df2 are not None before trying to use them
-        if df1 is not None:
+        if df1 is not None and not df1.empty:
             metadata1 = {
-                "num_rows": MetadataValue.int(len(df1)), # Removed .tolist() - len() works directly on DataFrame
+                "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
-            yield MaterializeResult(asset_key="targets_asset", metadata=metadata1)
+            result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
         else:
-            # You can log here if you add context: AssetExecutionContext to the signature
-            # context.log.warn(f"targets_asset could not be materialized due to empty DataFrame.")
-            exit() # Or raise an error if an empty df is an explicit failure
+            print(f"targets_asset DataFrame is empty or could not be loaded.")
+            result1 = None
 
-        if df2 is not None:
+        if df2 is not None and not df2.empty:
             metadata2 = {
-                "num_rows": MetadataValue.int(len(df2)), # Removed .tolist() - len() works directly on DataFrame
+                "num_rows": MetadataValue.int(len(df2)),
                 "file_name": MetadataValue.text(file_name_goals)
             }
-            yield MaterializeResult(asset_key="goals_asset", metadata=metadata2)
+            result2 = MaterializeResult(asset_key="goals_asset", metadata=metadata2)
         else:
-            # context.log.warn(f"goals_asset could not be materialized due to empty DataFrame.")
-            exit()
+            print(f"goals_asset DataFrame is empty or could not be loaded.")
+            result2 = None
+
     except Exception as e:
-            print(f"Error loading File: {e}")   
-            exit()
+        print(f"Error loading File: {e}")
+        raise  # Re-raise to fail the multi-asset
+
+    return result1, result2
+
 
 
 @asset_check(asset=raw_file_asset)
 def text_column_not_empty(raw_file_asset: pd.DataFrame) -> AssetCheckResult:
     if "text" not in raw_file_asset.columns:
-        return AssetCheckResult(passed=False)  
+        return AssetCheckResult(passed=False, metadata={"missing_column": "text"})
     if raw_file_asset["text"].isnull().any():
-        return AssetCheckResult(passed=False)
+        return AssetCheckResult(passed=False, metadata={"empty_values": raw_file_asset["text"].isnull().sum()})
     return AssetCheckResult(passed=True)
 
 
-@asset(deps=[raw_file_asset])
-def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
-    extracted=fu.process_texts(raw_file_asset.to_dict(orient='records'), fu.keyword1, fu.keyword2)
 
-    stats=fu.analyze_text_data(extracted)
+@asset(deps=[raw_file_asset])
+def extracted_data_asset(raw_file_asset: pd.DataFrame, config: MyAssetConfig) -> Output[List[dict]]: # Changed return type hint
+    extracted = fu.process_texts(raw_file_asset.to_dict(orient='records'), fu.keyword1, fu.keyword2)
+
+    stats = fu.analyze_text_data(extracted)
     # Attach metadata: number of lines
     metadata = {
         "stats": MetadataValue.md(json.dumps(stats))
     }
 
-    return Output(value=extracted, metadata=metadata)
+    return Output(value=extracted, metadata=metadata) # Ensure you return the processed data
 
 
-@asset(deps=["extracted_data_asset","targets_asset","goals_asset"])
-def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,config: MyAssetConfig) -> None:
+@asset(deps=["extracted_data_asset", "targets_asset", "goals_asset"])
+def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, qdrant_resource: qdrant, config: MyAssetConfig, extracted_data_asset: List[dict]) -> None: # Added extracted_data_asset as argument
     """
     Stream a large text file line-by-line, embed each batch with SBERT,
     and upsert into a Qdrant collection.
@@ -113,62 +123,25 @@ def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,config: MyA
     batch_size: int = config.batch_size
     sbert_model: SentenceTransformer = model.get_transformer()
     qdrant_client: QdrantClient = qdrant_resource.get_client()
-    es_client: ElasticSearch= es_resource.get_client()
+    es_client: Elasticsearch = es_resource.get_client()
 
     if not qdrant_client.collection_exists(config.current_collection):
         qdrant_client.create_collection(
-        collection_name=config.current_collection,
-        vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
+            collection_name=config.current_collection,
+            vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
         )
-    texts = extracted_data_asset['text'] 
-    ids = extracted_data_asset['id'] 
-    embeddings = sbert_model.encode(texts, batch_size=batch_size,convert_to_numpy=True)
+
+    texts = [item['text'] for item in extracted_data_asset] # Extract texts
+    ids = [item['id'] for item in extracted_data_asset]     # Extract ids
+    embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-                {
-                    "id": int(ids),
-                    "vector": embeddings.tolist(),
-                    "payload": {"class": ""}
-                }
-                for doc_id, text, emb in zip(ids, texts, embeddings)
-            ]
+        {
+            "id": int(doc_id),
+            "vector": emb.tolist(),
+            "payload": {"class": ""}
+        }
+        for doc_id, text, emb in zip(ids, texts, embeddings)
+    ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
-
-# 4. Asset: Run threshold search for 17 queries and persist scores
-# ------------------
-""" @asset(
-    config_schema={
-        "queries": list,
-        "threshold": float,
-        "limit": int,
-        "output_db_path": str,
-    },
-    required_resource_keys={"model", "qdrant"},
-)
-def search_and_store(context) -> str:
-    
-     Encode a list of queries, run range searches in Qdrant,
-     and save (query_id, doc_id, score) triples to SQLite on disk.
-    
-    queries: List[str] = context.op_config["queries"]
-    threshold: float = context.op_config["threshold"]
-    limit: int = context.op_config["limit"]
-    output_db: str = context.op_config["output_db_path"]
-
-    # Encode queries
-    q_embs = model.encode(queries, convert_to_numpy=True)
-    for q_idx, q_emb in enumerate(q_embs):
-        hits = client.search(
-            collection_name="my_texts",
-            query_vector=q_emb.tolist(),
-            limit=limit,
-            score_threshold=threshold,
-        )
-        rows: List[Tuple[int, int, float]] = [(q_idx, hit.id, hit.score) for hit in hits]
-        cur.executemany("INSERT OR IGNORE INTO results VALUES (?, ?, ?)", rows)
-        conn.commit()
-        context.log.info(f"Query {q_idx}: saved {len(rows)} hits.")
-
-    conn.close()
-    return output_db """

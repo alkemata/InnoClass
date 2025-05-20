@@ -136,8 +136,7 @@ def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, q
     ids = [item['id'] for item in extracted_data_asset]     # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-        {
-            "id": uuid.uuid4(),
+       {
             "vector": emb.tolist(),
             "payload": {"epo_id": str(doc_id), "class": ""}
         }

@@ -2,7 +2,7 @@ from dagster import Definitions, load_assets_from_modules
 
 from sensors import file_update_sensor
 from assets import text_column_not_empty
-from resources import SBERT_resource, qdrant_client_resource,es
+from resources import SBERT, qdrant,es
 #from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
 import dagster_project as assets

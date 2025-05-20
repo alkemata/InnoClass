@@ -3,17 +3,17 @@ from qdrant_client import QdrantClient
 from dagster import ConfigurableResource, EnvVar
 
 class SBERT(ConfigurableResource):
-    model: str = "all-MiniLM-L6-v2"
+    model_name: str = "all-MiniLM-L6-v2"
 
     def get_transformer(self):
-        return SentenceTransformer(model)
+        return SentenceTransformer(self.model_name)
 
 class qdrant(ConfigurableResource):
     url: str = "http://qdrant:6334"
 
 #   Qdrant client resource
     def get_client(self) -> QdrantClient:
-        return QdrantClient(url=url, prefer_grpc=True)   
+        return QdrantClient(url=self.url, prefer_grpc=True)   
 
 class es(ConfigurableResource):
     url:str="http://elasticsearch:9200"
@@ -22,8 +22,8 @@ class es(ConfigurableResource):
 
     def get_client(self):
         return Elasticsearch(
-                url,
-                    basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+                self.url,
+                    basic_auth=(self.ELASTICSEARCH_USER, self.ELASTICSEARCH_PASSWORD),
                     verify_certs=False, # Use with caution
                     request_timeout=60
             )

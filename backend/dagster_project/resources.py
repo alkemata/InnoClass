@@ -17,8 +17,8 @@ class qdrant(ConfigurableResource):
 
 class es(ConfigurableResource):
     url:str="http://elasticsearch:9200"
-    ELASTICSEARCH_USER:str = EnvVar("ELASTICSEARCH_USER")
-    ELASTICSEARCH_PASSWORD:str = EnvVar("ELASTICSEARCH_PASSWORD")
+    ELASTICSEARCH_USER = EnvVar("ELASTICSEARCH_USER")
+    ELASTICSEARCH_PASSWORD = EnvVar("ELASTICSEARCH_PASSWORD")
 
     def get_client(self):
         return Elasticsearch(

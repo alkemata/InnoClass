@@ -6,7 +6,7 @@ from resources import SBERT, qdrant,es
 #from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
 
-all_assets=load_assets_from__modules([assets])
+all_assets=load_assets_from_modules([assets])
 print(all_assets)
 
 defs = Definitions(

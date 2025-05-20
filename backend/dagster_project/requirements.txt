@@ -5,3 +5,5 @@ spacy
 beautifulsoup4
 sentence-transformers
 qdrant-client
+elasticsearch==8.14.0
+elastic_transport

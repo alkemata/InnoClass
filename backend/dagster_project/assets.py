@@ -82,7 +82,7 @@ def extracted_data_asset(raw_file_asset,config: MyAssetConfig,):
 
 @asset(deps=[extracted_data_asset,targets_asset,goals_asset],required_resource_keys={"SBERT", "qdrant"}
 )
-def index_texts(context,config: MyAssetConfig) -> None:
+def index_texts(extracted_data_asset, targets_asset,context,config: MyAssetConfig) -> None:
     """
     Stream a large text file line-by-line, embed each batch with SBERT,
     and upsert into a Qdrant collection.
@@ -123,7 +123,7 @@ def index_texts(context,config: MyAssetConfig) -> None:
         "limit": int,
         "output_db_path": str,
     },
-    required_resource_keys={"model", "qdrant"}
+    required_resource_keys={"model", "qdrant"},
 )
 def search_and_store(context) -> str:
     """

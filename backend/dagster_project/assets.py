@@ -18,6 +18,7 @@ from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from elasticsearch import Elasticsearch, helpers
 from resources import SBERT, qdrant, es
+from qdrant_client.models import VectorParams, Distance
 
 
 class MyAssetConfig(Config):

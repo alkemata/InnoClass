@@ -139,7 +139,7 @@ def index_texts(context: AssetExecutionContext, model: SBERT, es_resource: es, q
        {
             "id":idi,
             "vector": emb.tolist(),
-            "payload": {"epo_id": str(doc_id), "class": ""}
+            "payload": {"epo_id": str(docs_id), "class": ""}
         }
         for idi, text, emb,docs_id in zip(range(1,len(ids)),texts, embeddings, ids)
     ]

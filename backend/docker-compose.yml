@@ -136,7 +136,6 @@ services:
       - ./dagster_home:/opt/dagster/dagster_home    # ← share host dir
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
-      - ./classEngine/data:/opt/project_data
     networks:
       - es_network
     depends_on:

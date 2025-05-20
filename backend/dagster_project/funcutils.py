@@ -252,7 +252,7 @@ def read_dataframe(filepath):
         list of dict: A list of dictionaries representing the DataFrame, or None if an error occurs.
     """
     try:
-        with open("./data/"+filepath, 'rb') as f:
+        with open(filepath, 'rb') as f:
             df = pickle.load(f)
         print("sdgs read")
         if isinstance(df, pd.DataFrame):

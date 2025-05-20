@@ -22,4 +22,5 @@ defs = Definitions(
         "SBERT": ResourceDefinition.hardcoded_resource(SBERT),
         "qdrant": ResourceDefinition.hardcoded_resource(qdrant),
         "es": ResourceDefinition.hardcoded_resource(es)
+    }
 )

@@ -14,7 +14,7 @@ defs = Definitions(
         *all_assets
     ],
     asset_checks=[
-        text_column_not_empty,  # optional
+        assets.text_column_not_empty,  # optional
     ],
     sensors=[
         file_update_sensor,

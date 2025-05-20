@@ -4,7 +4,7 @@ import json
 from typing import List, Optional
 from dagster import (
     asset, multi_asset, AssetExecutionContext,
-    Output, MetadataValue
+    Output, MetadataValue, MaterializeResult
 )
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource, AssetSpec
 import funcutils as fu
@@ -65,7 +65,7 @@ def prompts_asset(config: MyAssetConfig) :
         else:
             # You can log here if you add context: AssetExecutionContext to the signature
             # context.log.warn(f"targets_asset could not be materialized due to empty DataFrame.")
-            pass # Or raise an error if an empty df is an explicit failure
+            exit() # Or raise an error if an empty df is an explicit failure
 
         if df2 is not None:
             metadata2 = {
@@ -75,10 +75,10 @@ def prompts_asset(config: MyAssetConfig) :
             yield MaterializeResult(value=df2, asset_key="goals_asset", metadata=metadata2)
         else:
             # context.log.warn(f"goals_asset could not be materialized due to empty DataFrame.")
-            pass # Or raise an error if an empty df is an explicit failure
+            exit()
     except Exception as e:
             print(f"Error loading File: {e}")   
-
+            exit()
 
 
 @asset_check(asset=raw_file_asset)

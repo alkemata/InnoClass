@@ -115,7 +115,7 @@ def index_texts(model:SBERT, es_resource: es, qdrant_resource:qdrant,config: MyA
     es_client: ElasticSearch= es_resource.get_client
 
     # (Re)create collection; adjust name as needed
-    es_client.recreate_collection(
+    qdrant_client.recreate_collection(
         collection_name=config.current_collection,
         vectors_config={
             "size": model.get_sentence_embedding_dimension(),

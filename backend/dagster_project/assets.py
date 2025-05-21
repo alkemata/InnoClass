@@ -14,7 +14,7 @@ from qdrant_client import QdrantClient, models
 from elasticsearch import Elasticsearch, helpers
 # from resources import SBERT, qdrant, es # Removed direct import, will access via context
 from qdrant_client.models import VectorParams, Distance
-import uuid
+from collections import defaultdict 
 
 
 class MyAssetConfig(Config):
@@ -69,7 +69,7 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
-            df1.pickle("./storage/goals_asset")
+            df1.pickle("./storage/targets_asset")
             result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
         else:
             print(f"targets_asset DataFrame is empty or could not be loaded.")
@@ -119,7 +119,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
         "stats": MetadataValue.md(json.dumps(stats))
     }
 
-    return Output(value=extracted, metadata=metadata)  # Ensure you return the processed data
+    return Output(value=result, metadata=metadata)  # Ensure you return the processed data
 
 
 @asset(deps=["extracted_data_asset"])
@@ -144,7 +144,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
         models.PointStruct(id=str(docs_id), vector=emb.tolist(), payload={"epo_id": str(docs_id)})
-        for idi, text, emb, docs_id in zip(range(1, len(ids) + 1), texts, embeddings, ids) # Corrected the range
+        for idi, docs_id in zip(range(1, len(ids) + 1), embeddings, ids) # Corrected the range
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
 
@@ -253,23 +253,26 @@ def check_qdrant_health(context: AssetExecutionContext):
 
 # 4. Asset: Run threshold search for queries and persist scores
 # ------------------
-@asset(deps=["index_texts", "targets_asset", "goals_asset"])
-def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> str:
+@asset(deps=["index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource"})
+def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> None:
     """
     Encode a list of queries, run range searches in Qdrant,
     and save scores to a CSV file.
     """
+    INDEX_NAME=config.current_collection
     queries = goals_asset.tolist()
     threshold: float = config.threshold
-    limit: int = config.limit
     output_file_path: str = config.search_results_file # Get output file from config
 
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
     qdrant_client: QdrantClient = context.resources.qdrant.get_client()
+    es_client: Elasticsearch = context.resources.es_resource.get_client()
 
     # Encode queries
     q_embs = sbert_model.encode(queries, convert_to_numpy=True)
-    results = [] # List to store results before saving
+    document_sdg_mapping = defaultdict(set) # Using a set to store unique query_ids for each document
+    document_details = {} # To store other relevant details like epo_id
+
     for q_idx, q_emb in enumerate(q_embs):
         hits = qdrant_client.search(
             collection_name=config.current_collection,
@@ -277,18 +280,52 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
             score_threshold=threshold,
         )
         for hit in hits:
-            results.append({
-                "query_index": q_idx,
-                "hit_id": hit.id,
-                "score": hit.score,
-                "epo_id": hit.payload.get("epo_id"), # Extract epo_id from payload
-            })
+            # Add the query_index to the set for the corresponding hit_id
+            document_sdg_mapping[hit.id].add(str(q_idx)) # Store as string if SDG field is keyword
 
-    # Convert results to DataFrame and save to CSV
-    df_results = pd.DataFrame(results)
-    df_results.to_csv(output_file_path, index=False) # save the results
-    context.log.info(f"Search results saved to {output_file_path}")
-    return output_file_path # Return file path
+            # Store other details. Assuming epo_id is consistent for a given hit.id
+            if hit.id not in document_details:
+                document_details[hit.id] = {
+                    "epo_id": hit.payload.get("epo_id"),
+                    # You might want to store other relevant details here if they are in the payload
+                }
+
+# Prepare data for Elasticsearch bulk update
+actions = []
+for doc_id, query_indices_set in document_sdg_mapping.items():
+    # Convert the set of query_indices to a list
+    sdg_list = list(query_indices_set)
+
+    # Get the epo_id and any other details for this document
+    details = document_details.get(doc_id, {})
+    epo_id = details.get("epo_id")
+
+    # Assuming 'id_epab' in Elasticsearch corresponds to 'hit.id' or 'epo_id'
+    # You need to decide which one to use as the document ID for updating.
+    # If hit.id is the document ID in Elasticsearch:
+    es_doc_id = doc_id
+    # If epo_id is the document ID in Elasticsearch:
+    # es_doc_id = epo_id # Make sure epo_id is always present and unique
+
+    if es_doc_id: # Only proceed if you have a valid ID to update
+        action = {
+            "_op_type": "update",
+            "_index": INDEX_NAME, 
+            "_id": es_doc_id,
+            "doc": {
+                "sdg": sdg_list,
+            },
+            "doc_as_upsert": True # Creates the document if it doesn't exist, otherwise updates
+        }
+        actions.append(action)
+
+# Now, use Elasticsearch's bulk API to update the documents
+# This is much more efficient than updating documents one by one.
+try:
+    helpers.bulk(es, actions)
+    context.log.info(f"Prepared {len(actions)} Elasticsearch bulk update actions.")
+except Exception as e:
+    context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
 @asset(deps=[raw_file_asset],required_resource_keys={"es_resource"})
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):

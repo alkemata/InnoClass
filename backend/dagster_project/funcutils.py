@@ -276,7 +276,7 @@ def read_dataframe(filepath):
             df = pickle.load(f)
         print("sdgs read")
         if isinstance(df, pd.DataFrame):
-            return df.to_dict(orient='records')
+            return df
         else:
             print(f"Error: Pickle file does not contain a pandas DataFrame.")
             return None

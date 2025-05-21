@@ -72,7 +72,7 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
-            df1.pickle("/opt/dagster/dagster_home/storage/targetss_asset")
+            df1.pickle("/opt/dagster/dagster_home/storage/targets_asset")
             result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
         else:
             print(f"targets_asset DataFrame is empty or could not be loaded.")

@@ -72,7 +72,7 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
-            df1.pickle("./storage/targets_asset")
+            df1.pickle("/opt/dagster/dagster_home/storage/targetss_asset")
             result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
         else:
             print(f"targets_asset DataFrame is empty or could not be loaded.")
@@ -83,7 +83,7 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df2)),
                 "file_name": MetadataValue.text(file_name_goals)
             }
-            df2.pickle("./storage/goals_asset")
+            df2.pickle("/opt/dagster/dagster_home/storage/goals_asset")
             result2 = MaterializeResult(asset_key="goals_asset", metadata=metadata2)
         else:
             print(f"goals_asset DataFrame is empty or could not be loaded.")
@@ -263,9 +263,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     and save to ES
     """
     INDEX_NAME=config.current_collection
-    with open("./storage/goals_asset", 'rb') as file:
-            goals_asset = pickle.load(file)
-    queries = goals_asset
+    queries = goals_asset.tolist()
     threshold: float = config.threshold
 
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context

@@ -289,3 +289,44 @@ def read_dataframe(filepath):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return None
+
+def merge_by_id(list1, list2):
+    # Create a lookup dictionary from list2 using 'id' as the key
+    lookup = {item['id']: item['original_text'] for item in list2}
+    lookup1 = {item['id']: item['pubnbr'] for item in list2}
+    lookup2 = {item['id']: item['pubdate'] for item in list2}
+
+    # Merge with corresponding entry in list1
+    merged = []
+    for item in list1:
+        merged_item = {
+            'id': item['id'],
+            'text': item['text'],
+            'pubdate': lookup2.get(item['id']) ,
+            'pubnbr':lookup1.get(item['id']) ,
+            'original_text': lookup.get(item['id'])  # Use .get() to avoid KeyError
+        }
+        merged.append(merged_item)
+    
+    return merged
+
+def merge_sentence(processed_texts):
+    """
+    Merges sentences by text_id from the processed texts.
+    
+    Args:
+        processed_texts (list of tuples): Each tuple is (text_id, sentence).
+        
+    Returns:
+        list of dict: Each dictionary has the text_id as key and the merged sentences as value.
+    """
+    merged = {}
+    for item in processed_texts:
+        text_id=item["id"]
+        sentence=item["sentence"]
+        if text_id not in merged:
+            merged[text_id] = sentence
+        else:
+            merged[text_id] += "\n" + sentence
+    # Convert to list of dictionaries as required.
+    return [{"id":text_id,"text":sentences} for text_id, sentences in merged.items()]

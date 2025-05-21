@@ -111,7 +111,8 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
 @asset(deps=[raw_file_asset])
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
-
+    merged=fu.merge_sentence(extracted)
+    result=fu.merge_by_id(merged,texts)
     stats = fu.analyze_text_data(extracted)
     # Attach metadata: number of lines
     metadata = {
@@ -142,7 +143,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     ids = [item['id'] for item in extracted_asset]  # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-        models.PointStruct(id=str(docs_id), vector=emb.tolist(), payload={"epo_id": str(docs_id), "class": ""})
+        models.PointStruct(id=str(docs_id), vector=emb.tolist(), payload={"epo_id": str(docs_id)})
         for idi, text, emb, docs_id in zip(range(1, len(ids) + 1), texts, embeddings, ids) # Corrected the range
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
@@ -250,7 +251,7 @@ def check_qdrant_health(context: AssetExecutionContext):
 
 
 
-# 4. Asset: Run threshold search for 17 queries and persist scores
+# 4. Asset: Run threshold search for queries and persist scores
 # ------------------
 @asset(deps=["index_texts", "targets_asset", "goals_asset"])
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> str:

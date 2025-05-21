@@ -112,7 +112,7 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
     merged=fu.merge_sentence(extracted)
-    result=fu.merge_by_id(merged,texts)
+    result=fu.merge_by_id(merged,raw_file_asset)
     stats = fu.analyze_text_data(extracted)
     # Attach metadata: number of lines
     metadata = {

@@ -149,7 +149,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
-@asset
+@asset(required_resource_keys={"qdrant"})
 def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig):
     """
     Asset to check the content of a specific Qdrant collection.
@@ -185,7 +185,7 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
 # class QdrantHealthConfig(Config):
 #     pass # No specific config needed for basic health check
 
-@asset
+@asset(required_resource_keys={"qdrant"})
 def check_qdrant_health(context: AssetExecutionContext):
     """
     Checks the health and status of the Qdrant database and reports results in Markdown metadata.

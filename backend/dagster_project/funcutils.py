@@ -262,21 +262,13 @@ def merge_by_id(list1, list2):
 
 # function used tor ead goals and targets files
 def read_dataframe(filepath):
-    """
-    Reads a pandas DataFrame from a pickle file and converts it to a list of dictionaries.
-
-    Args:
-        filepath (str): The path to the pickle file.
-
-    Returns:
-        list of dict: A list of dictionaries representing the DataFrame, or None if an error occurs.
-    """
+ 
     try:
         with open(filepath, 'rb') as f:
             df = pickle.load(f)
         print("sdgs read")
         if isinstance(df, pd.DataFrame):
-            return df
+            return df.to_dict(orient='records')
         else:
             print(f"Error: Pickle file does not contain a pandas DataFrame.")
             return None

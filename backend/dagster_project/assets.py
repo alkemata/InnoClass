@@ -57,7 +57,9 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
     file_name_goals = config.filename_prompts_goals
 
     df1: Optional[pd.DataFrame] = None  # Initialize to None
+    df1=pd.DataFrame(df1)
     df2: Optional[pd.DataFrame] = None  # Initialize to None
+    df2=pd.DataFrame(df2)
     result1: Optional[MaterializeResult] = None
     result2: Optional[MaterializeResult] = None
 
@@ -72,6 +74,7 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
+            df1=df1.tolist()
             df1.pickle("/opt/dagster/dagster_home/storage/targets_asset")
             result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
         else:
@@ -83,7 +86,9 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df2)),
                 "file_name": MetadataValue.text(file_name_goals)
             }
+            df2=df2.tolist()
             df2.pickle("/opt/dagster/dagster_home/storage/goals_asset")
+
             result2 = MaterializeResult(asset_key="goals_asset", metadata=metadata2)
         else:
             print(f"goals_asset DataFrame is empty or could not be loaded.")

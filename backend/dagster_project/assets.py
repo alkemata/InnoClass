@@ -25,6 +25,7 @@ class MyAssetConfig(Config):
     batch_size: int = 10
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.6
+    es_sample_size: int = 5 # New: Number of documents to sample for overview
 
 
 
@@ -245,3 +246,109 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
     except Exception as e:
         context.log.info(f"Error during bulk indexing: {e}")
         raise
+
+@asset(deps=[es_patent_light])
+def es_health_check_and_overview(context: AssetExecutionContext, config: MyAssetConfig):
+    """
+    Checks the health and status of the Elasticsearch index and provides an overview
+    of its content and metrics.
+    """
+    es_client: Elasticsearch = context.resources.es.get_client()
+    index_name = config.current_collection
+
+    context.log.info(f"Performing health check and overview for Elasticsearch index: {index_name}")
+
+    # 1. Check if the index exists
+    if not es_client.indices.exists(index=index_name):
+        raise Exception(f"Elasticsearch index '{index_name}' does not exist after indexing.")
+    context.log.info(f"Elasticsearch index '{index_name}' exists.")
+
+    # 2. Get cluster health status
+    try:
+        cluster_health = es_client.cluster.health(index=index_name)
+        status = cluster_health.get('status', 'unknown')
+        active_shards = cluster_health.get('active_shards', 0)
+        unassigned_shards = cluster_health.get('unassigned_shards', 0)
+
+        health_md = f"""
+        ### Elasticsearch Cluster Health for Index '{index_name}'
+        - **Status:** `{status}`
+        - **Active Shards:** `{active_shards}`
+        - **Unassigned Shards:** `{unassigned_shards}`
+        """
+        if status not in ['green', 'yellow']:
+            context.log.warning(f"Elasticsearch index '{index_name}' health is {status}. Investigate any issues.")
+            # Depending on severity, you might want to raise an error here
+            # raise Exception(f"Elasticsearch index health is {status}. Expected 'green' or 'yellow'.")
+        context.log.info(f"Elasticsearch index '{index_name}' health: {status}")
+
+    except Exception as e:
+        context.log.error(f"Error getting cluster health for index '{index_name}': {e}")
+        health_md = f"Error retrieving cluster health: {e}"
+        status = "error" # Indicate an error in status
+
+    # 3. Get index statistics (size on disk, document count)
+    index_stats_md = ""
+    try:
+        stats = es_client.indices.stats(index=index_name)
+        index_docs_count = stats['indices'][index_name]['total']['docs']['count']
+        store_size_bytes = stats['indices'][index_name]['total']['store']['size_in_bytes']
+        store_size_mb = f"{(store_size_bytes / (1024 * 1024)):.2f} MB" if store_size_bytes else "0 MB"
+
+        index_stats_md = f"""
+        ### Elasticsearch Index Statistics for '{index_name}'
+        - **Document Count:** `{index_docs_count}`
+        - **Storage Size:** `{store_size_mb}`
+        """
+        context.log.info(f"Elasticsearch index '{index_name}' contains {index_docs_count} documents, size: {store_size_mb}")
+
+    except Exception as e:
+        context.log.error(f"Error getting index statistics for '{index_name}': {e}")
+        index_stats_md = f"Error retrieving index statistics: {e}"
+
+
+    # 4. Get a sample of documents to show content
+    sample_docs_md = ""
+    try:
+        sample_size = config.es_sample_size
+        search_body = {
+            "size": sample_size,
+            "query": {
+                "match_all": {}
+            }
+        }
+        sample_results = es_client.search(index=index_name, body=search_body)
+        hits = sample_results['hits']['hits']
+
+        if hits:
+            sample_docs_md = f"### Sample Documents from '{index_name}' (First {len(hits)}):\n"
+            for i, hit in enumerate(hits):
+                source = hit['_source']
+                sample_docs_md += f"#### Document {i+1} (ID: {hit['_id']})\n"
+                sample_docs_md += "```json\n"
+                sample_docs_md += json.dumps(source, indent=2, ensure_ascii=False)
+                sample_docs_md += "\n```\n"
+        else:
+            sample_docs_md = f"### No documents found in index '{index_name}' to sample."
+
+    except Exception as e:
+        context.log.error(f"Error sampling documents from '{index_name}': {e}")
+        sample_docs_md = f"Error retrieving sample documents: {e}"
+
+    # Combine all markdown outputs
+    full_md_output = f"""
+    # Elasticsearch Index Overview: {index_name}
+
+    {health_md}
+    {index_stats_md}
+    {sample_docs_md}
+    """
+
+    return Output(
+        value=index_name, # Return the index name or a success indicator
+        metadata={
+            "es_index_name": MetadataValue.text(index_name),
+            "es_health_status": MetadataValue.text(status),
+            "es_overview": MetadataValue.md(full_md_output)
+        }
+    )

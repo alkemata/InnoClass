@@ -27,6 +27,7 @@ class SearchResponse(BaseModel):
 
 @router.post("/search", response_model=SearchResponse)
 async def search(req: SearchRequest):
+    print("request received!")
     # build ES bool query
     filters = [{ "terms": { req.category: req.selections }}] if req.selections else []
     must = []

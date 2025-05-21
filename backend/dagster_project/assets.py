@@ -187,7 +187,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     return output_file_path # Return file path
 
 @asset(deps=[raw_file_asset])
-def es_patent_light(raw_file_asset,context: AssetExecutionContext, config: MyAssetConfig):
+def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es.get_client()
     INDEX_NAME=config.current_collection

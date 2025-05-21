@@ -253,7 +253,7 @@ def check_qdrant_health(context: AssetExecutionContext):
 
 # 4. Asset: Run threshold search for queries and persist scores
 # ------------------
-@asset(deps=["index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource"})
+@asset(deps=["index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource","model","qdrant"})
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> None:
     """
     Encode a list of queries, run range searches in Qdrant,

@@ -263,7 +263,9 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     and save to ES
     """
     INDEX_NAME=config.current_collection
-    queries = goals_asset.tolist()
+    with open("./storage/goals_asset", 'rb') as file:
+            goals_asset = pickle.load(file)
+    queries = goals_asset
     threshold: float = config.threshold
 
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context

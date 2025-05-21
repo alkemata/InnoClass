@@ -43,7 +43,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <Box className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
           <Typography variant="h4">
-            Welcome to InnoClass AI!
+            Welcome to InnoClass AI demonstrator
           </Typography>
         </Box>
       </ThemeProvider>

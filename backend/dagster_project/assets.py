@@ -253,7 +253,7 @@ def es_health_check_and_overview(context: AssetExecutionContext, config: MyAsset
     Checks the health and status of the Elasticsearch index and provides an overview
     of its content and metrics.
     """
-    es_client: Elasticsearch = context.resources.es.get_client()
+    es_client: Elasticsearch = context.resources.es_resource.get_client()
     index_name = config.current_collection
 
     context.log.info(f"Performing health check and overview for Elasticsearch index: {index_name}")

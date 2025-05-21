@@ -42,7 +42,7 @@ function ResultsPage() {
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(null);
 
   // You might want to make this configurable, e.g., in an environment variable
-  const FASTAPI_BASE_URL = 'api.innoclass.alkemata.com/search'; // Replace with your actual FastAPI base URL
+  const FASTAPI_BASE_URL = 'api.innoclass.alkemata.com'; // Replace with your actual FastAPI base URL
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

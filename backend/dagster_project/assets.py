@@ -200,14 +200,14 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
         context.log.info(f"Deleting existing index: {INDEX_NAME}")
         es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
 
-    index_mapping = {
+    properties_definition = {
         "properties": {
             "original_text": {
                 "type": "text",
                 "analyzer": "standard"
             },
-            "idepo": {"type": "text"}, # <--- CORRECTED
-            "pubnbr": {"type": "keyword"}, # <--- CORRECTED
+            "idepo": {"type": "text"}, 
+            "pubnbr": {"type": "keyword"},
             "title": {
                 "type": "text",
                 "analyzer": "standard"
@@ -221,7 +221,9 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
     try:
         es_client.indices.create(
             index=config.current_collection,
-            body=index_mapping,
+            body=   { "mappings": {  # <--- This is the key you need
+        "properties": properties_definition
+      }}
         )
     except Exception as e:
         print(f"Error creating index: {e}")

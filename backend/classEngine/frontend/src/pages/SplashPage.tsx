@@ -118,6 +118,7 @@ function App() {
           /* Ensure html, body, and the root div take full height and prevent scrolling. */
           html, body, #root {
             height: 100%;
+            widht: 80%;
             margin: 0;
             overflow: hidden; /* Prevents scrollbars during the splash screen display. */
           }

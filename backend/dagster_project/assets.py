@@ -66,36 +66,19 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
     try:
         df1 = fu.read_dataframe(file_name_targets)
         df2 = fu.read_dataframe(file_name_goals)
-        df1=pd.DataFrame(df1)
-        df2=pd.DataFrame(df2)
-
-        # Attach metadata: number of lines
-        # Check if df1 and df2 are not None before trying to use them
-        if df1 is not None and not df1.empty:
-            metadata1 = {
+        metadata1 = {
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
-            df1=df1.tolist()
-            df1.pickle("/opt/dagster/dagster_home/storage/targets_asset")
-            result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
-        else:
-            print(f"targets_asset DataFrame is empty or could not be loaded.")
-            result1 = None
-
-        if df2 is not None and not df2.empty:
-            metadata2 = {
+        result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
+    
+        metadata2 = {
                 "num_rows": MetadataValue.int(len(df2)),
                 "file_name": MetadataValue.text(file_name_goals)
             }
-            df2=df2.tolist()
-            df2.pickle("/opt/dagster/dagster_home/storage/goals_asset")
-
-            result2 = MaterializeResult(asset_key="goals_asset", metadata=metadata2)
-        else:
-            print(f"goals_asset DataFrame is empty or could not be loaded.")
-            result2 = None
-
+    
+        result2 = MaterializeResult(asset_key="goals_asset", metadata=metadata2)
+   
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise to fail the multi-asset

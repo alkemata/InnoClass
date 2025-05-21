@@ -93,11 +93,17 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
 
 
 @asset_check(asset=raw_file_asset)
-def text_column_not_empty(raw_file_asset: pd.DataFrame) -> AssetCheckResult:
-    if "text" not in raw_file_asset.columns:
+def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
+    # Convert list of dictionaries to DataFrame for easier processing,
+    # especially for `isnull().any()` and `isnull().sum()`
+    df = pd.DataFrame(raw_file_asset)
+
+    if "text" not in df.columns:
         return AssetCheckResult(passed=False, metadata={"missing_column": "text"})
-    if raw_file_asset["text"].isnull().any():
-        return AssetCheckResult(passed=False, metadata={"empty_values": raw_file_asset["text"].isnull().sum()})
+
+    if df["text"].isnull().any():
+        return AssetCheckResult(passed=False, metadata={"empty_values": df["text"].isnull().sum()})
+
     return AssetCheckResult(passed=True)
 
 

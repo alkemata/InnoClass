@@ -257,7 +257,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     threshold: float = config.threshold
 
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
-    qdrant_client: QdrantClient = context.resources.qdrant.get_client()
+    qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
 
     # Encode queries

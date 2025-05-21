@@ -125,7 +125,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
-
+    es_client.delete_collection(collection_name=config.current_collection)
     if not qdrant_client.collection_exists(config.current_collection):
         qdrant_client.create_collection(
             collection_name=config.current_collection,

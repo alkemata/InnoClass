@@ -247,7 +247,7 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
         context.log.info(f"Error during bulk indexing: {e}")
         raise
 
-@asset(deps=[es_patent_light])
+@asset(deps=[es_patent_light],required_resource_keys={"es_resource"})
 def es_health_check_and_overview(context: AssetExecutionContext, config: MyAssetConfig):
     """
     Checks the health and status of the Elasticsearch index and provides an overview

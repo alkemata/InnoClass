@@ -150,6 +150,9 @@ services:
       args:
         BUILD_ENV: server
     container_name: api-server
+    volumes:
+      - ./app:/app  
+    command: sh -c "gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 main:app --log-level debug"
     working_dir: /app
     depends_on:
       - elasticsearch

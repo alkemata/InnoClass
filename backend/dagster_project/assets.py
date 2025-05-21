@@ -196,9 +196,6 @@ def check_qdrant_health(context: AssetExecutionContext):
 
     try:
         # 1. Basic Health Check
-        health_status = qdrant_client.health_check()
-        markdown_content.append(f"## Qdrant Health Status\n\n- **Status:** `{health_status}`\n")
-        context.log.info(f"Qdrant Health Status: {health_status}")
 
         # 2. Get Telemetry (provides more detailed information including memory and disk usage)
         telemetry_info = qdrant_client.get_telemetry()

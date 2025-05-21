@@ -9,8 +9,6 @@ origins = [
     "https://api.innoclass.alkemata.com", # if you ever fetch against the API hostname directly
 ]
 
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,            # <-- whitelist

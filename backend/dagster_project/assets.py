@@ -60,9 +60,6 @@ def prompts_asset(config: MyAssetConfig):
 
     df2: Optional[pd.DataFrame] = None  # Initialize to None
 
-    result1: Optional[MaterializeResult] = None
-    result2: Optional[MaterializeResult] = None
-
     try:
         df1 = fu.read_dataframe(file_name_targets)
         df2 = fu.read_dataframe(file_name_goals)
@@ -70,21 +67,20 @@ def prompts_asset(config: MyAssetConfig):
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
-        result1 = Output(value=df1,asset_key="targets_asset", metadata=metadata1)
+        yield Output(value=df1, metadata=metadata1)
     
         metadata2 = {
                 "num_rows": MetadataValue.int(len(df2)),
                 "file_name": MetadataValue.text(file_name_goals)
             }
     
-        result2 = Output(value=df2,asset_key="goals_asset", metadata=metadata2)
+        yield Output(value=df2, metadata=metadata2)
    
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise to fail the multi-asset
 
-    return result1, result2
-
+    
 
 @asset_check(asset=raw_file_asset)
 def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:

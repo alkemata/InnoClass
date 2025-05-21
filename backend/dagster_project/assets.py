@@ -16,6 +16,7 @@ from elasticsearch import Elasticsearch, helpers
 from qdrant_client.models import VectorParams, Distance
 from collections import defaultdict 
 import uuid
+import checkfunc
 
 
 
@@ -427,14 +428,16 @@ def es_health_check_and_overview(context: AssetExecutionContext, config: MyAsset
         index_docs_count = stats['indices'][index_name]['total']['docs']['count']
         store_size_bytes = stats['indices'][index_name]['total']['store']['size_in_bytes']
         store_size_mb = f"{(store_size_bytes / (1024 * 1024)):.2f} MB" if store_size_bytes else "0 MB"
-
+        results = checkfunc.count_non_empty_sdg_target(es_client, index_name)
         index_stats_md = f"""
         ### Elasticsearch Index Statistics for '{index_name}'
         - **Document Count:** `{index_docs_count}`
-        - **Storage Size:** `{store_size_mb}`
+        - **Storage Size:** `{store_size_mb}`,
+        - **SDG Classification Nbr** `{results['sdg_non_empty']}`,
+        - **Target Classification Nbr** `{results['target_non_empty']}`,
         """
         context.log.info(f"Elasticsearch index '{index_name}' contains {index_docs_count} documents, size: {store_size_mb}")
-
+    
     except Exception as e:
         context.log.error(f"Error getting index statistics for '{index_name}': {e}")
         index_stats_md = f"Error retrieving index statistics: {e}"

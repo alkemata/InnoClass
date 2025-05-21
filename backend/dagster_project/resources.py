@@ -4,7 +4,7 @@ from dagster import ConfigurableResource, EnvVar
 from elasticsearch import Elasticsearch, helpers
 
 class SBERT(ConfigurableResource):
-    model_name: str = "all-MiniLM-L6-v2"
+    model_name: str = "allenai-specter"
 
     def get_transformer(self):
         return SentenceTransformer(self.model_name)

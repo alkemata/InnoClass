@@ -23,8 +23,6 @@ defs = Definitions(
     resources={
         "model": SBERT(),
         "qdrant_resource": qdrant(),
-        "es_resource": es(    url="http://elasticsearch:9200",
-        ELASTICSEARCH_USER=EnvVar("ELASTICSEARCH_USER"),
-        ELASTICSEARCH_PASSWORD=EnvVar("ELASTICSEARCH_PASSWORD"))
+        "es_resource": es( ))
     }
 )

@@ -154,8 +154,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
 # 4. Asset: Run threshold search for 17 queries and persist scores
 # ------------------
-@asset(
-    deps=["index_texts", "targets_asset", "goals_asset"],)
+@asset(deps=["index_texts", "targets_asset", "goals_asset"])
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> str:
     """
     Encode a list of queries, run range searches in Qdrant,

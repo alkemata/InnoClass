@@ -57,15 +57,17 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
     file_name_goals = config.filename_prompts_goals
 
     df1: Optional[pd.DataFrame] = None  # Initialize to None
-    df1=pd.DataFrame(df1)
+
     df2: Optional[pd.DataFrame] = None  # Initialize to None
-    df2=pd.DataFrame(df2)
+
     result1: Optional[MaterializeResult] = None
     result2: Optional[MaterializeResult] = None
 
     try:
         df1 = fu.read_dataframe(file_name_targets)
         df2 = fu.read_dataframe(file_name_goals)
+        df1=pd.DataFrame(df1)
+        df2=pd.DataFrame(df2)
 
         # Attach metadata: number of lines
         # Check if df1 and df2 are not None before trying to use them

@@ -1,53 +1,100 @@
-import { useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
-import { api } from "../api";
-import { Box, Typography, CircularProgress } from "@mui/material";
-import ResultCard from "../components/ResultCard";
+// src/ResultsPage.tsx
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Box,
+  Button,
+} from '@mui/material';
 
-interface Hit {
-  id: string;
-  title: string;
-  extracted_text: string;
-  sdgs: string[];
-  targets: string[];
-  up: number;
-  down: number;
-}
+function ResultsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [sdgIds, setSdgIds] = useState<string[]>([]);
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [fastApiUrl, setFastApiUrl] = useState<string>('');
 
-export default function ResultsPage() {
-  const { category, selections, keywords } = useLocation().state as any;
-  const [hits, setHits] = useState<Hit[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const observer = useRef<IntersectionObserver>();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sdg_ids_param = params.get('sdg_ids');
+    const sdg_ids = sdg_ids_param ? sdg_ids_param.split(',') : [];
 
-  const loadMore = useCallback(async () => {
-    setLoading(true);
-    const res = await api.post("/search", { category, selections, keywords, page, size: 20 });
-    setHits(h => [...h, ...res.data.hits]);
-    setLoading(false);
-  }, [category, selections, keywords, page]);
+    // The 'keywords' parameter might appear multiple times
+    const keywords_params = params.getAll('keywords');
+    const kws: string[] = keywords_params.flatMap(kw => kw.split(',').map(item => item.trim()));
 
-  useEffect(() => { loadMore(); }, [loadMore]);
 
-  const lastRef = useCallback((node: HTMLDivElement|null) => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) setPage(p => p+1);
-    });
-    if (node) observer.current.observe(node);
-  }, [loading]);
+    setSdgIds(sdg_ids);
+    setKeywords(kws);
+
+    // Construct the FastAPI URL (replace with your actual FastAPI endpoint)
+    const baseUrl = 'http://api.innoclass.alkemata.com/search'; // Example FastAPI endpoint
+    const queryParams = new URLSearchParams();
+    sdg_ids.forEach(id => queryParams.append('sdg_ids', id));
+    kws.forEach(kw => queryParams.append('keywords', kw));
+
+    setFastApiUrl(`${baseUrl}?${queryParams.toString()}`);
+
+    // In a real application, you would make an API call here:
+    // fetch(fastApiUrl)
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     // Process and display your results
+    //     console.log('FastAPI Response:', data);
+    //   })
+    //   .catch(error => console.error('Error fetching data:', error));
+
+  }, [location.search]);
 
   return (
-    <Box p={4}>
-      <Typography variant="h5">Results</Typography>
-      {hits.map((h, i) => (
-        <div key={h.id} ref={i === hits.length - 1 ? lastRef : null}>
-          <ResultCard hit={h} category={category} />
-        </div>
-      ))}
-      {loading && <CircularProgress sx={{ mt:2 }} />}
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            InnoClass
+          </Typography>
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" component="h2" gutterBottom>
+          Search Results
+        </Typography>
+
+        <Typography variant="h6" gutterBottom>
+          Selected SDG IDs:
+        </Typography>
+        <Typography paragraph>
+          {sdgIds.length > 0 ? sdgIds.join(', ') : 'No SDGs selected.'}
+        </Typography>
+
+        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          Keywords:
+        </Typography>
+        <Typography paragraph>
+          {keywords.length > 0 ? keywords.join(', ') : 'No keywords entered.'}
+        </Typography>
+
+        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+          Simulated FastAPI Query:
+        </Typography>
+        <Typography paragraph sx={{ fontStyle: 'italic', wordBreak: 'break-all' }}>
+          {fastApiUrl}
+        </Typography>
+
+        <Button
+          variant="contained"
+          onClick={() => navigate('/')}
+          sx={{ mt: 4 }}
+        >
+          Go Back to Search
+        </Button>
+      </Container>
     </Box>
   );
 }
+
+export default ResultsPage;

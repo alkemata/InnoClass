@@ -1,6 +1,6 @@
 from elasticsearch import AsyncElasticsearch
 
-es = AsyncElasticsearch(hosts=["http://localhost:9200"])
+es = AsyncElasticsearch(hosts=["http://elasticsearch:9200"])
 
 async def search_docs(index: str, *,
                       mode_field: str,

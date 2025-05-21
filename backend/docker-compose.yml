@@ -119,9 +119,9 @@ services:
       - "traefik.http.routers.dagster.entrypoints=websecure"
       - "traefik.http.routers.dagster.tls.certresolver=myresolver"
       - "traefik.http.services.dagster.loadbalancer.server.port=3000"
-      - "traefik.http.routers.dagster.middlewares=dagster-auth"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
       # Replace with your own credentials or reference .env variables
-      - "traefik.http.middlewares.dagster-auth.basicauth.users=${DAGSTER_UI_USER}:${DAGSTER_UI_PASSWORD_HASH}"
+      #- "traefik.http.middlewares.dagster-auth.basicauth.users=${DAGSTER_UI_USER}:${DAGSTER_UI_PASSWORD_HASH}"
 
   dagster_daemon:
     build:
@@ -209,6 +209,7 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
       - "traefik.http.services.frontend.loadbalancer.server.port=9000"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
 
 networks:
   es_network:

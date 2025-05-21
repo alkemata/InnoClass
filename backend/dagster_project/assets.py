@@ -29,22 +29,22 @@ class MyAssetConfig(Config):
 
 
 @asset
-def raw_file_asset(config: MyAssetConfig) -> Output[pd.DataFrame]:
+def raw_file_asset(config: MyAssetConfig):
     file_name = config.filename_texts
     # Load file
     try:
-        df = fu.load_list(file_name)
+        metadata,data = fu.load_list(file_name)
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise the exception to fail the asset
 
     # Attach metadata: number of lines
     metadata = {
-        "num_rows": MetadataValue.int(len(df)),
+        "num_rows": MetadataValue.int(len(data)),
         "file_name": MetadataValue.text(file_name),
-        "preview": MetadataValue.md(df.to_markdown())
+        "preview": MetadataValue.md(metadata["extract_method"])
     }
-    return Output(value=df, metadata=metadata)
+    return Output(value=data, metadata=metadata)
 
 
 @multi_asset(specs=[AssetSpec("targets_asset"), AssetSpec("goals_asset")])
@@ -68,6 +68,7 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
+            df1.pickle("./storage/goals_asset")
             result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
         else:
             print(f"targets_asset DataFrame is empty or could not be loaded.")
@@ -78,6 +79,7 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df2)),
                 "file_name": MetadataValue.text(file_name_goals)
             }
+            df2.pickle("./storage/goals_asset")
             result2 = MaterializeResult(asset_key="goals_asset", metadata=metadata2)
         else:
             print(f"goals_asset DataFrame is empty or could not be loaded.")
@@ -100,8 +102,8 @@ def text_column_not_empty(raw_file_asset: pd.DataFrame) -> AssetCheckResult:
 
 
 @asset(deps=[raw_file_asset])
-def extracted_data_asset(raw_file_asset: pd.DataFrame, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
-    extracted = fu.process_texts(raw_file_asset.to_dict(orient='records'), fu.keyword1, fu.keyword2)
+def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
+    extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
 
     stats = fu.analyze_text_data(extracted)
     # Attach metadata: number of lines
@@ -133,12 +135,14 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     ids = [item['id'] for item in extracted_asset]  # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-        models.PointStruct(id=idi, vector=emb.tolist(), payload={"epo_id": str(docs_id), "class": ""})
+        models.PointStruct(id=str(docs_id), vector=emb.tolist(), payload={"epo_id": str(docs_id), "class": ""})
         for idi, text, emb, docs_id in zip(range(1, len(ids) + 1), texts, embeddings, ids) # Corrected the range
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
+
+
 
 
 
@@ -181,3 +185,59 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     df_results.to_csv(output_file_path, index=False) # save the results
     context.log.info(f"Search results saved to {output_file_path}")
     return output_file_path # Return file path
+
+@asset(deps=[raw_file_asset])
+def es_patent_light(raw_file_asset,context: AssetExecutionContext, config: MyAssetConfig):
+
+    es_client: Elasticsearch = context.resources.es.get_client()
+    INDEX_NAME=config.current_collection
+    if es_client.indices.exists(index=INDEX_NAME):
+        context.log.info(f"Deleting existing index: {INDEX_NAME}")
+        es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
+
+    index_mapping = {
+        "properties": {
+            "original_text": { # For keyword search (BM25)
+                "type": "text",
+                "analyzer": "standard" # Use a suitable analyzer
+            },
+            "idepo": {type:"text"},
+            "pubnbr": {type:"keyword"},
+            "title":    { # For keyword search (BM25)
+                "type": "text",
+                "analyzer": "standard" # Use a suitable analyzer
+            },
+            "sdg": {"type": "keyword"},
+            "target": {"type": "keyword"}
+            # Add other fields from your JSON if you want to index/search them
+        }
+    }
+
+    context.log.info(f"Creating index: {INDEX_NAME} with mapping...")
+    try:
+        es_client.indices.create(
+            index=config.current_collection,
+            body=index_mapping,
+        )
+    except Exception as e:
+        print(f"Error creating index: {e}")
+        exit()
+    docs_to_index = []
+    for text in raw_file_asset:
+        doc = {
+            "_index": INDEX_NAME,
+            "idepo": text["id"],
+            "pubnbr": text["pubnbr"],
+            "original_text": text["original_text"],
+            "title": text["title"],
+            "sdg":[""],
+            "target":[""]
+            }
+        docs_to_index.append(doc)
+
+    context.log.info(f"Bulk indexing {len(docs_to_index)} documents...")
+    try:
+        helpers.bulk(es_client, docs_to_index)
+    except Exception as e:
+        context.log.info(f"Error during bulk indexing: {e}")
+        raise

@@ -15,19 +15,38 @@ nlp.add_pipe('sentencizer')
 
 def load_list(filename):
     """
-    Loads a gzipped JSON Lines (jsonl) file and returns a list of dictionaries.
+    Loads a gzipped JSON Lines (jsonl) file, separating the first line as metadata
+    and the rest as a list of dictionaries.
 
     Parameters:
         filename (str): The filename of the gzipped jsonl file.
 
     Returns:
-        list: A list of dictionaries read from the file.
+        tuple: A tuple containing:
+            - dict: The metadata dictionary from the first line.
+            - list: A list of dictionaries (data records) read from the file.
     """
-    result = []
+    metadata = {}
+    data_records = []
+    
     with gzip.open(filename, 'rt', encoding='utf-8') as f:
+        # Read the first line as metadata
+        first_line = f.readline()
+        if first_line:
+            try:
+                metadata = json.loads(first_line)
+            except json.JSONDecodeError as e:
+                print(f"Warning: Could not decode first line as metadata: {e}")
+                pass     
+        # Read the rest of the lines as data records
         for line in f:
-            result.append(json.loads(line))
-    return pd.DataFrame(result)
+            try:
+                data_records.append(json.loads(line))
+            except json.JSONDecodeError as e:
+                print(f"Warning: Could not decode line as JSON, skipping: {line.strip()} - {e}")
+                continue # Skip malformed lines
+
+    return metadata, data_records
 
 # Keywords to search for in headings (allowing fuzzy matching with up to one error)
 keyword1 = ["scope of the invention","Description of the Related Art", "TECHNICAL SCOPE","Description of Related Art","REVEALING THE INVENTION","background of the invention", "background of the disclosure", "field of the invention", "technical field","summary","industrial applicability","field of the disclosure","background",  "prior art", "state of the art"]

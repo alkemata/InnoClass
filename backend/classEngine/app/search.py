@@ -1,31 +1,63 @@
-from fastapi import APIRouter, HTTPException
-from app.schemas import SearchRequest, SearchHit
-from app.elastic import search_docs
+from fastapi import APIRouter, Query
+from typing import List, Optional
+from app.elastic import es, INDEX
+from pydantic import BaseModel
 
 router = APIRouter()
 
-INDEX_NAME = "documents"
-MODE_FIELD_MAP = {"sdgs": "sdgs_list", "targets": "targets_list"}
+class SearchRequest(BaseModel):
+    category: str                   # "sdgs" or "targets"
+    selections: List[str]
+    keywords: Optional[str] = ""
+    page: int = 1
+    size: int = 20
 
-@router.post("/search", response_model=list[SearchHit])
+class Hit(BaseModel):
+    id: str
+    title: str
+    extracted_text: str
+    sdgs: List[str]
+    targets: List[str]
+    up: int
+    down: int
+
+class SearchResponse(BaseModel):
+    hits: List[Hit]
+    total: int
+
+@router.post("/search", response_model=SearchResponse)
 async def search(req: SearchRequest):
-    if req.mode not in MODE_FIELD_MAP:
-        raise HTTPException(400, "Invalid mode")
-    hits = await search_docs(
-        INDEX_NAME,
-        mode_field=MODE_FIELD_MAP[req.mode],
-        selected=req.selected,
-        keywords=req.keywords,
-        page=req.page,
-    )
-    results = []
-    for h in hits:
+    # build ES bool query
+    filters = [{ "terms": { req.category: req.selections }}] if req.selections else []
+    must = []
+    if req.keywords:
+        must.append({
+            "multi_match": {
+                "query": req.keywords,
+                "fields": ["title^2", "full_text"]
+            }
+        })
+    body = {
+        "query": {
+            "bool": {
+                "filter": filters,
+                "must": must
+            }
+        },
+        "from": (req.page-1)*req.size,
+        "size": req.size
+    }
+    res = await es.search(index=INDEX, body=body)
+    hits = []
+    for h in res["hits"]["hits"]:
         src = h["_source"]
-        results.append(SearchHit(
+        hits.append(Hit(
             id=h["_id"],
             title=src["title"],
-            excerpt=src.get("extracted_text","")[:200],
-            sdgs=src["sdgs_list"],
-            targets=src["targets_list"]
+            extracted_text=src.get("extracted_text",""),
+            sdgs=src.get("sdgs",[]),
+            targets=src.get("targets",[]),
+            up=src.get("up",0),
+            down=src.get("down",0)
         ))
-    return results
+    return SearchResponse(hits=hits, total=res["hits"]["total"]["value"])

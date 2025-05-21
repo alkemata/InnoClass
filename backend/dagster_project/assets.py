@@ -316,7 +316,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     # Now, use Elasticsearch's bulk API to update the documents
     # This is much more efficient than updating documents one by one.
     try:
-        helpers.bulk(es, actions)
+        helpers.bulk(es_client, actions)
         context.log.info(f"Prepared {len(actions)} Elasticsearch bulk update actions.")
     except Exception as e:
         context.log.info(f"Error during Elasticsearch bulk update: {e}")

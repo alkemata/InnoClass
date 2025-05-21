@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.routers import search, feedback
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -7,6 +8,8 @@ origins = [
     "https://innoclass.alkemata.com",     # your frontend domain
     "https://api.innoclass.alkemata.com", # if you ever fetch against the API hostname directly
 ]
+
+
 
 app.add_middleware(
     CORSMiddleware,

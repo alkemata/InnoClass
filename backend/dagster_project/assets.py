@@ -269,6 +269,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
         hits = qdrant_client.search(
             collection_name=config.current_collection,
             query_vector=q_emb.tolist(),
+            limit=5000,
             score_threshold=threshold,
         )
         context.log.info(str(len(hits)))

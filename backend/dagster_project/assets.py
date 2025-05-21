@@ -291,41 +291,41 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
                 }
 
 # Prepare data for Elasticsearch bulk update
-actions = []
-for doc_id, query_indices_set in document_sdg_mapping.items():
-    # Convert the set of query_indices to a list
-    sdg_list = list(query_indices_set)
+    actions = []
+    for doc_id, query_indices_set in document_sdg_mapping.items():
+        # Convert the set of query_indices to a list
+        sdg_list = list(query_indices_set)
 
-    # Get the epo_id and any other details for this document
-    details = document_details.get(doc_id, {})
-    epo_id = details.get("epo_id")
+        # Get the epo_id and any other details for this document
+        details = document_details.get(doc_id, {})
+        epo_id = details.get("epo_id")
 
-    # Assuming 'id_epab' in Elasticsearch corresponds to 'hit.id' or 'epo_id'
-    # You need to decide which one to use as the document ID for updating.
-    # If hit.id is the document ID in Elasticsearch:
-    es_doc_id = doc_id
-    # If epo_id is the document ID in Elasticsearch:
-    # es_doc_id = epo_id # Make sure epo_id is always present and unique
+        # Assuming 'id_epab' in Elasticsearch corresponds to 'hit.id' or 'epo_id'
+        # You need to decide which one to use as the document ID for updating.
+        # If hit.id is the document ID in Elasticsearch:
+        es_doc_id = doc_id
+        # If epo_id is the document ID in Elasticsearch:
+        # es_doc_id = epo_id # Make sure epo_id is always present and unique
 
-    if es_doc_id: # Only proceed if you have a valid ID to update
-        action = {
-            "_op_type": "update",
-            "_index": INDEX_NAME, 
-            "_id": es_doc_id,
-            "doc": {
-                "sdg": sdg_list,
-            },
-            "doc_as_upsert": True # Creates the document if it doesn't exist, otherwise updates
-        }
-        actions.append(action)
+        if es_doc_id: # Only proceed if you have a valid ID to update
+            action = {
+                "_op_type": "update",
+                "_index": INDEX_NAME, 
+                "_id": es_doc_id,
+                "doc": {
+                    "sdg": sdg_list,
+                },
+                "doc_as_upsert": True # Creates the document if it doesn't exist, otherwise updates
+            }
+            actions.append(action)
 
-# Now, use Elasticsearch's bulk API to update the documents
-# This is much more efficient than updating documents one by one.
-try:
-    helpers.bulk(es, actions)
-    context.log.info(f"Prepared {len(actions)} Elasticsearch bulk update actions.")
-except Exception as e:
-    context.log.info(f"Error during Elasticsearch bulk update: {e}")
+    # Now, use Elasticsearch's bulk API to update the documents
+    # This is much more efficient than updating documents one by one.
+    try:
+        helpers.bulk(es, actions)
+        context.log.info(f"Prepared {len(actions)} Elasticsearch bulk update actions.")
+    except Exception as e:
+        context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
 @asset(deps=[raw_file_asset],required_resource_keys={"es_resource"})
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):

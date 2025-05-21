@@ -15,6 +15,8 @@ from elasticsearch import Elasticsearch, helpers
 # from resources import SBERT, qdrant, es # Removed direct import, will access via context
 from qdrant_client.models import VectorParams, Distance
 from collections import defaultdict 
+import uuid
+
 
 
 class MyAssetConfig(Config):
@@ -143,7 +145,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     ids = [item['id'] for item in extracted_data_asset]  # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-        models.PointStruct(vector=emb.tolist(), payload={"epo_id": str(docs_id)})
+        models.PointStruct(id=str(uuid.uuid4()),vector=emb.tolist(), payload={"epo_id": str(docs_id)})
         for emb, docs_id in zip(embeddings, ids)
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)

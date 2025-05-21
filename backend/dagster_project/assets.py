@@ -201,7 +201,6 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
         es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
 
     properties_definition = {
-        "properties": {
             "original_text": {
                 "type": "text",
                 "analyzer": "standard"
@@ -214,8 +213,7 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
             },
             "sdg": {"type": "keyword"},
             "target": {"type": "keyword"}
-        }
-    }
+            }
 
     context.log.info(f"Creating index: {INDEX_NAME} with mapping...")
     try:

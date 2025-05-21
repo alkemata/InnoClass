@@ -51,36 +51,40 @@ def raw_file_asset(config: MyAssetConfig):
     return Output(value=data, metadata=metadata)
 
 
-@multi_asset(specs=[AssetSpec("targets_asset"), AssetSpec("goals_asset")])
-def prompts_asset(config: MyAssetConfig):
-    file_name_targets = config.filename_prompts_targets
-    file_name_goals = config.filename_prompts_goals
-
-    df1: Optional[pd.DataFrame] = None  # Initialize to None
-
-    df2: Optional[pd.DataFrame] = None  # Initialize to None
-
-    try:
-        df1 = fu.read_dataframe(file_name_targets)
-        df2 = fu.read_dataframe(file_name_goals)
-        metadata1 = {
-                "num_rows": MetadataValue.int(len(df1)),
-                "file_name": MetadataValue.text(file_name_targets)
-            }
-        yield Output(value=df1, metadata=metadata1)
-    
-        metadata2 = {
-                "num_rows": MetadataValue.int(len(df2)),
-                "file_name": MetadataValue.text(file_name_goals)
-            }
-    
-        yield Output(value=df2, metadata=metadata2)
+@asset
+def goals_asset(config: MyAssetConfig):
+    file_name = config.filename_prompts_goals
    
+    try:
+        df = fu.read_dataframe(file_name)
+        
+        metadata1 = {
+                "num_rows": MetadataValue.int(len(df)),
+                "file_name": MetadataValue.text(file_name)
+            }
+        return Output(value=df, metadata=metadata1)
+       
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise to fail the multi-asset
 
-    
+@asset
+def targets_asset(config: MyAssetConfig):
+    file_name = config.filename_prompts_targets
+   
+    try:
+        df = fu.read_dataframe(file_name)
+        
+        metadata1 = {
+                "num_rows": MetadataValue.int(len(df)),
+                "file_name": MetadataValue.text(file_name)
+            }
+        return Output(value=df, metadata=metadata1)
+       
+    except Exception as e:
+        print(f"Error loading File: {e}")
+        raise  # Re-raise to fail the multi-asset    
+
 
 @asset_check(asset=raw_file_asset)
 def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:

@@ -1,4 +1,4 @@
-from dagster import Definitions, load_assets_from_modules,ResourceDefinition
+from dagster import Definitions, load_assets_from_modules,ResourceDefinition, EnvVar
 
 from sensors import file_update_sensor
 import assets
@@ -23,6 +23,8 @@ defs = Definitions(
     resources={
         "model": SBERT(),
         "qdrant_resource": qdrant(),
-        "es_resource": es()
+        "es_resource": es(    url="http://elasticsearch:9200",
+        ELASTICSEARCH_USER=EnvVar("ELASTICSEARCH_USER"),
+        ELASTICSEARCH_PASSWORD=EnvVar("ELASTICSEARCH_PASSWORD"))
     }
 )

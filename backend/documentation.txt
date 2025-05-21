@@ -5,3 +5,5 @@ echo $(htpasswd -nb youruser yourpassword) | sed -e 's/\$/\$\$/g'
 change notebook env from TEST to PROD
 
 explain how to create passkey for ssh
+
+entrypoint.sh : +x

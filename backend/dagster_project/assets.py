@@ -123,6 +123,9 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     """
     batch_size: int = config.batch_size
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
+    actual_embedding_dimension = sbert_model.get_sentence_embedding_dimension()
+    context.log.info(f"Model reports embedding dimension: {actual_embedding_dimension}")
+
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     es_client.delete_collection(collection_name=config.current_collection)

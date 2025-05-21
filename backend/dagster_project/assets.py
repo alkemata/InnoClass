@@ -24,7 +24,7 @@ class MyAssetConfig(Config):
     filename_texts: str = "/opt/project_data/raw_data.dat.gz"
     filename_prompts_targets: str = "/opt/project_data/sdg_targets.dat"
     filename_prompts_goals: str = "/opt/project_data/sdg_goals.dat"
-    current_collection: str = "test"
+    current_collection: str = "test2"
     batch_size: int = 10
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.4
@@ -128,7 +128,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
-    es_client.delete_collection(collection_name=config.current_collection)
+    #es_client.delete_collection(collection_name=config.current_collection)
     if not qdrant_client.collection_exists(config.current_collection):
         qdrant_client.create_collection(
             collection_name=config.current_collection,

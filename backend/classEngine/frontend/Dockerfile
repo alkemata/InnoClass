@@ -6,4 +6,4 @@ COPY ./classEngine/frontend/package.json ./
 RUN npm install
 RUN npm install tailwindcss postcss autoprefixer
 #RUN npm init vite@latest . -- --template react-ts
-RUN npx tailwindcss init -p
+#RUN npx tailwindcss init -p

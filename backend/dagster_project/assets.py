@@ -149,7 +149,107 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
+@asset
+def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig):
+    """
+    Asset to check the content of a specific Qdrant collection.
+    """
+    qdrant_client: QdrantClient = context.resources.qdrant.get_client()
 
+    context.log.info(f"Checking content of collection: {config.current_collection}")
+    try:
+        scroll_result, _ = qdrant_client.scroll(
+            collection_name=config.current_collection,
+            limit=10,  # Retrieve more points if needed
+            with_payload=True,
+            with_vectors=False,
+        )
+        if scroll_result:
+            context.log.info(f"Sample points from Qdrant collection '{config.current_collection}':")
+            for point in scroll_result:
+                context.log.info(f"  ID: {point.id}, Payload: {point.payload}")
+        else:
+            context.log.info(f"Collection '{config.current_collection}' appears to be empty or no points retrieved.")
+
+        count_result = qdrant_client.count(
+            collection_name=config.current_collection,
+            exact=True
+        )
+        context.log.info(f"Total points in collection '{config.current_collection}': {count_result.count}")
+
+    except Exception as e:
+        context.log.error(f"Error checking Qdrant collection content: {e}")
+        raise # Re-raise to indicate asset failure
+
+# Assuming MyAssetConfig is defined elsewhere, or create a separate one for health checks
+# class QdrantHealthConfig(Config):
+#     pass # No specific config needed for basic health check
+
+@asset
+def check_qdrant_health(context: AssetExecutionContext):
+    """
+    Checks the health and status of the Qdrant database and reports results in Markdown metadata.
+    """
+    qdrant_client: QdrantClient = context.resources.qdrant.get_client()
+
+    markdown_content = []
+
+    try:
+        # 1. Basic Health Check
+        health_status = qdrant_client.health_check()
+        markdown_content.append(f"## Qdrant Health Status\n\n- **Status:** `{health_status}`\n")
+        context.log.info(f"Qdrant Health Status: {health_status}")
+
+        # 2. Get Telemetry (provides more detailed information including memory and disk usage)
+        telemetry_info = qdrant_client.get_telemetry()
+        markdown_content.append("## Qdrant Telemetry Information\n")
+        context.log.info("Qdrant Telemetry Information:")
+
+        if telemetry_info and telemetry_info.collections:
+            markdown_content.append("### Collections Information\n")
+            for collection in telemetry_info.collections:
+                markdown_content.append(f"#### Collection: `{collection.id}`\n")
+                markdown_content.append(f"- Points Count: `{collection.points_count}`\n")
+                markdown_content.append(f"- Vectors Count: `{collection.vectors_count}`\n")
+                markdown_content.append(f"- Disk Size: `{collection.disk_size} bytes`\n")
+                markdown_content.append(f"- RAM Size: `{collection.ram_size} bytes`\n")
+                markdown_content.append("\n") # Add a newline for separation
+                context.log.info(f"    Collection Name: {collection.id}")
+                context.log.info(f"      Points Count: {collection.points_count}")
+                context.log.info(f"      Vectors Count: {collection.vectors_count}")
+                context.log.info(f"      Disk Size (bytes): {collection.disk_size}")
+                context.log.info(f"      RAM Size (bytes): {collection.ram_size}")
+
+
+        if telemetry_info and telemetry_info.app:
+            markdown_content.append("### Application Information\n")
+            markdown_content.append(f"- Qdrant Version: `{telemetry_info.app.version}`\n")
+            markdown_content.append(f"- Qdrant Uptime: `{telemetry_info.app.uptime} seconds`\n")
+            context.log.info("  Application Information:")
+            context.log.info(f"    Qdrant Version: {telemetry_info.app.version}")
+            context.log.info(f"    Qdrant Uptime (seconds): {telemetry_info.app.uptime}")
+
+        # 3. System-level checks (if Qdrant is running on the same machine as Dagster)
+        markdown_content.append("## System Resource Usage (Dagster host)\n")
+        markdown_content.append(f"- CPU Usage: `{psutil.cpu_percent()}%`\n")
+        markdown_content.append(f"- Memory Usage: `{psutil.virtual_memory().percent}%`\n")
+        markdown_content.append(f"- Disk Usage (`/`): `{psutil.disk_usage('/').percent}%`\n")
+        context.log.info("System Resource Usage (where Dagster is running):")
+        context.log.info(f"  CPU Usage: {psutil.cpu_percent()}%")
+        context.log.info(f"  Memory Usage: {psutil.virtual_memory().percent}%")
+        context.log.info(f"  Disk Usage: {psutil.disk_usage('/').percent}%")
+
+
+    except Exception as e:
+        error_message = f"Error checking Qdrant health or telemetry: {e}"
+        markdown_content.append(f"## Error\n\n```\n{error_message}\n```\n")
+        context.log.error(error_message)
+        raise # Re-raise to indicate asset failure
+
+    # Set the Markdown metadata
+    context.add_output_metadata(
+        metadata={"Qdrant Health Report": MetadataValue.md("".join(markdown_content))}
+    )
 
 
 

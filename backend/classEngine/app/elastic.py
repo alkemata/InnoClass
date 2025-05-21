@@ -1,6 +1,11 @@
 from elasticsearch import AsyncElasticsearch
+import os
 
-es = AsyncElasticsearch(hosts=["http://elasticsearch:9200"])
+ELASTICSEARCH_USER = os.environ.get("ELASTICSEARCH_USER")
+ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
+es = AsyncElasticsearch(hosts="http://elasticsearch:9200",                    basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
+                    verify_certs=False, # Use with caution
+                    request_timeout=60)
 INDEX="test2"
 REVIEW_INDEX="test2"
 

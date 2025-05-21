@@ -27,7 +27,7 @@ class MyAssetConfig(Config):
     current_collection: str = "test"
     batch_size: int = 10
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
-    threshold: float =0.6
+    threshold: float =0.4
     es_sample_size: int = 5 # New: Number of documents to sample for overview
 
 
@@ -260,7 +260,7 @@ def check_qdrant_health(context: AssetExecutionContext):
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> None:
     """
     Encode a list of queries, run range searches in Qdrant,
-    and save scores to a CSV file.
+    and save to ES
     """
     INDEX_NAME=config.current_collection
     queries = goals_asset.tolist()
@@ -281,6 +281,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
             query_vector=q_emb.tolist(),
             score_threshold=threshold,
         )
+        context.log.info(str(len(hits)))
         for hit in hits:
             # Add the query_index to the set for the corresponding hit_id
             document_sdg_mapping[hit.id].add("SDG"+str(q_idx)) # Store as string if SDG field is keyword

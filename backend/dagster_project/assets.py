@@ -98,11 +98,11 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
     # especially for `isnull().any()` and `isnull().sum()`
     df = pd.DataFrame(raw_file_asset)
 
-    if "text" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "text"})
+    if "original_text" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "original_text"})
 
-    if df["text"].isnull().any():
-        return AssetCheckResult(passed=False, metadata={"empty_values": df["text"].isnull().sum()})
+    if df["original_text"].isnull().any():
+        return AssetCheckResult(passed=False, metadata={"empty_values": df["original_text"].isnull().sum()})
 
     return AssetCheckResult(passed=True)
 

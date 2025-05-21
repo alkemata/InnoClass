@@ -1,6 +1,7 @@
 from elasticsearch import AsyncElasticsearch
 
 es = AsyncElasticsearch(hosts=["http://elasticsearch:9200"])
+INDEX="test2"
 
 async def search_docs(index: str, *,
                       mode_field: str,

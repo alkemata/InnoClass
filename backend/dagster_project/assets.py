@@ -27,7 +27,7 @@ class MyAssetConfig(Config):
     current_collection: str = "test2"
     batch_size: int = 10
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
-    threshold: float =0.4
+    threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
 
 
@@ -271,6 +271,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
         hits = qdrant_client.search(
             collection_name=config.current_collection,
             query_vector=q_emb.tolist(),
+            score_threshold=config.threshold,
             limit=10,
         )
         print(hits)

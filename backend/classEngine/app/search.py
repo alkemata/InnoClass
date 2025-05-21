@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from typing import List, Optional
-from app.elastic import es, INDEX
+from elastic import es, INDEX
 from pydantic import BaseModel
 
 router = APIRouter()

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.elastic import es, INDEX, REVIEW_INDEX
+from elastic import es, INDEX, REVIEW_INDEX
 
 THRESHOLD = 5
 

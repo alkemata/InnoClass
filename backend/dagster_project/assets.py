@@ -149,12 +149,12 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
-@asset(required_resource_keys={"qdrant"})
+@asset(required_resource_keys={"qdrant_resource"})
 def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig):
     """
     Asset to check the content of a specific Qdrant collection.
     """
-    qdrant_client: QdrantClient = context.resources.qdrant.get_client()
+    qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
 
     context.log.info(f"Checking content of collection: {config.current_collection}")
     try:
@@ -185,12 +185,12 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
 # class QdrantHealthConfig(Config):
 #     pass # No specific config needed for basic health check
 
-@asset(required_resource_keys={"qdrant"})
+@asset(required_resource_keys={"qdrant_resource"})
 def check_qdrant_health(context: AssetExecutionContext):
     """
     Checks the health and status of the Qdrant database and reports results in Markdown metadata.
     """
-    qdrant_client: QdrantClient = context.resources.qdrant.get_client()
+    qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
 
     markdown_content = []
 

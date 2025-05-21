@@ -171,19 +171,6 @@ services:
       - "traefik.http.routers.api.tls.certresolver=myresolver"
       - "traefik.http.services.api.loadbalancer.server.port=8000"
 
-  frontend-builder:
-    build:
-      context: .
-      dockerfile: ./classEngine/frontend/Dockerfile
-    container_name: frontend-builder
-    working_dir: /app
-    volumes:
-      - ./classEngine/frontend:/app
-      - ./classEngine/frontend/dist:/app/dist
-      - frontend_node_modules:/app/node_modules
-    command: sh -c "npm run build"
-    restart: "no"
-
   frontend-server:
     build:
       context: .
@@ -198,7 +185,6 @@ services:
     expose: 
       - '9000'
     depends_on:
-      - frontend-builder
       - traefik
     restart: "no"
     networks:
@@ -209,7 +195,7 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
       - "traefik.http.services.frontend.loadbalancer.server.port=9000"
-      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.routers.frontend.middlewares=dashboard-auth"
 
 networks:
   es_network:

@@ -122,7 +122,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     return Output(value=result, metadata=metadata)  # Ensure you return the processed data
 
 
-@asset(deps=["extracted_data_asset"])
+@asset(deps=["extracted_data_asset"],required_resource_keys={"es_resource","model","qdrant_resource"})
 def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted_data_asset: List[dict]) -> None:  # Added extracted_data_asset
     """
     Stream a large text file line-by-line, embed each batch with SBERT,

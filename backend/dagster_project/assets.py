@@ -143,8 +143,8 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     ids = [item['id'] for item in extracted_data_asset]  # Extract ids
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
-        models.PointStruct(id=str(docs_id), vector=emb.tolist(), payload={"epo_id": str(docs_id)})
-        for idi, emb, docs_id in zip(range(1, len(ids) + 1), embeddings, ids)
+        models.PointStruct(vector=emb.tolist(), payload={"epo_id": str(docs_id)})
+        for emb, docs_id in zip(embeddings, ids)
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
 
@@ -262,7 +262,6 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     INDEX_NAME=config.current_collection
     queries = goals_asset.tolist()
     threshold: float = config.threshold
-    output_file_path: str = config.search_results_file # Get output file from config
 
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
     qdrant_client: QdrantClient = context.resources.qdrant.get_client()
@@ -281,7 +280,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
         )
         for hit in hits:
             # Add the query_index to the set for the corresponding hit_id
-            document_sdg_mapping[hit.id].add(str(q_idx)) # Store as string if SDG field is keyword
+            document_sdg_mapping[hit.id].add("SDG"+str(q_idx)) # Store as string if SDG field is keyword
 
             # Store other details. Assuming epo_id is consistent for a given hit.id
             if hit.id not in document_details:
@@ -302,10 +301,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 
         # Assuming 'id_epab' in Elasticsearch corresponds to 'hit.id' or 'epo_id'
         # You need to decide which one to use as the document ID for updating.
-        # If hit.id is the document ID in Elasticsearch:
-        es_doc_id = doc_id
-        # If epo_id is the document ID in Elasticsearch:
-        # es_doc_id = epo_id # Make sure epo_id is always present and unique
+        es_doc_id = epo_id # Make sure epo_id is always present and unique
 
         if es_doc_id: # Only proceed if you have a valid ID to update
             action = {

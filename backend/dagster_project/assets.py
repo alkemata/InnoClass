@@ -144,7 +144,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
         models.PointStruct(id=str(docs_id), vector=emb.tolist(), payload={"epo_id": str(docs_id)})
-        for idi, docs_id in zip(range(1, len(ids) + 1), embeddings, ids) # Corrected the range
+        for idi, emb, docs_id in zip(range(1, len(ids) + 1), embeddings, ids)
     ]
     qdrant_client.upsert(collection_name=config.current_collection, points=points)
 

@@ -52,7 +52,7 @@ def raw_file_asset(config: MyAssetConfig):
 
 
 @multi_asset(specs=[AssetSpec("targets_asset"), AssetSpec("goals_asset")])
-def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], Optional[MaterializeResult]]:
+def prompts_asset(config: MyAssetConfig):
     file_name_targets = config.filename_prompts_targets
     file_name_goals = config.filename_prompts_goals
 
@@ -70,14 +70,14 @@ def prompts_asset(config: MyAssetConfig) -> Tuple[Optional[MaterializeResult], O
                 "num_rows": MetadataValue.int(len(df1)),
                 "file_name": MetadataValue.text(file_name_targets)
             }
-        result1 = MaterializeResult(asset_key="targets_asset", metadata=metadata1)
+        result1 = Output(value=df1,asset_key="targets_asset", metadata=metadata1)
     
         metadata2 = {
                 "num_rows": MetadataValue.int(len(df2)),
                 "file_name": MetadataValue.text(file_name_goals)
             }
     
-        result2 = MaterializeResult(asset_key="goals_asset", metadata=metadata2)
+        result2 = Output(value=df2,asset_key="goals_asset", metadata=metadata2)
    
     except Exception as e:
         print(f"Error loading File: {e}")
@@ -253,7 +253,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     and save to ES
     """
     INDEX_NAME=config.current_collection
-    queries = goals_asset.tolist()
+    queries = goals_asset
     threshold: float = config.threshold
 
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context

@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select'; // Import SelectChangeEvent
 
-import sdgsData from './data/sdgs.json'; // Import your JSON data
+import sdgsData from '../data/sdgs.json'; // Import your JSON data
 
 // Define the type for the SDG data for better type safety
 interface SdgsDataType {

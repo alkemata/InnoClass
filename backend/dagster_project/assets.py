@@ -154,7 +154,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
 # 4. Asset: Run threshold search for 17 queries and persist scores
 # ------------------
-@asset(deps=["index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource"})
+@asset(deps=["index_texts", "targets_asset", "goals_asset"])
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset: pd.DataFrame) -> str:
     """
     Encode a list of queries, run range searches in Qdrant,
@@ -191,7 +191,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     context.log.info(f"Search results saved to {output_file_path}")
     return output_file_path # Return file path
 
-@asset(deps=[raw_file_asset])
+@asset(deps=[raw_file_asset],required_resource_keys={"es_resource"})
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es_resource.get_client()

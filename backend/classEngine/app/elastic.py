@@ -6,8 +6,8 @@ ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 es = AsyncElasticsearch(hosts="http://elasticsearch:9200",                    basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
                     verify_certs=False, # Use with caution
                     request_timeout=60)
-INDEX="test"
-REVIEW_INDEX="test"
+INDEX="test2"
+REVIEW_INDEX="test2"
 
 async def search_docs(index: str, *,
                       mode_field: str,

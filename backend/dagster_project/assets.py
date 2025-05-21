@@ -195,7 +195,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 @asset(deps=[raw_file_asset])
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
-    es_client: Elasticsearch = context.resources.es.get_client()
+    es_client: Elasticsearch = context.resources.es_resource.get_client()
     INDEX_NAME=config.current_collection
     if es_client.indices.exists(index=INDEX_NAME):
         context.log.info(f"Deleting existing index: {INDEX_NAME}")
@@ -227,7 +227,7 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
         )
     except Exception as e:
         print(f"Error creating index: {e}")
-        exit()
+        raise
     docs_to_index = []
     for text in raw_file_asset:
         doc = {

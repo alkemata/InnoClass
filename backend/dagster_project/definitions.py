@@ -23,6 +23,6 @@ defs = Definitions(
     resources={
         "model": SBERT(),
         "qdrant_resource": qdrant(),
-        "es_resource": es( ))
+        "es_resource": es( )
     }
 )

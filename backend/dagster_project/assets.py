@@ -202,19 +202,18 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
 
     index_mapping = {
         "properties": {
-            "original_text": { # For keyword search (BM25)
+            "original_text": {
                 "type": "text",
-                "analyzer": "standard" # Use a suitable analyzer
+                "analyzer": "standard"
             },
-            "idepo": {type:"text"},
-            "pubnbr": {type:"keyword"},
-            "title":    { # For keyword search (BM25)
+            "idepo": {"type": "text"}, # <--- CORRECTED
+            "pubnbr": {"type": "keyword"}, # <--- CORRECTED
+            "title": {
                 "type": "text",
-                "analyzer": "standard" # Use a suitable analyzer
+                "analyzer": "standard"
             },
             "sdg": {"type": "keyword"},
             "target": {"type": "keyword"}
-            # Add other fields from your JSON if you want to index/search them
         }
     }
 

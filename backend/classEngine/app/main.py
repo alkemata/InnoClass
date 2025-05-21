@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import search, feedback
+import search, feedback
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()

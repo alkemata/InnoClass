@@ -205,7 +205,7 @@ def merge_sentence(processed_texts):
         else:
             merged[text_id] += "\n" + sentence
     # Convert to list of dictionaries as required.
-    return [{"id":text_id,"text":sentences, "status":""} for text_id, sentences in merged.items()]
+    return [{"id":text_id,"text":sentences} for text_id, sentences in merged.items()]
 
 def analyze_text_data(data):
     """    
@@ -224,7 +224,7 @@ def analyze_text_data(data):
     for entry in data:
         # Adjust the keys if your structure is different.
         nbr+=1
-        sentence = entry['sentence']
+        sentence = entry['text']
         count = len(sentence.split())
         word_counts.append(count)
     word_counts = np.array(word_counts)

@@ -137,6 +137,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
     texts = [item['text'] for item in extracted_data_asset]  # Extract texts
     ids = [item['id'] for item in extracted_data_asset]  # Extract ids
+    print(texts)
     embeddings = sbert_model.encode(texts, batch_size=batch_size, convert_to_numpy=True)
     points = [
         models.PointStruct(id=str(uuid.uuid4()),vector=emb.tolist(), payload={"epo_id": str(docs_id)})

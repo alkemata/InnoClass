@@ -7,7 +7,7 @@ THRESHOLD = 5
 router = APIRouter()
 
 class Feedback(BaseModel):
-    doc_id: str
+    id: str
     feedback: str   # "up" or "down"
 
 @router.post("/feedback")

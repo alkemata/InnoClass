@@ -265,11 +265,11 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 
     # Encode queries
     prompts_list = [item['Prompt'] for item in queries]
-    q_embs = sbert_model.encode(queries, convert_to_numpy=True)
+    q_embs = sbert_model.encode(prompts_list, convert_to_numpy=True)
     document_sdg_mapping = defaultdict(set) # Using a set to store unique query_ids for each document
     document_details = {} # To store other relevant details like epo_id
     
-    
+    print(prompts_list)
     for q_idx, q_emb in enumerate(q_embs,start=1):
         hits = qdrant_client.search(
             collection_name="test2",

@@ -277,7 +277,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
             score_threshold=config.threshold,
             limit=2000,
         )
-        print(query_vector)
+        print(str(q_emb))
         context.log.info(str(len(hits)))
         for hit in hits:
             # Add the query_index to the set for the corresponding hit_id

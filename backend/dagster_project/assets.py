@@ -167,13 +167,13 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
             for point in scroll_result:
                 context.log.info(f"  ID: {point.id}, Payload: {point.payload}")
         else:
-            context.log.info(f"Collection '{config.current_collection}' appears to be empty or no points retrieved.")
+            context.log.info(f"Collection '{INDEX2}' appears to be empty or no points retrieved.")
 
         count_result = qdrant_client.count(
             collection_name=INDEX2,
             exact=True
         )
-        context.log.info(f"Total points in collection '{config.current_collection}': {count_result.count}")
+        context.log.info(f"Total points in collection '{INDEX2}': {count_result.count}")
 
     except Exception as e:
         context.log.error(f"Error checking Qdrant collection content: {e}")

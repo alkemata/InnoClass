@@ -40,7 +40,7 @@ def raw_file_asset(config: MyAssetConfig):
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise the exception to fail the asset
-    wordcounts=fu.wourd_count(data)
+    wordcounts=fu.word_count(data)
     distrib=fu.make_plot(wordcounts,"Number of words")
     metadata = {
         "num_rows": MetadataValue.int(len(data)),

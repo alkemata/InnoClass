@@ -156,7 +156,7 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
     context.log.info(f"Checking content of collection: {config.current_collection}")
     try:
         scroll_result, _ = qdrant_client.scroll(
-            collection_name=config.current_collection,
+            collection_name=config.main_table,
             limit=10,  # Retrieve more points if needed
             with_payload=True,
             with_vectors=False,
@@ -255,7 +255,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     Encode a list of queries, run range searches in Qdrant,
     and save to ES
     """
-    INDEX_NAME=config.current_collection
+    INDEX_NAME=config.main_table
     queries = goals_asset
     threshold: float = config.threshold
 
@@ -323,15 +323,14 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
         context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
 @asset(required_resource_keys={"es_resource"},description="Creation of the Main table of patents")
-def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) -> None:
+def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) -> MaterializeResult:
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     INDEX_NAME=config.main_table
     properties_definition = {
             "original_text": {
                 "type": "text",
                 "analyzer": "standard"
-            },
-            "idepo": {"type": "text"}, 
+            }, 
             "pubnbr": {"type": "keyword"},
             "title": {
                 "type": "text",
@@ -367,7 +366,7 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
     for text in raw_file_asset:
         doc = {
             "_index": INDEX_NAME,
-            "idepo": text["id"],
+            "_id": text["id"],
             "pubnbr": text["pubnbr"],
             "original_text": text["original_text"],
             "title": text["title"],

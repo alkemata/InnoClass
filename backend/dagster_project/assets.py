@@ -31,7 +31,7 @@ class MyAssetConfig(Config):
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
-    clear_vector: str="yes"
+    clear_vector: str="no"
 
 @asset(description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
@@ -106,8 +106,9 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
     merged=fu.merge_sentence(extracted)
     result=fu.merge_by_id(merged,raw_file_asset)
-    if result["text"]=="":
-        result["text"]=result["title"]
+    for item in result:
+        if item["text"] == "":
+            item["text"] = item["title"]
     stats = fu.analyze_text_data(merged)
     # Attach metadata: number of lines
     metadata = {

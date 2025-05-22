@@ -292,6 +292,7 @@ def merge_by_id(list1, list2):
     lookup = {item['id']: item['original_text'] for item in list2}
     lookup1 = {item['id']: item['pubnbr'] for item in list2}
     lookup2 = {item['id']: item['pubdate'] for item in list2}
+    lookup3 = {item['id']: item['title'] for item in list2}
 
     # Merge with corresponding entry in list1
     merged = []
@@ -301,6 +302,7 @@ def merge_by_id(list1, list2):
             'text': item['text'],
             'pubdate': lookup2.get(item['id']) ,
             'pubnbr':lookup1.get(item['id']) ,
+            'title':lookup3.get(item['title']) ,
             'original_text': lookup.get(item['id'])  # Use .get() to avoid KeyError
         }
         merged.append(merged_item)

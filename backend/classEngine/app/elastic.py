@@ -47,7 +47,9 @@ async def search_docs(index: str, *,
             index=index,
             body=body
         )
+        print(str(resp))
         return resp.body
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -296,14 +296,9 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
         
         # Convert the set of query_indices to a list
         sdg_list = list(query_indices_set)
-        print(doc_id)
-        print(sdg_list)
-        # Get the epo_id and any other details for this document
+         # Get the epo_id and any other details for this document
         details = document_details.get(doc_id, {})
         epo_id = details.get("epo_id")
-
-        # Assuming 'id_epab' in Elasticsearch corresponds to 'hit.id' or 'epo_id'
-        # You need to decide which one to use as the document ID for updating.
         es_doc_id = epo_id # Make sure epo_id is always present and unique
 
         if es_doc_id: # Only proceed if you have a valid ID to update

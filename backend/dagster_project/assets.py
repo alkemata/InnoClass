@@ -391,7 +391,7 @@ def es_health_check_and_overview(context: AssetExecutionContext, config: MyAsset
     of its content and metrics.
     """
     es_client: Elasticsearch = context.resources.es_resource.get_client()
-    index_name = config.current_collection
+    index_name = config.main_table
 
     context.log.info(f"Performing health check and overview for Elasticsearch index: {index_name}")
 

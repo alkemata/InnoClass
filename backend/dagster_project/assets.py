@@ -23,7 +23,10 @@ class MyAssetConfig(Config):
     filename_texts: str = "/opt/project_data/raw_data.dat.gz"
     filename_prompts_targets: str = "/opt/project_data/sdg_targets.dat"
     filename_prompts_goals: str = "/opt/project_data/sdg_goals.dat"
-    current_collection: str = "test2"
+    main_table: str = "main_table"
+    ref_table:str="ref_table"
+    feedback_table:str="fb_table"
+    test_table:str="test_table"
     batch_size: int = 10
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.7
@@ -319,15 +322,10 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     except Exception as e:
         context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
-@asset(deps=[raw_file_asset],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
-def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
-
+@asset(required_resource_keys={"es_resource"})
+def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
     es_client: Elasticsearch = context.resources.es_resource.get_client()
-    INDEX_NAME=config.current_collection
-    if es_client.indices.exists(index=INDEX_NAME):
-        context.log.info(f"Deleting existing index: {INDEX_NAME}")
-        es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
-
+    INDEX_NAME=config.main_table
     properties_definition = {
             "original_text": {
                 "type": "text",
@@ -342,18 +340,28 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
             "sdg": {"type": "keyword"},
             "target": {"type": "keyword"}
             }
-
     context.log.info(f"Creating index: {INDEX_NAME} with mapping...")
     try:
         es_client.indices.create(
             index=config.current_collection,
             body=   { "mappings": {  # <--- This is the key you need
         "properties": properties_definition
-      }}
+    }}
         )
+        yield MaterializeResult(asset_key="es_maintable_created")
     except Exception as e:
         print(f"Error creating index: {e}")
-        raise
+        raise    
+
+@asset(deps=[raw_file_asset,es_maintanable_created],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
+def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
+
+    es_client: Elasticsearch = context.resources.es_resource.get_client()
+    INDEX_NAME=config.main_table
+#   if es_client.indices.exists(index=INDEX_NAME):
+#       context.log.info(f"Deleting existing index: {INDEX_NAME}")
+#       es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
+
     docs_to_index = []
     for text in raw_file_asset:
         doc = {
@@ -373,6 +381,8 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
     except Exception as e:
         context.log.info(f"Error during bulk indexing: {e}")
         raise
+    return dg.Definitions(
+    assets=[asset_key])
 
 @asset(deps=[es_patent_light],required_resource_keys={"es_resource"})
 def es_health_check_and_overview(context: AssetExecutionContext, config: MyAssetConfig):

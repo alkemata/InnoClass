@@ -29,7 +29,7 @@ class MyAssetConfig(Config):
     test_table:str="test_table"
     batch_size: int = 10
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
-    threshold: float =0.7
+    threshold: float =0.85
     es_sample_size: int = 5 # New: Number of documents to sample for overview
 
 
@@ -273,7 +273,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
             collection_name="test2",
             query_vector=q_emb.tolist(),
             score_threshold=config.threshold,
-            limit=10,
+            limit=2000,
         )
         print(hits)
         context.log.info(str(len(hits)))

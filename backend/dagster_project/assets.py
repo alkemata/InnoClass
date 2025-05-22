@@ -131,7 +131,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     if not qdrant_client.collection_exists(config.current_collection):
         qdrant_client.create_collection(
-            collection_name=config.current_collection,
+            collection_name=config."test2",
             vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
         )
 

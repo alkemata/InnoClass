@@ -17,6 +17,7 @@ from qdrant_client.models import VectorParams, Distance
 from collections import defaultdict 
 import uuid
 import checkfunc
+import psutil
 
 
 
@@ -32,8 +33,8 @@ class MyAssetConfig(Config):
 
 
 
-@asset
-def raw_file_asset( config: MyAssetConfig):
+@asset(description="Raw file provided epadb in TIP")
+def raw_file_asset(config: MyAssetConfig):
     file_name = config.filename_texts
     # Load file
     try:
@@ -48,7 +49,7 @@ def raw_file_asset( config: MyAssetConfig):
         "file_name": MetadataValue.text(file_name),
         "preview": MetadataValue.md(metadata["extract_method"])
     }
-    yield AssetMaterialization(asset_key="raw_file_asset",metadata=metadata)
+    yield MaterializeResult(asset_key="raw_file_asset",metadata=metadata)
     yield Output(value=data)
 
 

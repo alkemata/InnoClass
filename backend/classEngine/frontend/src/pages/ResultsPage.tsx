@@ -204,62 +204,65 @@ function ResultsPage() {
               Total Hits: {searchResults.total}
             </Typography>
             {searchResults.hits.length > 0 ? (
-              <List>
-                {searchResults.hits.map((hit) => (
-                  <Paper key={hit.id} elevation={1} sx={{ mb: 2, p: 2 }}>
-                    <ListItem alignItems="flex-start" secondaryAction={
-                      <Box>
-                        <IconButton aria-label="upvote" onClick={() => handleFeedback(hit.id, 'up')}>
-                          <ArrowUpwardIcon />
-                        </IconButton>
-                        <IconButton aria-label="downvote" onClick={() => handleFeedback(hit.id, 'down')}>
-                          <ArrowDownwardIcon />
-                        </IconButton>
-                      </Box>
-                    }>
-                      <ListItemText
-                        primary={
-                          <Typography variant="h6" component="span">
-                            {hit.title}
-                          </Typography>
-                        }
-                        secondary={
-                          <>
-                            <Typography
-                              sx={{ display: 'block' }}
-                              component="span"
-                              variant="body2"
-                              color="text.primary"
-                            >
-                              Extracted Text: {hit.extracted_text || 'N/A'}
+              // Start of the React Fragment
+              <React.Fragment>
+                <List>
+                  {searchResults.hits.map((hit) => (
+                    <Paper key={hit.id} elevation={1} sx={{ mb: 2, p: 2 }}>
+                      <ListItem alignItems="flex-start" secondaryAction={
+                        <Box>
+                          <IconButton aria-label="upvote" onClick={() => handleFeedback(hit.id, 'up')}>
+                            <ArrowUpwardIcon />
+                          </IconButton>
+                          <IconButton aria-label="downvote" onClick={() => handleFeedback(hit.id, 'down')}>
+                            <ArrowDownwardIcon />
+                          </IconButton>
+                        </Box>
+                      }>
+                        <ListItemText
+                          primary={
+                            <Typography variant="h6" component="span">
+                              {hit.title}
                             </Typography>
-                            <Typography component="span" variant="body2" color="text.secondary">
-                              SDGs: {hit.sdgs.join(', ') || 'N/A'} | Targets: {hit.targets.join(', ') || 'N/A'}
-                            </Typography>
-                            <Typography component="span" variant="body2" color="text.secondary">
-                              <br />Up Votes: {hit.up} | Down Votes: {hit.down}
-                            </Typography>
-                          </>
-                        }
-                      />
-                    </ListItem>
-                  </Paper>
-                ))}
-              </List>
+                          }
+                          secondary={
+                            <>
+                              <Typography
+                                sx={{ display: 'block' }}
+                                component="span"
+                                variant="body2"
+                                color="text.primary"
+                              >
+                                Extracted Text: {hit.extracted_text || 'N/A'}
+                              </Typography>
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                SDGs: {hit.sdgs.join(', ') || 'N/A'} | Targets: {hit.targets.join(', ') || 'N/A'}
+                              </Typography>
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                <br />Up Votes: {hit.up} | Down Votes: {hit.down}
+                              </Typography>
+                            </>
+                          }
+                        />
+                      </ListItem>
+                    </Paper>
+                  ))}
+                </List>
 
-              {/* Pagination Component */}
-              {totalPages > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-                  <Pagination
-                    count={totalPages}
-                    page={currentPage}
-                    onChange={handlePageChange}
-                    color="primary"
-                    showFirstButton
-                    showLastButton
-                  />
-                </Box>
-              )}
+                {/* Pagination Component */}
+                {totalPages > 1 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={handlePageChange}
+                      color="primary"
+                      showFirstButton
+                      showLastButton
+                    />
+                  </Box>
+                )}
+              </React.Fragment> // End of the React Fragment
             ) : (
               <Typography>No results found for your search criteria.</Typography>
             )}

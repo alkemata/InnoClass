@@ -17,8 +17,6 @@ from qdrant_client.models import VectorParams, Distance
 from collections import defaultdict 
 import uuid
 import checkfunc
-import psutil
-
 
 
 class MyAssetConfig(Config):

@@ -270,7 +270,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 
     for q_idx, q_emb in enumerate(q_embs):
         hits = qdrant_client.search(
-            collection_name=INDEX_NAME,
+            collection_name="test2"",
             query_vector=q_emb.tolist(),
             score_threshold=config.threshold,
             limit=10,

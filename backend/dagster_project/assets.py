@@ -322,7 +322,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     except Exception as e:
         context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
-@asset(required_resource_keys={"es_resource"})
+@asset(required_resource_keys={"es_resource"},description="Creation of the Main table of patents")
 def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     INDEX_NAME=config.main_table
@@ -348,8 +348,8 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
         "properties": properties_definition
     }}
         )
-        yield MaterializeResult()
-
+        yield MaterializeResult(asset_key="es_maintable_created")
+        
     except Exception as e:
         print(f"Error creating index: {e}")
         raise    

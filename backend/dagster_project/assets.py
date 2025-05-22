@@ -258,7 +258,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     INDEX_NAME=config.main_table
     queries = goals_asset
     threshold: float = config.threshold
-
+    print(queries)
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()

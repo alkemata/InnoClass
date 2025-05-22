@@ -264,7 +264,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     es_client: Elasticsearch = context.resources.es_resource.get_client()
 
     # Encode queries
-    prompts_list = [item['Prompt'] for item in queries]
+    prompts_list = [item['Goal Title'] for item in queries]
     q_embs = sbert_model.encode(prompts_list, convert_to_numpy=True)
     document_sdg_mapping = defaultdict(set) # Using a set to store unique query_ids for each document
     document_details = {} # To store other relevant details like epo_id

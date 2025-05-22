@@ -9,6 +9,11 @@ import pickle
 from typing import List, Optional
 from bs4 import BeautifulSoup  # Missing import
 import numpy as np          # Missing import
+from dagster import MetadataValue
+import seaborn
+import matplotlib.pyplot as plt
+import base64
+from io import BytesIO
 
 nlp = spacy.blank('en')
 nlp.add_pipe('sentencizer')
@@ -322,3 +327,24 @@ def merge_sentence(processed_texts):
             merged[text_id] += "\n" + sentence
     # Convert to list of dictionaries as required.
     return [{"id":text_id,"text":sentences} for text_id, sentences in merged.items()]
+
+def word_count(data):
+    word_counts = []
+    nbr=0
+    for entry in data:
+        # Adjust the keys if your structure is different.
+        nbr+=1
+        sentence = entry['text']
+        count = len(sentence.split())
+        word_counts.append(count)
+    return np.array(word_counts)
+
+def make_plot(data,x_title):
+    plt.clf()
+    distrib_plot = seaborn.distplot(data, binwidth=20, x=x_title, y="count")
+    fig = distrib_plot.get_figure()
+    buffer = BytesIO()
+    fig.savefig(buffer)
+    image_data = base64.b64encode(buffer.getvalue())
+
+    return MetadataValue.md(f"![img](data:image/png;base64,{image_data.decode()})")

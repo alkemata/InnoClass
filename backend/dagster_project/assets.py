@@ -40,12 +40,13 @@ def raw_file_asset(config: MyAssetConfig):
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise the exception to fail the asset
-
-    # Attach metadata: number of lines
+    wordcounts=funcutils.wourd_count(data)
+    distrib=funcutils.make_plot(wordcounts,"Number of words")
     metadata = {
         "num_rows": MetadataValue.int(len(data)),
         "file_name": MetadataValue.text(file_name),
-        "preview": MetadataValue.md(metadata["extract_method"])
+        "Extraction method": MetadataValue.text(metadata["extract_method"]),
+        "Distribution of words":distrib
     }
     yield MaterializeResult(asset_key="raw_file_asset",metadata=metadata)
     return Output(value=data)

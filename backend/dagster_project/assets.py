@@ -122,6 +122,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     Stream a large text file line-by-line, embed each batch with SBERT,
     and upsert into a Qdrant collection.
     """
+    INDEX2="test2"
     batch_size: int = config.batch_size
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
     actual_embedding_dimension = sbert_model.get_sentence_embedding_dimension()
@@ -129,9 +130,9 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
 
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
-    if not qdrant_client.collection_exists(config.current_collection):
+    if not qdrant_client.collection_exists(INDEX2):
         qdrant_client.create_collection(
-            collection_name="test2",
+            collection_name=INDEX2,
             vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
         )
 
@@ -154,16 +155,16 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
     """
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
 
-    context.log.info(f"Checking content of collection: {config.current_collection}")
+    context.log.info(f"Checking content of collection: {INDEX2}")
     try:
         scroll_result, _ = qdrant_client.scroll(
-            collection_name="test2",
+            collection_name=INDEX2,
             limit=10,  # Retrieve more points if needed
             with_payload=True,
             with_vectors=False,
         )
         if scroll_result:
-            context.log.info(f"Sample points from Qdrant collection '{config.current_collection}':")
+            context.log.info(f"Sample points from Qdrant collection '{INDEX2}':")
             for point in scroll_result:
                 context.log.info(f"  ID: {point.id}, Payload: {point.payload}")
         else:

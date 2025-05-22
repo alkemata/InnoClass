@@ -61,7 +61,7 @@ def goals_asset(config: MyAssetConfig):
                 "num_rows": MetadataValue.int(len(df)),
                 "file_name": MetadataValue.text(file_name)
             }
-        return Output(value=df, metadata=metadata1)
+        yield Output(value=df, metadata=metadata1)
        
     except Exception as e:
         print(f"Error loading File: {e}")

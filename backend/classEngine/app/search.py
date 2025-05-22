@@ -28,7 +28,7 @@ class SearchResponse(BaseModel):
 async def search(req: SearchRequest):
     print("request received!")
     # build ES bool query
-    filters = [{ "terms": { "sdg": req.sdg_ids}}] if req.selections else []
+    filters = [{ "terms": { "sdg": req.selections}}] if req.selections else []
     must = []
 #    if selections:
 #        must.append({"terms": {"sdg": selected_sdg}})

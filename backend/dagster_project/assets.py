@@ -147,7 +147,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     qdrant_client.upsert(collection_name=INDEX2, points=points)
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
-@asset(deps=["index_text"],required_resource_keys={"qdrant_resource"})
+@asset(deps=["index_texts"],required_resource_keys={"qdrant_resource"})
 def clear_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig):
     """
     Asset to check the content of a specific Qdrant collection.

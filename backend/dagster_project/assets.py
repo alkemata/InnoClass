@@ -382,8 +382,7 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
     except Exception as e:
         context.log.info(f"Error during bulk indexing: {e}")
         raise
-    return dg.Definitions(
-    assets=[asset_key])
+
 
 @asset(deps=[es_patent_light],required_resource_keys={"es_resource"})
 def es_health_check_and_overview(context: AssetExecutionContext, config: MyAssetConfig):

@@ -15,24 +15,41 @@ async def search_docs(index: str, *,
                       keywords: str,
                       page: int = 0,
                       size: int = 20):
-    # build your query
+    # Build your query
+    must_clauses = []
+
+    # Add the "sdg" terms query (one of the selected in the sdg field)
+    if selected_sdg:
+        must_clauses.append({"terms": {"sdg": selected_sdg}})
+
+    # Add the "keywords" query to "title" if keywords is not empty or not ""
+    if keywords:
+        must_clauses.append({"match": {"title": keywords}})
+
+    # If no clauses are present, it means no specific search criteria are provided,
+    # so we might want to return all documents or handle it differently.
+    # For now, let's assume at least one criteria (selected_sdg or keywords) will be provided.
+    if not must_clauses:
+        raise HTTPException(status_code=400, detail="At least 'selected_sdg' or 'keywords' must be provided.")
+
     body = {
         "query": {
             "bool": {
-                "must": [
-                    {"terms": {mode_field: selected}},
-                    {"multi_match": {
-                        "query": keywords,
-                        "fields": ["title", "full_text"]
-                    }}
-                ]
+                "must": must_clauses
             }
         },
         "from": page * size,
         "size": size
     }
-    resp = await es.search(index=index, body=body)
-    return resp["hits"]["hits"]
+
+    try:
+        resp = await es.search(
+            index=index,
+            body=body
+        )
+        return resp.body
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 async def update_feedback(index: str, doc_id: str, field: str):
     # increment up/down counter

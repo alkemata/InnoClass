@@ -13,4 +13,5 @@ ENV DAGSTER_HOME=/opt/dagster/dagster_home/
 EXPOSE 4000
 
 # CMD allows this to be overridden from run launchers or executors to execute runs and steps
+CMD ["dagster", "code-server", "start" , "-h", "0.0.0.0", "-p", "4000", "-f", "definitions.py"
 CMD ["dagster","api", "grpc",  "-h", "0.0.0.0", "-p", "4000", "-f", "definitions.py"]

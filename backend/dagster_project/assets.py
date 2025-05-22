@@ -31,7 +31,7 @@ class MyAssetConfig(Config):
 
 
 
-@asset(description="Raw file provided epadb in TIP")
+@asset(description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
     file_name = config.filename_texts
     # Load file
@@ -47,7 +47,8 @@ def raw_file_asset(config: MyAssetConfig):
         "file_name": MetadataValue.text(file_name),
         "preview": MetadataValue.md(metadata["extract_method"])
     }
-    yield Output(value=data,metadata=metadata)
+    yield MaterializeResult(asset_key="raw_file_asset",metadata=metadata)
+    return Output(value=data)
 
 
 @asset

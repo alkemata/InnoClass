@@ -258,7 +258,6 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     INDEX_NAME=config.main_table
     queries = goals_asset
     threshold: float = config.threshold
-    print(queries)
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
@@ -269,8 +268,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     document_sdg_mapping = defaultdict(set) # Using a set to store unique query_ids for each document
     document_details = {} # To store other relevant details like epo_id
     
-    for q_idx, q_emb in enumerate(q_embs):
-        print(q_idx)
+    for q_idx, q_emb in enumerate(q_embs,start=1):
         hits = qdrant_client.search(
             collection_name="test2",
             query_vector=q_emb.tolist(),

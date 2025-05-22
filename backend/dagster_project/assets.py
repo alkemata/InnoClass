@@ -326,6 +326,8 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) -> MaterializeResult:
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     INDEX_NAME=config.main_table
+    context.log.info(f"Deleting existing index: {INDEX_NAME}")
+    es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
     properties_definition = {
             "original_text": {
                 "type": "text",

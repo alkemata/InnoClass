@@ -325,19 +325,8 @@ def merge_sentence(processed_texts):
             merged[text_id] = sentence
         else:
             merged[text_id] += "\n" + sentence
-    # Convert to list of dictionaries as required.
+    # Convert to list of dictionaries 
     return [{"id":text_id,"text":sentences} for text_id, sentences in merged.items()]
-
-def word_count(data):
-    word_counts = []
-    nbr=0
-    for entry in data:
-        # Adjust the keys if your structure is different.
-        nbr+=1
-        sentence = entry['sentence']
-        count = len(sentence.split())
-        word_counts.append(count)
-    return np.array(word_counts)
 
 def make_plot(data,x_title):
     plt.clf()

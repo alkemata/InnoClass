@@ -131,7 +131,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     if not qdrant_client.collection_exists(config.current_collection):
         qdrant_client.create_collection(
-            collection_name=config."test2",
+            collection_name="test2",
             vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
         )
 
@@ -157,7 +157,7 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
     context.log.info(f"Checking content of collection: {config.current_collection}")
     try:
         scroll_result, _ = qdrant_client.scroll(
-            collection_name=config.main_table,
+            collection_name="test2",
             limit=10,  # Retrieve more points if needed
             with_payload=True,
             with_vectors=False,

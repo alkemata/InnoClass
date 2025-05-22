@@ -41,7 +41,7 @@ async def search_docs(index: str, *,
         "from": page * size,
         "size": size
     }
-
+    print("sending request to es")
     try:
         resp = await es.search(
             index=index,

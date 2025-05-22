@@ -277,7 +277,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
             score_threshold=config.threshold,
             limit=2000,
         )
-        print(hits)
+
         context.log.info(str(len(hits)))
         for hit in hits:
             # Add the query_index to the set for the corresponding hit_id
@@ -293,9 +293,11 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 # Prepare data for Elasticsearch bulk update
     actions = []
     for doc_id, query_indices_set in document_sdg_mapping.items():
+        
         # Convert the set of query_indices to a list
         sdg_list = list(query_indices_set)
-
+        print(doc_id)
+        print(sdg_list)
         # Get the epo_id and any other details for this document
         details = document_details.get(doc_id, {})
         epo_id = details.get("epo_id")

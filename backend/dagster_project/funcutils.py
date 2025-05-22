@@ -244,27 +244,6 @@ def analyze_text_data(data):
     }
     return stats
 
-
-def merge_by_id(list1, list2):
-    # Create a lookup dictionary from list2 using 'id' as the key
-    lookup = {item['id']: item['original_text'] for item in list2}
-    lookup1 = {item['id']: item['pubnbr'] for item in list2}
-    lookup2 = {item['id']: item['pubdate'] for item in list2}
-
-    # Merge with corresponding entry in list1
-    merged = []
-    for item in list1:
-        merged_item = {
-            'id': item['id'],
-            'text': item['text'],
-            'pubdate': lookup2.get(item['id']) ,
-            'pubnbr':lookup1.get(item['id']) ,
-            'original_text': lookup.get(item['id'])  # Use .get() to avoid KeyError
-        }
-        merged.append(merged_item)
-    
-    return merged
-
 # function used tor ead goals and targets files
 def read_dataframe(filepath):
  
@@ -302,7 +281,7 @@ def merge_by_id(list1, list2):
             'text': item['text'],
             'pubdate': lookup2.get(item['id']) ,
             'pubnbr':lookup1.get(item['id']) ,
-            'title':lookup3.get(item['title']) ,
+            'title':lookup3.get(item['i']) ,
             'original_text': lookup.get(item['id'])  # Use .get() to avoid KeyError
         }
         merged.append(merged_item)

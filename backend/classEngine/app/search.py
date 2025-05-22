@@ -6,10 +6,10 @@ from pydantic import BaseModel
 router = APIRouter()
 
 class SearchRequest(BaseModel):
-    selections: List[str]
+    sdg_ids: List[str]
     keywords: Optional[str] = ""
     page: int = 1
-    size: int = 20
+    size: int = 10
 
 class Hit(BaseModel):
     id: str
@@ -28,10 +28,10 @@ class SearchResponse(BaseModel):
 async def search(req: SearchRequest):
     print("request received!")
     # build ES bool query
-    filters = [{ "terms": { req.category: req.selections }}] if req.selections else []
+    filters = [{ "terms": { "sdg": req.sdg_ids}}] if req.selections else []
     must = []
-    if selections:
-        must.append({"terms": {"sdg": selected_sdg}})
+#    if selections:
+#        must.append({"terms": {"sdg": selected_sdg}})
     if req.keywords:
         must.append({
             "multi_match": {

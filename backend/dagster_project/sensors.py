@@ -1,5 +1,5 @@
 import os
-from dagster import sensor, SensorEvaluationContext, RunRequest, SkipReason, AssetSelection,Field
+from dagster import sensor, SensorEvaluationContext, RunRequest, SkipReason, AssetSelection,Field,Config
 from assets import raw_file_asset
 
 class FileUpdateSensorConfig(Config):

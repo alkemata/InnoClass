@@ -27,7 +27,7 @@ class MyAssetConfig(Config):
     ref_table:str="ref_table"
     feedback_table:str="fb_table"
     test_table:str="test_table"
-    batch_size: int = 10
+    batch_size: int = 100
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.85
     es_sample_size: int = 5 # New: Number of documents to sample for overview
@@ -144,7 +144,6 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
         for emb, docs_id in zip(embeddings, ids)
     ]
     qdrant_client.upsert(collection_name=INDEX2, points=points)
-
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
 @asset(required_resource_keys={"qdrant_resource"})
@@ -152,6 +151,7 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
     """
     Asset to check the content of a specific Qdrant collection.
     """
+    INDEX2="test2"
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
 
     context.log.info(f"Checking content of collection: {INDEX2}")
@@ -170,7 +170,7 @@ def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
             context.log.info(f"Collection '{config.current_collection}' appears to be empty or no points retrieved.")
 
         count_result = qdrant_client.count(
-            collection_name=config.current_collection,
+            collection_name=INDEX2,
             exact=True
         )
         context.log.info(f"Total points in collection '{config.current_collection}': {count_result.count}")
@@ -257,6 +257,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     and save to ES
     """
     INDEX_NAME=config.main_table
+    INDEX2="test2"
     queries = goals_asset
     threshold: float = config.threshold
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
@@ -271,7 +272,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     
     for q_idx, q_emb in enumerate(q_embs,start=1):
         hits = qdrant_client.search(
-            collection_name="test2",
+            collection_name=INDEX2,
             query_vector=q_emb.tolist(),
             score_threshold=config.threshold,
             limit=2000,
@@ -281,7 +282,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
         for hit in hits:
             # Add the query_index to the set for the corresponding hit_id
             document_sdg_mapping[hit.id].add("SDG"+str(q_idx)) # Store as string if SDG field is keyword
-
+            
             # Store other details. Assuming epo_id is consistent for a given hit.id
             if hit.id not in document_details:
                 document_details[hit.id] = {
@@ -292,7 +293,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 # Prepare data for Elasticsearch bulk update
     actions = []
     for doc_id, query_indices_set in document_sdg_mapping.items():
-        
+        print(doc_id)
         # Convert the set of query_indices to a list
         sdg_list = list(query_indices_set)
          # Get the epo_id and any other details for this document

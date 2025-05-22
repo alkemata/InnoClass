@@ -144,7 +144,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
         models.PointStruct(id=str(uuid.uuid4()),vector=emb.tolist(), payload={"epo_id": str(docs_id)})
         for emb, docs_id in zip(embeddings, ids)
     ]
-    qdrant_client.upsert(collection_name=config.current_collection, points=points)
+    qdrant_client.upsert(collection_name=INDEX2, points=points)
 
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 

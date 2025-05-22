@@ -29,7 +29,7 @@ class MyAssetConfig(Config):
     test_table:str="test_table"
     batch_size: int = 100
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
-    threshold: float =0.85
+    threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
 
 
@@ -277,7 +277,6 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
             score_threshold=config.threshold,
             limit=2000,
         )
-        print(str(q_emb))
         context.log.info(str(len(hits)))
         for hit in hits:
             # Add the query_index to the set for the corresponding hit_id

@@ -17,7 +17,12 @@ defs = Definitions(
         assets.text_column_not_empty,  # optional
     ],
     sensors=[
-        file_update_sensor,
+            file_update_sensor.to_job(
+            name="file_monitor_job", # Give your sensor's underlying job a name
+            config={
+                "file_path": "/opt/project_data/raw_data.dat.gz" # Your configurable file path
+            }
+        )
     ],
     # Uncomment and customize if using resources like IO managers
     resources={

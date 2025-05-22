@@ -2,18 +2,7 @@ from elasticsearch import Elasticsearch
 from typing import Dict, Any
 
 def count_non_empty_sdg_target(es_client: Elasticsearch, index_name: str) -> Dict[str, int]:
-    """
-    Counts the number of documents in an Elasticsearch index with non-empty
-    "sdg" and "target" fields.
 
-    Args:
-        es_client: The Elasticsearch client object.
-        index_name: The name of the Elasticsearch index to query.
-
-    Returns:
-        A dictionary containing the counts of non-empty "sdg" and "target" fields.
-        Returns {"sdg_non_empty": 0, "target_non_empty": 0} in case of error.
-    """
     count_results = {"sdg_non_empty": 0, "target_non_empty": 0}
 
     try:

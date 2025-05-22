@@ -4,8 +4,8 @@ import json
 from typing import List, Optional, Tuple
 from dagster import (
     asset, multi_asset, AssetExecutionContext,
-    Output, MetadataValue, MaterializeResult
-)
+    Output, MetadataValue, MaterializeResult,
+    AutomationCondition)
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource, AssetSpec
 import funcutils as fu
 
@@ -33,7 +33,7 @@ class MyAssetConfig(Config):
 
 
 @asset
-def raw_file_asset(config: MyAssetConfig):
+def raw_file_asset( config: MyAssetConfig,description="Raw data provided by epab in TIP"):
     file_name = config.filename_texts
     # Load file
     try:
@@ -48,7 +48,8 @@ def raw_file_asset(config: MyAssetConfig):
         "file_name": MetadataValue.text(file_name),
         "preview": MetadataValue.md(metadata["extract_method"])
     }
-    return Output(value=data, metadata=metadata)
+    yield AssetMaterialization(asset_key="raw_file_asset",metadata=metadata)
+    yield Output(value=data)
 
 
 @asset
@@ -101,7 +102,7 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
     return AssetCheckResult(passed=True)
 
 
-@asset(deps=[raw_file_asset])
+@asset(deps=[raw_file_asset],automation_condition=AutomationCondition.eager())
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
     merged=fu.merge_sentence(extracted)
@@ -115,7 +116,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     return Output(value=result, metadata=metadata)  # Ensure you return the processed data
 
 
-@asset(deps=["extracted_data_asset"],required_resource_keys={"es_resource","model","qdrant_resource"})
+@asset(deps=["extracted_data_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
 def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted_data_asset: List[dict]) -> None:  # Added extracted_data_asset
     """
     Stream a large text file line-by-line, embed each batch with SBERT,
@@ -248,7 +249,7 @@ def check_qdrant_health(context: AssetExecutionContext):
 
 # 4. Asset: Run threshold search for queries and persist scores
 # ------------------
-@asset(deps=["es_patent_light","index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource","model","qdrant_resource"})
+@asset(deps=["es_patent_light","index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset) -> None:
     """
     Encode a list of queries, run range searches in Qdrant,
@@ -321,7 +322,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     except Exception as e:
         context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
-@asset(deps=[raw_file_asset],required_resource_keys={"es_resource"})
+@asset(deps=[raw_file_asset],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es_resource.get_client()

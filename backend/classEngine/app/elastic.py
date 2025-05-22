@@ -6,8 +6,8 @@ ELASTICSEARCH_PASSWORD = os.environ.get("ELASTICSEARCH_PASSWORD")
 es = AsyncElasticsearch(hosts="http://elasticsearch:9200",                    basic_auth=(ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD),
                     verify_certs=False, # Use with caution
                     request_timeout=60)
-INDEX="test2"
-REVIEW_INDEX="test2"
+INDEX="main_table"
+REVIEW_INDEX="fb_table"
 
 async def update_feedback(index: str, doc_id: str, field: str):
     # increment up/down counter

@@ -32,8 +32,6 @@ class MyAssetConfig(Config):
     threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
 
-
-
 @asset(description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
     file_name = config.filename_texts
@@ -107,6 +105,8 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
     merged=fu.merge_sentence(extracted)
     result=fu.merge_by_id(merged,raw_file_asset)
+    if result["text"]=="":
+        result["text"]=result["title"]
     stats = fu.analyze_text_data(merged)
     # Attach metadata: number of lines
     metadata = {

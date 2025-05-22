@@ -31,6 +31,7 @@ class MyAssetConfig(Config):
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
+    clear_vector="yes"
 
 @asset(description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
@@ -146,38 +147,20 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     qdrant_client.upsert(collection_name=INDEX2, points=points)
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
-@asset(required_resource_keys={"qdrant_resource"})
-def check_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig):
+@asset(deps=["index_text"],required_resource_keys={"qdrant_resource"})
+def clear_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig):
     """
     Asset to check the content of a specific Qdrant collection.
     """
     INDEX2="test2"
+    clearok=config.clear_vector;
+    if clearok=="no":
+        context.log.error("Clearing index for vector database not accepted")
+        raise
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
+    qdrant_client.delete_collection(collection_name=collection_name_to_delete)
 
-    context.log.info(f"Checking content of collection: {INDEX2}")
-    try:
-        scroll_result, _ = qdrant_client.scroll(
-            collection_name=INDEX2,
-            limit=10,  # Retrieve more points if needed
-            with_payload=True,
-            with_vectors=False,
-        )
-        if scroll_result:
-            context.log.info(f"Sample points from Qdrant collection '{INDEX2}':")
-            for point in scroll_result:
-                context.log.info(f"  ID: {point.id}, Payload: {point.payload}")
-        else:
-            context.log.info(f"Collection '{INDEX2}' appears to be empty or no points retrieved.")
-
-        count_result = qdrant_client.count(
-            collection_name=INDEX2,
-            exact=True
-        )
-        context.log.info(f"Total points in collection '{INDEX2}': {count_result.count}")
-
-    except Exception as e:
-        context.log.error(f"Error checking Qdrant collection content: {e}")
-        raise # Re-raise to indicate asset failure
+    
 
 # Assuming MyAssetConfig is defined elsewhere, or create a separate one for health checks
 # class QdrantHealthConfig(Config):

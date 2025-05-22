@@ -343,7 +343,7 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
     context.log.info(f"Creating index: {INDEX_NAME} with mapping...")
     try:
         es_client.indices.create(
-            index=config.current_collection,
+            index=INDEX_NAME,
             body=   { "mappings": {  # <--- This is the key you need
         "properties": properties_definition
     }}
@@ -353,7 +353,7 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
         print(f"Error creating index: {e}")
         raise    
 
-@asset(deps=[raw_file_asset,"es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
+@asset(deps=["raw_file_asset","es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es_resource.get_client()

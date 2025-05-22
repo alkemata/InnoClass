@@ -348,7 +348,8 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
         "properties": properties_definition
     }}
         )
-        yield MaterializeResult(asset_key="es_maintable_created")
+        yield MaterializeResult()
+
     except Exception as e:
         print(f"Error creating index: {e}")
         raise    

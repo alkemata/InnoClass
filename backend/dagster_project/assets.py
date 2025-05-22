@@ -323,7 +323,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
         context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
 @asset(required_resource_keys={"es_resource"},description="Creation of the Main table of patents")
-def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
+def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) -> None:
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     INDEX_NAME=config.main_table
     properties_definition = {

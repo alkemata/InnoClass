@@ -353,7 +353,7 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig):
         print(f"Error creating index: {e}")
         raise    
 
-@asset(deps=[raw_file_asset,es_maintanable_created],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
+@asset(deps=[raw_file_asset,"es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es_resource.get_client()

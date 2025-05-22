@@ -269,8 +269,8 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     document_sdg_mapping = defaultdict(set) # Using a set to store unique query_ids for each document
     document_details = {} # To store other relevant details like epo_id
     
-    print(prompts_list)
-    for q_idx, q_emb in enumerate(q_embs,start=1):
+    for q_idx, q_emb in enumerate(q_embs):
+        print(q_idx)
         hits = qdrant_client.search(
             collection_name="test2",
             query_vector=q_emb.tolist(),

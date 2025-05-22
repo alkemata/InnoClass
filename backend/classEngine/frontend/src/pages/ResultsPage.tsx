@@ -63,7 +63,6 @@ function ResultsPage() {
 
       try {
         const requestBody = {
-          category: 'sdgs', // Based on your FastAPI route, this is fixed for now
           selections: sdg_ids_from_url,
           keywords: keywords_from_url,
           page: 1, // Defaulting for now, you could add pagination later

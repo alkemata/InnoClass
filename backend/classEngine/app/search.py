@@ -6,10 +6,10 @@ from pydantic import BaseModel
 router = APIRouter()
 
 class SearchRequest(BaseModel):
-    sdg_ids: List[str]
+    selections: List[str]
     keywords: Optional[str] = ""
     page: int = 1
-    size: int = 10
+    size: int = 20
 
 class Hit(BaseModel):
     id: str

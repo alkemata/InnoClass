@@ -33,7 +33,7 @@ class MyAssetConfig(Config):
 
 
 @asset
-def raw_file_asset( config: MyAssetConfig,description="Raw data provided by epab in TIP"):
+def raw_file_asset( config: MyAssetConfig):
     file_name = config.filename_texts
     # Load file
     try:

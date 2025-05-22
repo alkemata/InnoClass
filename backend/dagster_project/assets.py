@@ -31,7 +31,7 @@ class MyAssetConfig(Config):
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
-    clear_vector="yes"
+    clear_vector: str="yes"
 
 @asset(description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
@@ -153,12 +153,12 @@ def clear_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
     Asset to check the content of a specific Qdrant collection.
     """
     INDEX2="test2"
-    clearok=config.clear_vector;
+    clearok=config.clear_vector
     if clearok=="no":
         context.log.error("Clearing index for vector database not accepted")
         raise
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
-    qdrant_client.delete_collection(collection_name=collection_name_to_delete)
+    qdrant_client.delete_collection(collection_name=INDEX2)
 
     
 

@@ -34,7 +34,7 @@ class MyAssetConfig(Config):
     es_sample_size: int = 5 # New: Number of documents to sample for overview
     clear_vector: str="no"
 
-@asset(description="Raw file provided byb epadb in TIP")
+@asset(kinds={"python"},tags={"pipeline":"classification_pipeline"},description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
     file_name = config.filename_texts
     # Load file
@@ -53,7 +53,7 @@ def raw_file_asset(config: MyAssetConfig):
 
 
 @asset
-def goals_asset(config: MyAssetConfig):
+def goals_asset(config: MyAssetConfig,kinds={"python"},tags={"pipeline":"classification_pipeline"}):
     file_name = config.filename_prompts_goals
    
     try:
@@ -70,7 +70,7 @@ def goals_asset(config: MyAssetConfig):
         raise  # Re-raise to fail the multi-asset
 
 @asset
-def targets_asset(config: MyAssetConfig):
+def targets_asset(config: MyAssetConfig,kinds={"python"},tags={"pipeline":"classification_pipeline"}):
     file_name = config.filename_prompts_targets
    
     try:
@@ -87,7 +87,7 @@ def targets_asset(config: MyAssetConfig):
         raise  # Re-raise to fail the multi-asset    
 
 
-@asset_check(asset=raw_file_asset)
+@asset_check(tags={"pipeline":"classification_pipeline"},asset=raw_file_asset)
 def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
     # Convert list of dictionaries to DataFrame for easier processing,
     # especially for `isnull().any()` and `isnull().sum()`
@@ -102,7 +102,7 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
     return AssetCheckResult(passed=True)
 
 
-@asset(deps=[raw_file_asset],automation_condition=AutomationCondition.eager())
+@asset(kinds={"python"},tags={"pipeline":"classification_pipeline"},deps=[raw_file_asset],automation_condition=AutomationCondition.eager())
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     tracker = tracker = OfflineEmissionsTracker(country_iso_code="DEU")
     tracker.start()
@@ -121,7 +121,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     return Output(value=result, metadata=metadata)  # Ensure you return the processed data
 
 
-@asset(deps=["extracted_data_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
+@asset(tags={"pipeline":"classification_pipeline"},deps=["extracted_data_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
 def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted_data_asset: List[dict]) -> None:  # Added extracted_data_asset
     """
     Stream a large text file line-by-line, embed each batch with SBERT,
@@ -154,7 +154,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
 @asset(deps=["index_texts"],required_resource_keys={"qdrant_resource"})
-def clear_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig):
+def clear_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig,tags={"pipeline":"classification_pipeline"}):
     """
     Asset to check the content of a specific Qdrant collection.
     """
@@ -172,7 +172,7 @@ def clear_qdrant_collection_content(context: AssetExecutionContext, config: MyAs
 # class QdrantHealthConfig(Config):
 #     pass # No specific config needed for basic health check
 
-@asset(required_resource_keys={"qdrant_resource"})
+@asset(tags={"pipeline":"classification_pipeline"},required_resource_keys={"qdrant_resource"})
 def check_qdrant_health(context: AssetExecutionContext):
     """
     Checks the health and status of the Qdrant database and reports results in Markdown metadata.
@@ -239,7 +239,7 @@ def check_qdrant_health(context: AssetExecutionContext):
 
 # 4. Asset: Run threshold search for queries and persist scores
 # ------------------
-@asset(deps=["es_patent_light","index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
+@asset(kinds={"elasticssearch"},tags={"pipeline":"classification_pipeline"},deps=["es_patent_light","index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset) -> None:
     """
     Encode a list of queries, run range searches in Qdrant,
@@ -309,7 +309,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     except Exception as e:
         context.log.info(f"Error during Elasticsearch bulk update: {e}")
 
-@asset(required_resource_keys={"es_resource"},description="Creation of the Main table of patents")
+@asset(tags={"pipeline":"classification_pipeline"},required_resource_keys={"es_resource"},description="Creation of the Main table of patents")
 def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) -> MaterializeResult:
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     INDEX_NAME=config.main_table
@@ -342,7 +342,7 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) 
         print(f"Error creating index: {e}")
         raise    
 
-@asset(deps=["raw_file_asset","es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
+@asset(tags={"pipeline":"classification_pipeline"},deps=["raw_file_asset","es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es_resource.get_client()
@@ -372,7 +372,7 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
         raise
 
 
-@asset(deps=[es_patent_light],required_resource_keys={"es_resource"})
+@asset(tags={"pipeline":"classification_pipeline"},deps=[es_patent_light],required_resource_keys={"es_resource"})
 def es_health_check_and_overview(context: AssetExecutionContext, config: MyAssetConfig):
     """
     Checks the health and status of the Elasticsearch index and provides an overview

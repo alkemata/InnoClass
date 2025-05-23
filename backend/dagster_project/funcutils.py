@@ -54,8 +54,8 @@ def load_list(filename):
     return metadata, data_records
 
 # Keywords to search for in headings (allowing fuzzy matching with up to one error)
-keyword1 = ["scope of the invention","Description of the Related Art", "TECHNICAL SCOPE","Description of Related Art","REVEALING THE INVENTION","background of the invention", "background of the disclosure", "field of the invention", "field of invention", "technical field","summary","industrial applicability","Field of art","introduction","background art"]
-keyword2=["background","The present invention regards","herein described subject matter", "It is well known" "technology described herein", "field of the disclosure", "field of the invention", "subject of the invention", "belongs to the field", "invention is","invention relates to", "present invention refers to","aspect of the invention"]
+keyword1 = ["scope of the invention","Description of the Related Art", "TECHNICAL SCOPE","Description of Related Art","REVEALING THE INVENTION","background of the invention", "background of the disclosure", "field of the invention", "field of invention", "technical field","summary","industrial applicability","Field of art","background","introduction","background art"]
+keyword2=["background","The present invention regards","herein described subject matter", "It is well known" "technology described herein", "field of the disclosure", "field of the invention", "subject of the invention", "belongs to the field", "invention is","invention relates to", "present invention refers to","aspect of the invention","technical field"]
 
 def clean_sentences(s):
     if s.endswith('.'):
@@ -174,7 +174,7 @@ def extract_text_simple(
                 # All subsequent paragraphs will now be collected in the next iterations
 
     # 3) Final Fallback: First sentences of the text (now using word count)
-    if not collected:
+    if not collected or (' '.join(collected).split()<100):
         # Get all text from the body, then segment into sentences
         full_text = soup.body.get_text(separator=' ', strip=True) if soup.body else html_text
         doc = nlp(full_text)
@@ -193,8 +193,7 @@ def extract_text_simple(
                     if current_word_count_initial + sent_word_count <= target_word_count_initial + 100: # Allow up to 100 words overshoot
                         collected.append(cleaned_sent)
                         current_word_count_initial += sent_word_count
-                    break # Stop if it goes too far over
-                
+                                    
                 collected.append(cleaned_sent)
                 current_word_count_initial += sent_word_count
                 
@@ -243,7 +242,7 @@ def extract_text_simple(
                     total_words_output += current_sent_word_count
             break # Break regardless if we hit the limit or went over and decided not to add
 
-        output_sents.append(cleaned_sent)
+        output_sents.append(clean_sentences(cleaned_sent))
         total_words_output += current_sent_word_count
 
     # If nothing was collected after filtering and all logic, ensure at least one empty string is returned
@@ -270,7 +269,7 @@ def process_texts(texts, keyword1, keyword2, min_sentence_length=5):
     """
     results = []
     for item in texts:
-        sentences = extract_text_simple(item["original_text"], keyword1,keyword1, keyword2)
+        sentences = extract_text_simple(item["original_text"], keyword1,keyword2, keyword2)
         if len(sentences)==0:
             sentences=[""]
         for sentence in sentences:

@@ -8,6 +8,7 @@ from dagster import (
     AutomationCondition)
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource, AssetSpec
 import funcutils as fu
+from codecarbon import EmissionsTracker
 
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient, models
@@ -103,14 +104,18 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
 
 @asset(deps=[raw_file_asset],automation_condition=AutomationCondition.eager())
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
-    extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
-    merged=fu.merge_sentence(extracted)
-    result=fu.merge_by_id(merged,raw_file_asset)
-
+    try:
+        tracker = EmissionsTracker()
+        tracker.start()
+        extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
+        merged=fu.merge_sentence(extracted)
+        result=fu.merge_by_id(merged,raw_file_asset)
+    finally:
+        _ = tracker.stop()
     stats = fu.analyze_text_data(merged)
     # Attach metadata: number of lines
     metadata = {
-        "stats": MetadataValue.md(json.dumps(stats))
+        "stats": MetadataValue.md(json.dumps(stats)),
     }
 
     return Output(value=result, metadata=metadata)  # Ensure you return the processed data

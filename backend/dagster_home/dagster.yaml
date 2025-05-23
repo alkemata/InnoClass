@@ -42,3 +42,12 @@ event_log_storage:
   class: SqliteEventLogStorage
   config:
     base_dir: /opt/dagster/dagster_home
+
+retention:
+  schedule:
+    purge_after_days: 90 # Retain schedule ticks for 90 days
+  sensor:
+    purge_after_days:
+      skipped: 3   # Retain skipped sensor ticks for 7 days
+      failure: 3  # Retain failed sensor ticks for 30 days
+      success: -1  # Retain successful sensor ticks indefinitely (-1 means indefinitely)

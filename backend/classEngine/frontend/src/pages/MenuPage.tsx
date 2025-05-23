@@ -36,7 +36,7 @@ function Menu() {
       //console.log('Navigating to internal Search page...');
     } else if (page === 'classification') {
       // In a real application:
-      navigate('/check-classification');
+      navigate('/check');
       //console.log('Navigating to internal Check Classification page...');
     } else if (page === 'operations') {
       // Opens the external URL in a new browser tab.
@@ -145,7 +145,7 @@ function Menu() {
             <ListItem disablePadding>
               <ListItemButton
                 component="a" // Renders the ListItemButton as an HTML anchor tag
-                href="https://example.com/operations" // The external URL
+                href="https://dagster.innoclass.alkemata.com" // The external URL
                 target="_blank" // Opens the link in a new tab
                 rel="noopener noreferrer" // Security best practice for target="_blank"
                 sx={{

@@ -174,7 +174,7 @@ def extract_text_simple(
                 # All subsequent paragraphs will now be collected in the next iterations
 
     # 3) Final Fallback: First sentences of the text (now using word count)
-    if not collected or (' '.join(collected).split()<100):
+    if not collected or (len(' '.join(collected).split())<100):
         # Get all text from the body, then segment into sentences
         full_text = soup.body.get_text(separator=' ', strip=True) if soup.body else html_text
         doc = nlp(full_text)

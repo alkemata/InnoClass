@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-import search, feedback
+import search, feedback,checker
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -18,3 +18,4 @@ app.add_middleware(
 )
 app.include_router(search.router)
 app.include_router(feedback.router)
+app.include_router(checker.router, tags=["checker"]) 

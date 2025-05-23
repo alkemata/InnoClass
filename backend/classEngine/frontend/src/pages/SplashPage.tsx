@@ -25,7 +25,7 @@ const SplashScreen = () => {
   useEffect(() => {
     // Set a timer to redirect after 5000 milliseconds (5 seconds).
     const timer = setTimeout(() => {
-      navigate('/search'); // Redirect to the /search route
+      navigate('/menu'); // Redirect to the /search route
     }, 5000); // 5 seconds
 
     // Create a style element and append it to the head

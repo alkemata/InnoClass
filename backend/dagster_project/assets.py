@@ -8,7 +8,7 @@ from dagster import (
     AutomationCondition)
 from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource, AssetSpec
 import funcutils as fu
-from codecarbon import EmissionsTracker
+from codecarbon import OfflineEmissionsTracker
 
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient, models
@@ -104,7 +104,7 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
 
 @asset(deps=[raw_file_asset],automation_condition=AutomationCondition.eager())
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
-    tracker = EmissionsTracker()
+    tracker = tracker = OfflineEmissionsTracker(country_iso_code="DEU")
     tracker.start()
     try:
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)

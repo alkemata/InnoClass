@@ -171,3 +171,5 @@ function Menu() {
             </ListItem>
             </List>
             </Paper></Box></ThemeProvider>)}
+
+export default Menu;

@@ -3,7 +3,7 @@ import SearchPage from "./pages/SearchPage";
 import ResultsPage from "./pages/ResultsPage";
 import SplashScreen from './pages/SplashPage'; // Import the SplashScreen component
 import MenuPage from "./pages/MenuPage";
-import MenuPage from "./pages/MenuPage";
+import CheckerPage from "./pages/CheckerPage";
 
 export default function App() {
   return (

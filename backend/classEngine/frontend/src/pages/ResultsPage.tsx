@@ -271,7 +271,7 @@ function ResultsPage() {
 
         <Button
           variant="contained"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/search')}
           sx={{ mt: 4 }}
         >
           Go Back to Search

@@ -54,8 +54,8 @@ def load_list(filename):
     return metadata, data_records
 
 # Keywords to search for in headings (allowing fuzzy matching with up to one error)
-keyword1 = ["scope of the invention","Description of the Related Art", "TECHNICAL SCOPE","Description of Related Art","REVEALING THE INVENTION","background of the invention", "background of the disclosure", "field of the invention", "technical field","summary","industrial applicability","field of the disclosure","background",  "prior art", "state of the art"]
-keyword2=["background","The present invention regards","herein described subject matter", "It is well known" "technology described herein", "field of the disclosure", "field of the invention", "subject of the invention", "belongs to the field", "invention is","invention relates to", "present invention refers to"]
+keyword1 = ["scope of the invention","Description of the Related Art", "TECHNICAL SCOPE","Description of Related Art","REVEALING THE INVENTION","background of the invention", "background of the disclosure", "field of the invention", "field of invention", "technical field","summary","industrial applicability","Field of art","introduction","background art"]
+keyword2=["background","The present invention regards","herein described subject matter", "It is well known" "technology described herein", "field of the disclosure", "field of the invention", "subject of the invention", "belongs to the field", "invention is","invention relates to", "present invention refers to","aspect of the invention"]
 
 def clean_sentences(s):
     if s.endswith('.'):
@@ -75,6 +75,39 @@ def remove_keywords(text,keywords):
     pattern = r'\b(?:' + '|'.join(map(re.escape, keywords)) + r')\b'
     return re.sub(pattern, '', text,flags=re.IGNORECASE)
 
+import re
+from bs4 import BeautifulSoup, Tag
+from typing import List
+import spacy
+
+# Load the English spaCy model (make sure you have it installed: python -m spacy download en_core_web_sm)
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    print("Downloading spacy model 'en_core_web_sm'...")
+    spacy.cli.download("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
+
+
+def clean_sentences(s):
+    if s.endswith('.'):
+        # Remove all content in parentheses or brackets, including the symbols
+        s = re.sub(r'\([^)]*\)', '', s)  # remove ( ... )
+        s = re.sub(r'\[[^\]]*\]', '', s)  # remove [ ... ]
+
+        # Remove HTML tags
+        s = re.sub(r'<[^>]+>', '', s)
+
+        # Collapse multiple spaces and strip again
+        s = re.sub(r'\s+', ' ', s).strip()
+    return s
+
+
+def remove_keywords(text, keywords):
+    pattern = r'\b(?:' + '|'.join(map(re.escape, keywords)) + r')\b'
+    return re.sub(pattern, '', text, flags=re.IGNORECASE)
+
+
 def extract_text_simple(
     html_text: str,
     keyword_headings: List[str],
@@ -85,11 +118,14 @@ def extract_text_simple(
     """
     Extracts up to max_words words of text from HTML:
     1) Finds <heading> or <h1>-<h6> tags whose text contains any keyword_headings;
-       collects text of all following sibling elements until the next heading.
+        collects text of all following sibling elements until the next heading.
     2) If no such headings, finds <p> tags containing any keyword_paragraphs,
-       and takes that paragraph + the next one.
+        and takes that paragraph + the next one.
     3) If still nothing, searches for keyword_fallback in <p> tags and takes
-       paragraphs until max_words.
+        paragraphs until max_words.
+    4) If still nothing, extracts the first sentences of the text until near 500 words
+       or max_words (whichever is met first).
+
     Removes the matched heading keywords, normalizes whitespace, then segments
     into sentences and accumulates full sentences up to max_words.
     Returns the concatenated string.
@@ -100,6 +136,7 @@ def extract_text_simple(
     kws_h = [kw.lower() for kw in keyword_headings]
     kws_p = [kw.lower() for kw in keyword_paragraphs]
     kws_f = [kw.lower() for kw in keyword_fallback]
+    collecting_mode = False
 
     def clean_text(elem):
         return elem.get_text(separator=' ', strip=True)
@@ -114,54 +151,105 @@ def extract_text_simple(
             block_texts = []
             for sib in h.find_next_siblings():
                 # stop at next heading
-                if sib.name == 'heading' or re.fullmatch(r'h[1-6]', sib.name):
-                    break
-                block_texts.append(clean_text(sib))
-            if block_texts:
-                collected.append(' '.join(block_texts))
+                #if sib.name == 'heading' or re.fullmatch(r'h[1-6]', sib.name):
+                #block_texts.append(clean_text(sib))
+                collected.append(clean_text(sib))
+            #if block_texts:
+            #    collected.append(' '.join(block_texts))
+            break # Stop after finding the first matching heading
 
     # 2) Paragraph-based fallback
     if not collected:
         paragraphs = soup.find_all('p')
         for idx, p in enumerate(paragraphs):
             txt = clean_text(p).lower()
-            if any(kw in txt for kw in kws_p):
-                collected.append(clean_text(p))
-                if idx + 1 < len(paragraphs):
-                    collected.append(clean_text(paragraphs[idx+1]))
-        # 3) Fallback keywords
-        if not collected:
-            for idx, p in enumerate(paragraphs):
-                txt = clean_text(p).lower()
-                if any(kw in txt for kw in kws_f):
-                    j = idx
-                    while j < len(paragraphs) and sum(len(c.split()) for c in collected) < max_words:
-                        collected.append(clean_text(paragraphs[j]))
-                        j += 1
-                    break
-
-    # Combine and remove heading keywords
-    combined = ' '.join(collected)
-    for kw in kws_h:
-        combined = re.sub(re.escape(kw), '', combined, flags=re.IGNORECASE)
         
-        combined = re.sub(r'\(.*?\)', '', combined)  # remove all parenthesis content
-        # Remove numeric references like (1), [0004]
-        combined = re.sub(r'\(\d+\)', '', combined)
-        combined = re.sub(r'\[\d+\]', '', combined)
-        combined = re.sub(r'\[\s*[^\d\]]+\]', '', combined)
+            if collecting_mode:
+                # If we are already in collecting mode, just append the paragraph
+                collected.append(clean_text(p))
+            elif any(kw in txt for kw in kws_p):
+                # If a keyword is found and we are not yet in collecting mode
+                collecting_mode = True  # Set the flag to True
+                collected.append(clean_text(p)) # Collect the current paragraph
+                # All subsequent paragraphs will now be collected in the next iterations
+
+    # 3) Final Fallback: First sentences of the text (now using word count)
+    if not collected:
+        # Get all text from the body, then segment into sentences
+        full_text = soup.body.get_text(separator=' ', strip=True) if soup.body else html_text
+        doc = nlp(full_text)
+        current_word_count_initial = 0
+        target_word_count_initial = 500 # Aim for around 500 words for the initial fallback
+        for sent in doc.sents:
+            cleaned_sent = sent.text.strip()
+            # Calculate word count for the current sentence
+            sent_word_count = len([token for token in nlp(cleaned_sent) if not token.is_space and not token.is_punct]) # Exclude punctuation
+            
+            # Ensure sentences have more than 15 characters (this constraint remains)
+            if len(cleaned_sent) > 15:
+                # Check if adding this sentence exceeds the target word count
+                if current_word_count_initial + sent_word_count > target_word_count_initial and current_word_count_initial > 0:
+                    # Allow some overshoot but try not to go wildly over
+                    if current_word_count_initial + sent_word_count <= target_word_count_initial + 100: # Allow up to 100 words overshoot
+                        collected.append(cleaned_sent)
+                        current_word_count_initial += sent_word_count
+                    break # Stop if it goes too far over
+                
+                collected.append(cleaned_sent)
+                current_word_count_initial += sent_word_count
+                
+                if current_word_count_initial >= target_word_count_initial:
+                    break # Stop when we're near or past the target word length
+
+    # Combine collected text and remove heading keywords (only if collected via heading)
+    combined = ' '.join(collected)
+    # Check if any heading keyword exists in the lowercased combined text to decide if removal is needed
+    if collected and any(kw in combined.lower() for kw in kws_h): 
+           for kw in kws_h:
+                combined = re.sub(re.escape(kw), '', combined, flags=re.IGNORECASE)
+
+    combined=clean_sentences(combined)
+    # General cleaning regardless of extraction method
+    combined = re.sub(r'\(.*?\)', '', combined)  # remove all parenthesis content
+    # Remove numeric references like (1), [0004]
+    combined = re.sub(r'\(\d+\)', '', combined)
+    combined = re.sub(r'\[\d+\]', '', combined)
+    combined = re.sub(r'\[\s*[^\d\]]+\]', '', combined) # Removes [ non-digit content ]
     combined = re.sub(r'\s+', ' ', combined).strip()
 
-    # Sentence segmentation and word limit
+    # Sentence segmentation and word limit for final output
     doc = nlp(combined)
     output_sents = []
-    total_words = 0
+    total_words_output = 0
+    target_word_count_final = 500 # Aim for around 500 words for the final output
+
     for sent in doc.sents:
-        wc = len([t for t in sent if not t.is_space])
-        if total_words + wc > max_words:
-            break
-        output_sents.append(sent.text.strip())
-        total_words += wc
+        cleaned_sent = sent.text.strip()
+        
+        # Filter sentences with less than 15 characters
+        if len(cleaned_sent) <= 15:
+            continue
+
+        # Calculate word count for the current sentence (excluding spaces and punctuation)
+        current_sent_word_count = len([token for token in nlp(cleaned_sent) if not token.is_space and not token.is_punct])
+        
+        # Check if adding this sentence pushes us over the final target word count
+        if (total_words_output + current_sent_word_count > target_word_count_final and total_words_output > 0):
+            # If we are below target, try to add this sentence if it doesn't vastly exceed
+            if total_words_output < target_word_count_final: # If we are still below 500 words
+                # Only add if it keeps us within a reasonable range (e.g., 50 words overshoot)
+                if total_words_output + current_sent_word_count <= target_word_count_final + 50: 
+                    output_sents.append(cleaned_sent)
+                    total_words_output += current_sent_word_count
+            break # Break regardless if we hit the limit or went over and decided not to add
+
+        output_sents.append(cleaned_sent)
+        total_words_output += current_sent_word_count
+
+    # If nothing was collected after filtering and all logic, ensure at least one empty string is returned
+    # This prevents the process_texts function from breaking.
+    if not output_sents:
+        return [""]
 
     return output_sents
 

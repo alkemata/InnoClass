@@ -89,24 +89,21 @@ except OSError:
     nlp = spacy.load("en_core_web_sm")
 
 
-def clean_sentences(s):
-    if s.endswith('.'):
-        # Remove all content in parentheses or brackets, including the symbols
-        s = re.sub(r'\([^)]*\)', '', s)  # remove ( ... )
-        s = re.sub(r'\[[^\]]*\]', '', s)  # remove [ ... ]
-
-        # Remove HTML tags
-        s = re.sub(r'<[^>]+>', '', s)
-
-        # Collapse multiple spaces and strip again
-        s = re.sub(r'\s+', ' ', s).strip()
-    return s
-
-
-def remove_keywords(text, keywords):
-    pattern = r'\b(?:' + '|'.join(map(re.escape, keywords)) + r')\b'
+def remove_keywords(text: str, keywords: List[str]) -> str:
+    """
+    Removes specified keywords from text using whole word, case-insensitive matching.
+    """
+    if not isinstance(text, str): return ""
+    if not keywords or not any(keywords): # Handle empty or all-empty keywords list
+        return text
+    
+    # Filter out non-string or empty keywords and escape them
+    valid_keywords = [re.escape(str(kw)) for kw in keywords if kw and isinstance(kw, str)]
+    if not valid_keywords:
+        return text
+        
+    pattern = r'\b(?:' + '|'.join(valid_keywords) + r')\b'
     return re.sub(pattern, '', text, flags=re.IGNORECASE)
-
 
 def extract_text_simple(
     html_text: str,
@@ -121,9 +118,7 @@ def extract_text_simple(
         collects text of all following sibling elements until the next heading.
     2) If no such headings, finds <p> tags containing any keyword_paragraphs,
         and takes that paragraph + the next one.
-    3) If still nothing, searches for keyword_fallback in <p> tags and takes
-        paragraphs until max_words.
-    4) If still nothing, extracts the first sentences of the text until near 500 words
+    3) If still nothing, extracts the first sentences of the text until near 500 words
        or max_words (whichever is met first).
 
     Removes the matched heading keywords, normalizes whitespace, then segments
@@ -145,21 +140,17 @@ def extract_text_simple(
     collected = []
     # consider both <heading> and standard heading tags
     headings = soup.find_all(lambda tag: tag.name == 'heading' or re.fullmatch(r'h[1-6]', tag.name))
+    mode="headings"
     for h in headings:
         txt = h.get_text().lower()
         if any(kw in txt for kw in kws_h):
-            block_texts = []
             for sib in h.find_next_siblings():
-                # stop at next heading
-                #if sib.name == 'heading' or re.fullmatch(r'h[1-6]', sib.name):
-                #block_texts.append(clean_text(sib))
                 collected.append(clean_text(sib))
-            #if block_texts:
-            #    collected.append(' '.join(block_texts))
             break # Stop after finding the first matching heading
 
     # 2) Paragraph-based fallback
     if not collected:
+        mode="paragraphs"
         paragraphs = soup.find_all('p')
         for idx, p in enumerate(paragraphs):
             txt = clean_text(p).lower()
@@ -175,6 +166,7 @@ def extract_text_simple(
 
     # 3) Final Fallback: First sentences of the text (now using word count)
     if not collected or (len(' '.join(collected).split())<100):
+        mode="fallback"
         # Get all text from the body, then segment into sentences
         full_text = soup.body.get_text(separator=' ', strip=True) if soup.body else html_text
         doc = nlp(full_text)
@@ -193,111 +185,54 @@ def extract_text_simple(
                     if current_word_count_initial + sent_word_count <= target_word_count_initial + 100: # Allow up to 100 words overshoot
                         collected.append(cleaned_sent)
                         current_word_count_initial += sent_word_count
+                    else:
+                        break
                                     
                 collected.append(cleaned_sent)
                 current_word_count_initial += sent_word_count
-                
-                if current_word_count_initial >= target_word_count_initial:
-                    break # Stop when we're near or past the target word length
+            
 
     # Combine collected text and remove heading keywords (only if collected via heading)
-    combined = ' '.join(collected)
+    combined_text = ' '.join(collected)
     # Check if any heading keyword exists in the lowercased combined text to decide if removal is needed
-    if collected and any(kw in combined.lower() for kw in kws_h): 
-           for kw in kws_h:
-                combined = re.sub(re.escape(kw), '', combined, flags=re.IGNORECASE)
+    if mode=="headings":
+        if collected and any(kw in combined_text.lower() for kw in kws_h): 
+               for kw in kws_h:
+                    combined_text = re.sub(re.escape(kw), '', combined_text, flags=re.IGNORECASE)
 
-    combined=clean_sentences(combined)
-    # General cleaning regardless of extraction method
-    combined = re.sub(r'\(.*?\)', '', combined)  # remove all parenthesis content
-    # Remove numeric references like (1), [0004]
-    combined = re.sub(r'\(\d+\)', '', combined)
-    combined = re.sub(r'\[\d+\]', '', combined)
-    combined = re.sub(r'\[\s*[^\d\]]+\]', '', combined) # Removes [ non-digit content ]
-    combined = re.sub(r'\s+', ' ', combined).strip()
+   # --- Block-level cleaning ---
+    # These are applied unconditionally to the combined_text block,
+    # as the user's clean_sentences might not trigger if combined_text doesn't end with '.'
+    combined_text = re.sub(r'\([^)]*\)', '', combined_text)  # remove (...)
+    combined_text = re.sub(r'\[[^\]]*\]', '', combined_text)  # remove [...]
+    combined_text = re.sub(r'<[^>]+>', '', combined_text)    # remove <...> HTML tags (extra safeguard)
 
-    # Sentence segmentation and word limit for final output
-    doc = nlp(combined)
-    output_sents = []
+    # Specific numeric/reference patterns (if these are distinct from general parenthesis removal)
+    combined_text = re.sub(r'\(\s*\d+\s*\)', '', combined_text) # e.g. (1), ( 2 )
+    combined_text = re.sub(r'\[\s*\d+\s*\]', '', combined_text) # e.g. [1], [ 2 ]
+    # Removes e.g. [References], [Table A], but not brackets with only digits or only spaces
+    combined_text = re.sub(r'\[\s*[^\]\d\s][^\]]*?\]', '', combined_text) 
+    combined_text = re.sub(r'\s+', ' ', combined_text).strip() # Normalize whitespace
+
     total_words_output = 0
     target_word_count_final = 500 # Aim for around 500 words for the final output
 
-    for sent in doc.sents:
-        cleaned_sent = sent.text.strip()
-        
-        # Filter sentences with less than 15 characters
-        if len(cleaned_sent) <= 15:
-            continue
-
-        # Calculate word count for the current sentence (excluding spaces and punctuation)
-        current_sent_word_count = len([token for token in nlp(cleaned_sent) if not token.is_space and not token.is_punct])
-        
-        # Check if adding this sentence pushes us over the final target word count
-        if (total_words_output + current_sent_word_count > target_word_count_final and total_words_output > 0):
-            # If we are below target, try to add this sentence if it doesn't vastly exceed
-            if total_words_output < target_word_count_final: # If we are still below 500 words
-                # Only add if it keeps us within a reasonable range (e.g., 50 words overshoot)
-                if total_words_output + current_sent_word_count <= target_word_count_final + 50: 
-                    output_sents.append(cleaned_sent)
-                    total_words_output += current_sent_word_count
-            break # Break regardless if we hit the limit or went over and decided not to add
-
-        output_sents.append(clean_sentences(cleaned_sent))
-        total_words_output += current_sent_word_count
-
-    # If nothing was collected after filtering and all logic, ensure at least one empty string is returned
-    # This prevents the process_texts function from breaking.
-    if not output_sents:
-        return [""]
-
-    return output_sents
+    words = combined_text.split()  # Split the text into a list of words
+    if len(words) > target_word_count_final:
+        truncated_words = words[:target_word_count_final]
+        return " ".join(truncated_words)
+    else:
+        return combined_text
 
 
-
-def process_texts(texts, keyword1, keyword2, min_sentence_length=5):
-    """
-    Processes a list of texts, each with an associated id.
-    
-    Args:
-        texts (list of tuples): Each tuple is (text_id, text).
-        keyword1 (list): Keywords for heading-based extraction.
-        keyword2 (list): Fallback keywords for paragraph-based extraction.
-        min_sentence_length (int): Minimum number of words a sentence must have.
-        
-    Returns:
-        list of tuples: Each tuple is (text_id, sentence) for each extracted sentence.
-    """
+def process_texts(texts, keyword1, keyword2, min_sentence_length=5): # min_sentence_length is now mostly handled in extract_text_simple
     results = []
     for item in texts:
-        sentences = extract_text_simple(item["original_text"], keyword1,keyword2, keyword2)
-        if len(sentences)==0:
-            sentences=[""]
-        for sentence in sentences:
-            results.append({"id":item["id"], "sentence":sentence})
-
+        # Note: extract_text_simple now returns a list of strings (sentences)
+        result = extract_text_simple(item["original_text"], keyword1, keyword2, keyword2)
+        item["cleaned_text"]=result
+        results.append(item)
     return results
-
-
-def merge_sentence(processed_texts):
-    """
-    Merges sentences by text_id from the processed texts.
-    
-    Args:
-        processed_texts (list of tuples): Each tuple is (text_id, sentence).
-        
-    Returns:
-        list of dict: Each dictionary has the text_id as key and the merged sentences as value.
-    """
-    merged = {}
-    for item in processed_texts:
-        text_id=item["id"]
-        sentence=item["sentence"]
-        if text_id not in merged:
-            merged[text_id] = sentence
-        else:
-            merged[text_id] += "\n" + sentence
-    # Convert to list of dictionaries as required.
-    return [{"id":text_id,"text":sentences} for text_id, sentences in merged.items()]
 
 def analyze_text_data(data):
     """    
@@ -316,7 +251,7 @@ def analyze_text_data(data):
     for entry in data:
         # Adjust the keys if your structure is different.
         nbr+=1
-        sentence = entry['text']
+        sentence = entry['cleaned_text']
         count = len(sentence.split())
         word_counts.append(count)
     word_counts = np.array(word_counts)
@@ -352,49 +287,6 @@ def read_dataframe(filepath):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return None
-
-def merge_by_id(list1, list2):
-    # Create a lookup dictionary from list2 using 'id' as the key
-    lookup = {item['id']: item['original_text'] for item in list2}
-    lookup1 = {item['id']: item['pubnbr'] for item in list2}
-    lookup2 = {item['id']: item['pubdate'] for item in list2}
-    lookup3 = {item['id']: item['title'] for item in list2}
-
-    # Merge with corresponding entry in list1
-    merged = []
-    for item in list1:
-        merged_item = {
-            'id': item['id'],
-            'text': item['text'],
-            'pubdate': lookup2.get(item['id']) ,
-            'pubnbr':lookup1.get(item['id']) ,
-            'title':lookup3.get(item['id']) ,
-            'original_text': lookup.get(item['id'])  # Use .get() to avoid KeyError
-        }
-        merged.append(merged_item)
-    
-    return merged
-
-def merge_sentence(processed_texts):
-    """
-    Merges sentences by text_id from the processed texts.
-    
-    Args:
-        processed_texts (list of tuples): Each tuple is (text_id, sentence).
-        
-    Returns:
-        list of dict: Each dictionary has the text_id as key and the merged sentences as value.
-    """
-    merged = {}
-    for item in processed_texts:
-        text_id=item["id"]
-        sentence=item["sentence"]
-        if text_id not in merged:
-            merged[text_id] = sentence
-        else:
-            merged[text_id] += "\n" + sentence
-    # Convert to list of dictionaries 
-    return [{"id":text_id,"text":sentences} for text_id, sentences in merged.items()]
 
 def make_plot(data,x_title):
     plt.clf()

@@ -29,7 +29,7 @@ services:
       - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
-      - "traefik.http.middlewares.dashboard-auth.basicauth.users=rdi:$$2y$$05$$POE8bQdStukF12mJ1jWHM.DVGKaF3Bc2pWnGN5SbJzF/TAa98Y1sq"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_USER}:${TRAEFIK_PASSWORD}"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0

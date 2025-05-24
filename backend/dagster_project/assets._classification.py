@@ -95,10 +95,22 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
 
     if "original_text" not in df.columns:
         return AssetCheckResult(passed=False, metadata={"missing_column": "original_text"})
-
-    if df["original_text"].isnull().any():
-        return AssetCheckResult(passed=False, metadata={"empty_values": df["original_text"].isnull().sum()})
-
+    if "id" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "id"})
+    if "pubnbr" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "pubnbr"})    
+    if "pubdate" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "pubdate"})
+    if "cleaned_text" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "cleaned_text"})
+    if "sdg" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "sdg"})
+    if "target" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "target"})
+    if "ref" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "ref"})
+    if "validation" not in df.columns:
+        return AssetCheckResult(passed=False, metadata={"missing_column": "validation"})
     return AssetCheckResult(passed=True)
 
 
@@ -108,8 +120,6 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     tracker.start()
     try:
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
-        merged=fu.merge_sentence(extracted)
-        result=fu.merge_by_id(merged,raw_file_asset)
     finally:
         _ = tracker.stop()
     stats = fu.analyze_text_data(merged)
@@ -479,3 +489,37 @@ def es_health_check_and_overview(context: AssetExecutionContext, config: MyAsset
             "es_overview": MetadataValue.md(full_md_output)
         }
     )
+
+@asset(tags={"pipeline":"Reference_pipeline"},required_resource_keys={"es_resource"},description="Creation of the Reference table of patents")
+def es_reftable_created(context: AssetExecutionContext, config: MyAssetConfig) -> MaterializeResult:
+    es_client: Elasticsearch = context.resources.es_resource.get_client()
+    INDEX_NAME=config.ref_table
+    context.log.info(f"Deleting existing index: {INDEX_NAME}")
+    es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
+    properties_definition = {
+            "original_text": {
+                "type": "text",
+                "analyzer": "standard"
+            }, 
+            "pubnbr": {"type": "keyword"},
+            "title": {
+                "type": "text",
+                "analyzer": "standard"
+            },
+            "sdg": {"type": "keyword"},
+            "target": {"type": "keyword"},
+            "validation": {"type": "boolean"}
+            }
+    context.log.info(f"Creating index: {INDEX_NAME} with mapping...")
+    try:
+        es_client.indices.create(
+            index=INDEX_NAME,
+            body=   { "mappings": {  # <--- This is the key you need
+        "properties": properties_definition
+    }}
+        )
+        yield MaterializeResult(asset_key="es_reftable_created")
+        
+    except Exception as e:
+        print(f"Error creating index: {e}")
+        raise  

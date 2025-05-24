@@ -1,16 +1,16 @@
 from dagster import Definitions, load_assets_from_modules,ResourceDefinition, EnvVar
 
 from sensors import file_update_sensor
-import assets
+import assets_classification
 from resources import SBERT, qdrant,es
 #from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
 
-all_assets=load_assets_from_modules([assets])
+all_assets_classification=load_assets_from_modules([assets_classification])
 
 defs = Definitions(
     assets=[
-        *all_assets
+        *all_assets_classification
     ],
     asset_checks=[
         assets.text_column_not_empty,  # optional

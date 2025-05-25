@@ -227,9 +227,7 @@ def extract_text_simple(
 
 def process_texts(texts, keyword1, keyword2, min_sentence_length=5): # min_sentence_length is now mostly handled in extract_text_simple
     results = []
-    nb1=0
     for item in texts:
-        print(nb1)
         nb1=nb1+1
         # Note: extract_text_simple now returns a list of strings (sentences)
         result = extract_text_simple(item["original_text"][:10000], keyword1, keyword2, keyword2)

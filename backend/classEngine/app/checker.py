@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Optional, Dict
 from pydantic import BaseModel
-from .elastic import es # Assuming elastic.py is in the same directory
+from elastic import es # Assuming elastic.py is in the same directory
 from elasticsearch import NotFoundError # For specific error handling
 
 router = APIRouter()

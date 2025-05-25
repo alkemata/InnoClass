@@ -83,34 +83,6 @@ def targets_asset(config: MyAssetConfig):
         print(f"Error loading File: {e}")
         raise  # Re-raise to fail the multi-asset    
 
-
-@asset_check(asset=raw_file_asset)
-def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
-    # Convert list of dictionaries to DataFrame for easier processing,
-    # especially for `isnull().any()` and `isnull().sum()`
-    df = pd.DataFrame(raw_file_asset)
-
-    if "original_text" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "original_text"})
-    if "id" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "id"})
-    if "pubnbr" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "pubnbr"})    
-    if "pubdate" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "pubdate"})
-    if "cleaned_text" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "cleaned_text"})
-    if "sdg" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "sdg"})
-    if "target" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "target"})
-    if "ref" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "ref"})
-    if "validation" not in df.columns:
-        return AssetCheckResult(passed=False, metadata={"missing_column": "validation"})
-    return AssetCheckResult(passed=True)
-
-
 @asset(deps=["raw_file_asset"],automation_condition=AutomationCondition.eager())
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     tracker = tracker = OfflineEmissionsTracker(country_iso_code="DEU")

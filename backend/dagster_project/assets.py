@@ -84,7 +84,7 @@ def targets_asset(config: MyAssetConfig,kinds={"python"},tags={"pipeline":"class
         raise  # Re-raise to fail the multi-asset    
 
 
-@asset_check(tags={"pipeline":"classification_pipeline"},asset=raw_file_asset)
+@asset_check(asset=raw_file_asset)
 def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
     # Convert list of dictionaries to DataFrame for easier processing,
     # especially for `isnull().any()` and `isnull().sum()`

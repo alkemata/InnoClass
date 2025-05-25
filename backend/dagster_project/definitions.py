@@ -1,6 +1,6 @@
 from dagster import Definitions, load_assets_from_modules,ResourceDefinition, EnvVar
 
-from sensors import file_update_sensor
+from sensors import file_update_sensor,my_job
 import assets
 from resources import SBERT, qdrant,es
 #from example_job import hello_job
@@ -11,7 +11,7 @@ all_assets=load_assets_from_modules([assets])
 defs = Definitions(
     assets=[
         *all_assets
-    ],
+    ],jobs=[my_job],
     sensors=[
             file_update_sensor],
     # Uncomment and customize if using resources like IO managers

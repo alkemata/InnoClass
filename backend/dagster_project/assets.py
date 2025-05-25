@@ -323,26 +323,22 @@ def es_patent_light(context: AssetExecutionContext,extracted_data_asset, config:
 
     docs_to_index = []
     for text in extracted_data_asset:
-        # Transform_sdg data
-        sdg_transformed = [{"value": s, "score": 0.0} for s in text.get("sdg", []) if s] if text.get("sdg") else []
-        # Transform target data
-        target_transformed = [{"value": t, "score": 0.0} for t in text.get("target", []) if t] if text.get("target") else []
-
-        doc = {
+            doc = {
             "_index": INDEX_NAME,
             "_id": text["id"],
             "pubnbr": text["pubnbr"],
             "original_text": text["original_text"],
             "cleaned_text": text["cleaned_text"],
             "title": text["title"],
-            "sdg": sdg_transformed,
-            "target": target_transformed,
+            "sdg": text.get("sdg", []),
+            "target": text.get("target", []),
             "reference": text.get("ref"), # Added reference field
             "validation": text.get("validation"), # Corrected validation field
             "thumbsup":0,
             "thumbsdown":0
             }
-        docs_to_index.append(doc)
+            docs_to_index.append(doc)
+            print(text.get("sdg", []))
 
     context.log.info(f"Bulk indexing {len(docs_to_index)} documents...")
     try:

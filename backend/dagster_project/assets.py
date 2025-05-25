@@ -338,7 +338,7 @@ def es_patent_light(context: AssetExecutionContext,extracted_data_asset, config:
             "thumbsdown":0
             }
             docs_to_index.append(doc)
-            print(text.get("sdg", []))
+            print(text["sdg"])
 
     context.log.info(f"Bulk indexing {len(docs_to_index)} documents...")
     try:

@@ -232,7 +232,7 @@ def process_texts(texts, keyword1, keyword2, min_sentence_length=5): # min_sente
         print(nb1)
         nb1=nb1+1
         # Note: extract_text_simple now returns a list of strings (sentences)
-        result = extract_text_simple(item["original_text"][1:10000], keyword1, keyword2, keyword2)
+        result = extract_text_simple(item["original_text"][:10000], keyword1, keyword2, keyword2)
         item["cleaned_text"]=result
         results.append(item)
     return results

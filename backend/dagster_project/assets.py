@@ -161,21 +161,6 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     qdrant_client.upsert(collection_name=INDEX2, points=points)
     context.log.info(f"Indexed {len(ids)} texts into Qdrant.")
 
-@asset(deps=["index_texts"],required_resource_keys={"qdrant_resource"})
-def clear_qdrant_collection_content(context: AssetExecutionContext, config: MyAssetConfig,tags={"pipeline":"classification_pipeline"}):
-    """
-    Asset to check the content of a specific Qdrant collection.
-    """
-    INDEX2="test2"
-    clearok=config.clear_vector
-    if clearok=="no":
-        context.log.error("Clearing index for vector database not accepted")
-        raise
-    qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
-    qdrant_client.delete_collection(collection_name=INDEX2)
-
-    
-
 # Assuming MyAssetConfig is defined elsewhere, or create a separate one for health checks
 # class QdrantHealthConfig(Config):
 #     pass # No specific config needed for basic health check

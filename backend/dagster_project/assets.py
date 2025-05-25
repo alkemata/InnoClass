@@ -112,7 +112,7 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
 
 
 @asset(deps=["raw_file_asset"],automation_condition=AutomationCondition.eager())
-def extracted_data_asset( config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
+def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     tracker = tracker = OfflineEmissionsTracker(country_iso_code="DEU")
     tracker.start()
     try:

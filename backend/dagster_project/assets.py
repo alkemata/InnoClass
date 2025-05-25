@@ -119,7 +119,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
     finally:
         _ = tracker.stop()
-    stats = fu.analyze_text_data(merged)
+    stats = fu.analyze_text_data(extracted)
     # Attach metadata: number of lines
     metadata = {
         "stats": MetadataValue.md(json.dumps(stats)),

@@ -45,8 +45,8 @@ def raw_file_asset(config: MyAssetConfig):
         "file_name": MetadataValue.text(file_name),
         "Extraction method": MetadataValue.text(metadata["extract_method"]),
     }
-    yield MaterializeResult(asset_key="raw_file_asset",metadata=metadata)
-    return Output(value=data)
+    #yield MaterializeResult(asset_key="raw_file_asset",metadata=metadata)
+    return Output(value=data,metadata=metadata)
 
 
 @asset

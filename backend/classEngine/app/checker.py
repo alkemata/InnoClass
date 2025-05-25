@@ -6,13 +6,18 @@ from elasticsearch import NotFoundError # For specific error handling
 
 router = APIRouter()
 
+class SdgItem(BaseModel):
+    value: str
+    score: int
+
 class CheckPageDataResponse(BaseModel):
     id: str
     title: str
     cleaned_text: str
-    sdg: List[str]
+    sdg: List[SdgItem]
     target: List[str]
     valid: bool
+    reference: bool
 
 @router.get("/check/next_entry", response_model=CheckPageDataResponse)
 async def get_next_unvalidated_entry():
@@ -34,16 +39,22 @@ async def get_next_unvalidated_entry():
     if res["hits"]["hits"]:
         hit = res["hits"]["hits"][0]
         src = hit["_source"]
+ # Process sdg field to be List[SdgItem]
+        sdg_data = src.get("sdg", [])
+        sdg_items = [SdgItem(**item) for item in sdg_data if isinstance(item, dict)]
+
         return CheckPageDataResponse(
             id=hit["_id"],
             title=src.get("title", ""),
             cleaned_text=src.get("cleaned_text", ""),
-            sdg=src.get("sdg", []),
+            sdg=sdg_items,
             target=src.get("target", []),
-            valid=src.get("valid", False)
+            valid=src.get("valid", False),
+            reference=src.get("reference", False) # Added reference field
         )
     else:
         raise HTTPException(status_code=404, detail="No unvalidated entries found.")
+
 
 class UpdateSdgRequest(BaseModel):
     doc_id: str

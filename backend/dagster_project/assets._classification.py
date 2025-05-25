@@ -265,7 +265,6 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     prompts_list = [item['Goal Title'] for item in queries]
     q_embs = sbert_model.encode(prompts_list, convert_to_numpy=True)
     document_sdg_mapping = defaultdict(set)# Using a set to store unique query_ids for each document
-    document_details = {} 
 
     for q_idx, q_emb in enumerate(q_embs,start=1):
         hits = qdrant_client.search(
@@ -274,19 +273,24 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
             score_threshold=config.threshold,
             limit=10000,
         )
-        context.log.info(str(len(hits)))
+        context.log.info(f"Query {q_idx} ('{prompts_list[q_idx-1]}') found {len(hits)} hits.")
+
         for hit in hits:
-            transformed_data[hit.id].append({"label": "SDG"+str(q_idx), "score": hit.score})
+            # hit.payload['epo_id'] is the Elasticsearch document ID
+            # as set in the `index_texts` asset.
+            epo_id = hit.payload['epo_id'] 
+            sdg_code = "SDG" + str(q_idx) 
+            transformed_data[epo_id].append({"value": sdg_code, "score": hit.score})
+
 
     actions = []
-    for doc_id, query_indices_set in transformed_data.items():
-        sdg_list = list(query_indices_set)
+    for es_doc_id, sdg_list_of_dicts in transformed_data.items():
         action = {
                 "_op_type": "update",
                 "_index": INDEX_NAME, 
-                "_id": es_doc_id,
+                "_id": es_doc_id, # Use the es_doc_id from transformed_data
                 "doc": {
-                    "sdg": sdg_list,
+                    "sdg": sdg_list_of_dicts, # This is now a list of {"value": ..., "score": ...}
                 },
                 "doc_as_upsert": True # Creates the document if it doesn't exist, otherwise updates
             }
@@ -320,8 +324,8 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) 
             "sdg": {
                 "type": "nested",
                 "properties": {
-                    "score": { "type": "float" },
-                    "label": { "type": "keyword" }
+                    "value": { "type": "keyword" },
+                    "score": { "type": "float" }
                 }
             },
             "target": {
@@ -361,16 +365,22 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
 
     docs_to_index = []
     for text in raw_file_asset:
+        # Transform_sdg data
+        sdg_transformed = [{"value": s, "score": 0.0} for s in text.get("sdg", []) if s] if text.get("sdg") else []
+        # Transform target data
+        target_transformed = [{"value": t, "score": 0.0} for t in text.get("target", []) if t] if text.get("target") else []
+
         doc = {
             "_index": INDEX_NAME,
             "_id": text["id"],
             "pubnbr": text["pubnbr"],
             "original_text": text["original_text"],
-            "cleaned_text": text["original_text"],
+            "cleaned_text": text["cleaned_text"],
             "title": text["title"],
-            "sdg":text["sdg"],
-            "target":text["target"],
-            "validation":target["validation"],
+            "sdg": sdg_transformed,
+            "target": target_transformed,
+            "reference": text.get("ref"), # Added reference field
+            "validation": text.get("validation"), # Corrected validation field
             "thumbsup":0,
             "thumbsdown":0
             }

@@ -25,14 +25,11 @@ class MyAssetConfig(Config):
     filename_prompts_targets: str = "/opt/project_data/sdg_targets.dat"
     filename_prompts_goals: str = "/opt/project_data/sdg_goals.dat"
     main_table: str = "main_table"
-    ref_table:str="ref_table"
-    feedback_table:str="fb_table"
     test_table:str="test_table"
     batch_size: int = 100
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
-    clear_vector: str="no"
 
 @asset(kinds={"python"},tags={"pipeline":"classification_pipeline"},description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
@@ -142,7 +139,8 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     sbert_model: SentenceTransformer = context.resources.model.get_transformer() # Get resources from context
     actual_embedding_dimension = sbert_model.get_sentence_embedding_dimension()
     context.log.info(f"Model reports embedding dimension: {actual_embedding_dimension}")
-
+    qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
+    qdrant_client.delete_collection(collection_name=INDEX2)
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     if not qdrant_client.collection_exists(INDEX2):
@@ -151,7 +149,7 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
             vectors_config=VectorParams(size=sbert_model.get_sentence_embedding_dimension(), distance=Distance.COSINE),
         )
 
-    texts = [item['text'] for item in extracted_data_asset]  # Extract texts
+    texts = [item['cleaned_text'] for item in extracted_data_asset]  # Extract texts
     ids = [item['id'] for item in extracted_data_asset]  # Extract ids
     for item in texts:
         print(item)
@@ -266,41 +264,24 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     # Encode queries
     prompts_list = [item['Goal Title'] for item in queries]
     q_embs = sbert_model.encode(prompts_list, convert_to_numpy=True)
-    document_sdg_mapping = defaultdict(set) # Using a set to store unique query_ids for each document
-    document_details = {} # To store other relevant details like epo_id
-    
+    document_sdg_mapping = defaultdict(set)# Using a set to store unique query_ids for each document
+    document_details = {} 
+
     for q_idx, q_emb in enumerate(q_embs,start=1):
         hits = qdrant_client.search(
             collection_name=INDEX2,
             query_vector=q_emb.tolist(),
             score_threshold=config.threshold,
-            limit=2000,
+            limit=10000,
         )
         context.log.info(str(len(hits)))
         for hit in hits:
-            # Add the query_index to the set for the corresponding hit_id
-            document_sdg_mapping[hit.id].add("SDG"+str(q_idx)) # Store as string if SDG field is keyword
-            
-            # Store other details. Assuming epo_id is consistent for a given hit.id
-            if hit.id not in document_details:
-                document_details[hit.id] = {
-                    "epo_id": hit.payload.get("epo_id"),
-                    # You might want to store other relevant details here if they are in the payload
-                }
+            transformed_data[hit.id].append({"label": "SDG"+str(q_idx), "score": hit.score})
 
-# Prepare data for Elasticsearch bulk update
     actions = []
-    for doc_id, query_indices_set in document_sdg_mapping.items():
-        print(doc_id)
-        # Convert the set of query_indices to a list
+    for doc_id, query_indices_set in transformed_data.items():
         sdg_list = list(query_indices_set)
-         # Get the epo_id and any other details for this document
-        details = document_details.get(doc_id, {})
-        epo_id = details.get("epo_id")
-        es_doc_id = epo_id # Make sure epo_id is always present and unique
-
-        if es_doc_id: # Only proceed if you have a valid ID to update
-            action = {
+        action = {
                 "_op_type": "update",
                 "_index": INDEX_NAME, 
                 "_id": es_doc_id,
@@ -309,7 +290,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
                 },
                 "doc_as_upsert": True # Creates the document if it doesn't exist, otherwise updates
             }
-            actions.append(action)
+        actions.append(action)
 
     # Now, use Elasticsearch's bulk API to update the documents
     # This is much more efficient than updating documents one by one.
@@ -369,7 +350,7 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) 
         print(f"Error creating index: {e}")
         raise    
 
-@asset(tags={"pipeline":"classification_pipeline"},deps=["raw_file_asset","es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
+@asset(tags={"pipeline":"classification_pipeline"},deps=["extracted_data_asset","es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
 def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es_resource.get_client()
@@ -385,9 +366,13 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
             "_id": text["id"],
             "pubnbr": text["pubnbr"],
             "original_text": text["original_text"],
+            "cleaned_text": text["original_text"],
             "title": text["title"],
-            "sdg":[""],
-            "target":[""]
+            "sdg":text["sdg"],
+            "target":text["target"],
+            "validation":target["validation"],
+            "thumbsup":0,
+            "thumbsdown":0
             }
         docs_to_index.append(doc)
 

@@ -91,7 +91,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
     finally:
         emissions_data = tracker.stop()
-        metadata["carbon_emissions_report"] = MetadataValue.value(emissions_data)
+       # metadata["carbon_emissions_report"] = MetadataValue.md(str(emissions_data))
     stats = fu.analyze_text_data(extracted)
     # Attach metadata: number of lines
     metadata = {

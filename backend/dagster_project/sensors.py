@@ -1,14 +1,13 @@
 import os
-from dagster import sensor, SensorEvaluationContext, RunRequest, SkipReason, AssetSelection,Field,Config
+from dagster import sensor, SensorEvaluationContext, RunRequest, SkipReason, AssetSelection,Field,Config,define_asset_job
 from assets import raw_file_asset
 
-class FileUpdateSensorConfig(Config):
-    file_path: str="/opt/project_data/test.dat.gz"
+my_job = define_asset_job("my_job", selection=[raw_file_asset])
 
-@sensor(
-    asset_selection=AssetSelection.assets(raw_file_asset)
-)
-def file_update_sensor(context: SensorEvaluationContext, config: FileUpdateSensorConfig):
+@sensor(job="my_job",minimum_interval_seconds=5,
+    default_status=dg.DefaultSensorStatus.RUNNING)
+
+def file_update_sensor(context: SensorEvaluationContext):
     file_name = "/opt/project_data/raw_data.dat.gz"
 
     if not os.path.exists(file_name):

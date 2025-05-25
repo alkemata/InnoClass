@@ -1,6 +1,6 @@
 import os
 from dagster import sensor, SensorEvaluationContext, RunRequest, SkipReason, AssetSelection,Field,Config
-from assets_classification import raw_file_asset
+from assets import raw_file_asset
 
 class FileUpdateSensorConfig(Config):
     file_path: str="/opt/project_data/test.dat.gz"

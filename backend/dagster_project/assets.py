@@ -125,7 +125,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
         "stats": MetadataValue.md(json.dumps(stats)),
     }
 
-    return Output(value=result, metadata=metadata)  # Ensure you return the processed data
+    return Output(value=extracted, metadata=metadata)  # Ensure you return the processed data
 
 
 @asset(deps=["extracted_data_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
@@ -141,7 +141,6 @@ def index_texts(context: AssetExecutionContext, config: MyAssetConfig, extracted
     context.log.info(f"Model reports embedding dimension: {actual_embedding_dimension}")
     qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     qdrant_client.delete_collection(collection_name=INDEX2)
-    qdrant_client: QdrantClient = context.resources.qdrant_resource.get_client()
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     if not qdrant_client.collection_exists(INDEX2):
         qdrant_client.create_collection(
@@ -250,6 +249,7 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
     prompts_list = [item['Goal Title'] for item in queries]
     q_embs = sbert_model.encode(prompts_list, convert_to_numpy=True)
     document_sdg_mapping = defaultdict(set)# Using a set to store unique query_ids for each document
+    transformed_data = defaultdict(list)
 
     for q_idx, q_emb in enumerate(q_embs,start=1):
         hits = qdrant_client.search(

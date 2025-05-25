@@ -313,7 +313,7 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) 
         raise    
 
 @asset(deps=["extracted_data_asset","es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
-def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAssetConfig):
+def es_patent_light(context: AssetExecutionContext,extracted_data_asset, config: MyAssetConfig):
 
     es_client: Elasticsearch = context.resources.es_resource.get_client()
     INDEX_NAME=config.main_table
@@ -322,7 +322,7 @@ def es_patent_light(context: AssetExecutionContext,raw_file_asset, config: MyAss
 #       es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
 
     docs_to_index = []
-    for text in raw_file_asset:
+    for text in extracted_data_asset:
         # Transform_sdg data
         sdg_transformed = [{"value": s, "score": 0.0} for s in text.get("sdg", []) if s] if text.get("sdg") else []
         # Transform target data

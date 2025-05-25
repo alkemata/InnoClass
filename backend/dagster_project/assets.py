@@ -85,13 +85,13 @@ def targets_asset(config: MyAssetConfig):
 
 @asset(deps=["raw_file_asset"],automation_condition=AutomationCondition.eager())
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
-    tracker = OfflineEmissionsTracker(country_iso_code="DEU")
+    tracker = OfflineEmissionsTracker(country_iso_code="DE")
     tracker.start()
     try:
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
     finally:
         emissions_data = tracker.stop()
-        metadata["carbon_emissions_report"] = MetadataValue.md(emissions_data.to_markdown())
+        metadata["carbon_emissions_report"] = MetadataValue.value(emissions_data)
     stats = fu.analyze_text_data(extracted)
     # Attach metadata: number of lines
     metadata = {

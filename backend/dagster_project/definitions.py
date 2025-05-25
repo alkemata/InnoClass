@@ -12,9 +12,6 @@ defs = Definitions(
     assets=[
         *all_assets
     ],
-    asset_checks=[
-        assets.text_column_not_empty,  # optional
-    ],
     sensors=[
             file_update_sensor],
     # Uncomment and customize if using resources like IO managers

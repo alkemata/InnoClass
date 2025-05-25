@@ -89,7 +89,7 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     tracker.start()
     try:
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
-        for item in extracted[:1]:
+        for item in extracted:
             print(item['sdg'])
     finally:
         emissions_data = tracker.stop()

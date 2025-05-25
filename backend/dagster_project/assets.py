@@ -31,7 +31,7 @@ class MyAssetConfig(Config):
     threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
 
-@asset(kinds={"python"},tags={"pipeline":"classification_pipeline"},description="Raw file provided byb epadb in TIP")
+@asset(tags={"pipeline":"classification_pipeline"},description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
     file_name = config.filename_texts
     # Load file
@@ -50,7 +50,7 @@ def raw_file_asset(config: MyAssetConfig):
 
 
 @asset
-def goals_asset(config: MyAssetConfig,kinds={"python"},tags={"pipeline":"classification_pipeline"}):
+def goals_asset(config: MyAssetConfig,tags={"pipeline":"classification_pipeline"}):
     file_name = config.filename_prompts_goals
    
     try:
@@ -67,7 +67,7 @@ def goals_asset(config: MyAssetConfig,kinds={"python"},tags={"pipeline":"classif
         raise  # Re-raise to fail the multi-asset
 
 @asset
-def targets_asset(config: MyAssetConfig,kinds={"python"},tags={"pipeline":"classification_pipeline"}):
+def targets_asset(config: MyAssetConfig,tags={"pipeline":"classification_pipeline"}):
     file_name = config.filename_prompts_targets
    
     try:
@@ -111,7 +111,7 @@ def text_column_not_empty(raw_file_asset: list[dict]) -> AssetCheckResult:
     return AssetCheckResult(passed=True)
 
 
-@asset(kinds={"python"},tags={"pipeline":"classification_pipeline"},deps=[raw_file_asset],automation_condition=AutomationCondition.eager())
+@asset(tags={"pipeline":"classification_pipeline"},deps=[raw_file_asset],automation_condition=AutomationCondition.eager())
 def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[dict]]:  # Changed return type hint
     tracker = tracker = OfflineEmissionsTracker(country_iso_code="DEU")
     tracker.start()
@@ -232,7 +232,7 @@ def check_qdrant_health(context: AssetExecutionContext):
 
 # 4. Asset: Run threshold search for queries and persist scores
 # ------------------
-@asset(kinds={"elasticssearch"},tags={"pipeline":"classification_pipeline"},deps=["es_patent_light","index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
+@asset(tags={"pipeline":"classification_pipeline"},deps=["es_patent_light","index_texts", "targets_asset", "goals_asset"],required_resource_keys={"es_resource","model","qdrant_resource"},automation_condition=AutomationCondition.eager())
 def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goals_asset) -> None:
     """
     Encode a list of queries, run range searches in Qdrant,

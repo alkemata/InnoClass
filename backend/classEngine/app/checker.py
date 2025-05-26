@@ -61,6 +61,7 @@ async def get_entry_by_offset( # Renamed function
                 "from": offset,
                 "size": 1
             }
+            print(search_query_body)
             res = await es.search(index="reference", body=search_query_body)
             if res["hits"]["hits"]:
                 hit = res["hits"]["hits"][0]

@@ -6,6 +6,10 @@ from elasticsearch import NotFoundError # For specific error handling
 
 router = APIRouter()
 
+class SdgItem(BaseModel):
+    value: str
+    score: float
+
 class CheckPageDataResponse(BaseModel):
     id: str
     title: str
@@ -92,10 +96,6 @@ async def get_entry_by_offset( # Renamed function
         raise HTTPException(status_code=500, detail="Elasticsearch operation failed")
 
     return PaginatedCheckPageDataResponse(entry=entry_data, total=total_hits, offset=offset)
-
-class SdgItem(BaseModel):
-    value: str
-    score: float
 
 class UpdateSdgRequest(BaseModel):
     doc_id: str

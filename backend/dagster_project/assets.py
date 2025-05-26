@@ -1,12 +1,13 @@
 import pandas as pd
 import os
+import csv # Added csv import
 import json
 from typing import List, Optional, Tuple
 from dagster import (
     asset, multi_asset, AssetExecutionContext,
     Output, MetadataValue, MaterializeResult,
-    AutomationCondition)
-from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource, AssetSpec
+    AutomationCondition, AssetSpec) # Added AssetSpec
+from dagster import asset_check, AssetCheckResult, AssetCheckSeverity, Config, ConfigurableResource
 import funcutils as fu
 from codecarbon import OfflineEmissionsTracker
 
@@ -30,6 +31,7 @@ class MyAssetConfig(Config):
     search_results_file: str = "/opt/project_data/search_results.csv" # Added output file path
     threshold: float =0.7
     es_sample_size: int = 5 # New: Number of documents to sample for overview
+    training_set_path: str = "/opt/project_data/training_set.csv" # Added training_set_path
 
 @asset(description="Raw file provided byb epadb in TIP")
 def raw_file_asset(config: MyAssetConfig):
@@ -270,9 +272,37 @@ def search_and_store(context: AssetExecutionContext, config: MyAssetConfig, goal
 @asset(required_resource_keys={"es_resource"},description="Creation of the Main table of patents")
 def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) -> MaterializeResult:
     es_client: Elasticsearch = context.resources.es_resource.get_client()
-    INDEX_NAME=config.main_table
+    INDEX_NAME = config.main_table
+    PIPELINE_NAME = 'timestamp_pipeline'
+
+    # Define and create the ingest pipeline
+    pipeline_body = {
+        "description": "Sets the last_updated field on document ingest/update",
+        "processors": [
+            {
+                "set": {
+                    "field": "last_updated",
+                    "value": "{{_ingest.timestamp}}"
+                }
+            }
+        ]
+    }
+    try:
+        es_client.ingest.put_pipeline(id=PIPELINE_NAME, body=pipeline_body)
+        context.log.info(f"Ingest pipeline '{PIPELINE_NAME}' created successfully.")
+    except Exception as e: # Broad exception for now, can be narrowed if specific error codes are known
+        # Attempt to check if it's a resource_already_exists_exception or similar
+        # For now, we'll assume if it fails, it might be because it exists, or another issue.
+        # A more robust check would inspect the error type or message.
+        if "resource_already_exists_exception" in str(e).lower():
+            context.log.info(f"Ingest pipeline '{PIPELINE_NAME}' already exists. Skipping creation.")
+        else:
+            context.log.error(f"Error creating ingest pipeline '{PIPELINE_NAME}': {e}")
+            raise # Re-raise if it's not an 'already exists' type error
+
     context.log.info(f"Deleting existing index: {INDEX_NAME}")
     es_client.indices.delete(index=INDEX_NAME, ignore=[400, 404])
+
     properties_definition = {
             "original_text": {
                 "type": "text",
@@ -301,21 +331,27 @@ def es_maintable_created(context: AssetExecutionContext, config: MyAssetConfig) 
             "reference":{"type":"boolean"},
             "validation":{"type":"boolean"},
             "thumbsup":{"type":"integer"},
-            "thumbsdown":{"type":"integer"}
+            "thumbsdown":{"type":"integer"},
+            "last_updated": {"type": "date"}  # Added last_updated field
             }
-    context.log.info(f"Creating index: {INDEX_NAME} with mapping...")
+    context.log.info(f"Creating index: {INDEX_NAME} with mapping and default pipeline...")
     try:
         es_client.indices.create(
             index=INDEX_NAME,
-            body=   { "mappings": {  # <--- This is the key you need
-        "properties": properties_definition
-    }}
+            body={
+                "settings": {
+                    "index.default_pipeline": PIPELINE_NAME
+                },
+                "mappings": {
+                    "properties": properties_definition
+                }
+            }
         )
         yield MaterializeResult(asset_key="es_maintable_created")
-        
+
     except Exception as e:
-        print(f"Error creating index: {e}")
-        raise    
+        context.log.error(f"Error creating index '{INDEX_NAME}': {e}")
+        raise
 
 @asset(deps=["extracted_data_asset","es_maintable_created"],required_resource_keys={"es_resource"},automation_condition=AutomationCondition.eager())
 def es_patent_light(context: AssetExecutionContext,extracted_data_asset, config: MyAssetConfig):
@@ -459,3 +495,75 @@ def es_health_check_and_overview(context: AssetExecutionContext, config: MyAsset
             "es_overview": MetadataValue.md(full_md_output)
         }
     )
+
+@asset(
+    name="training_set_creation",
+    required_resource_keys={"es_resource"},
+    deps=["es_maintable_created"] # Using simple string dependency
+)
+def training_set_creation(context: AssetExecutionContext, config: MyAssetConfig) -> Output:
+    es_client = context.resources.es_resource.get_client()
+    csv_output_path = config.training_set_path
+    index_name = config.main_table
+    
+    try:
+        os.makedirs(os.path.dirname(csv_output_path), exist_ok=True)
+        context.log.info(f"Directory for CSV ensured: {os.path.dirname(csv_output_path)}")
+    except Exception as e:
+        context.log.error(f"Error creating directory for CSV: {e}")
+        raise
+
+    query = {
+        "query": {
+            "term": {
+                "reference": True
+            }
+        },
+        "_source": ["sdg", "cleaned_text"] # Fetch only necessary fields
+    }
+    
+    row_counter = 0
+    
+    try:
+        with open(csv_output_path, 'w', newline='', encoding='utf-8') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(["SDG", "Text", "Score"]) # Header
+            
+            context.log.info(f"Starting to scan documents from index '{index_name}' for training set.")
+            # Use helpers.scan for efficiency
+            for hit in helpers.scan(es_client, query=query, index=index_name):
+                source = hit['_source']
+                cleaned_text = source.get('cleaned_text', '')
+                sdg_array = source.get('sdg', [])
+                
+                # Ensure cleaned_text is not empty, otherwise skip
+                if not cleaned_text:
+                    context.log.debug(f"Skipping document ID {hit['_id']} due to empty cleaned_text.")
+                    continue
+
+                if isinstance(sdg_array, list) and sdg_array:
+                    for sdg_item in sdg_array:
+                        if isinstance(sdg_item, dict): # sdg is a list of objects
+                            sdg_text = sdg_item.get('value')
+                            if sdg_text: # Ensure sdg_text is not None or empty
+                                csv_writer.writerow([sdg_text, cleaned_text, 1.0])
+                                row_counter += 1
+                            else:
+                                context.log.debug(f"Skipping SDG item in doc ID {hit['_id']} due to empty SDG value.")
+                        else:
+                            context.log.warning(f"Found non-dict item in sdg_array for doc ID {hit['_id']}: {sdg_item}")
+                # else: # This case means no valid SDGs were found for this document, or sdg field was missing/empty
+                    # context.log.debug(f"No valid SDG items found or sdg_array is empty for doc ID {hit['_id']}.")
+            
+        context.log.info(f"Successfully created training set with {row_counter} samples at {csv_output_path}")
+        return Output(
+            value=csv_output_path, # Can return the path or number of rows
+            metadata={
+                "num_training_samples": MetadataValue.int(row_counter),
+                "csv_file_path": MetadataValue.text(csv_output_path)
+            }
+        )
+    except Exception as e:
+        context.log.error(f"Error during training set creation (ES scan or CSV writing): {e}")
+        # Re-raise the exception to mark the asset as failed
+        raise

@@ -80,10 +80,11 @@ async def search(req: SearchRequest):
     hits = []
     for h in res["hits"]["hits"]:
         src = h["_source"]
+ 
         hits.append(Hit(
             id=h["_id"],
             title=src["title"],
-            extracted_text=src.get("extracted_text",""),
+            cleaned_text=src.get("cleaned_text",""),
             sdgs=[SdgItem(**sdg) for sdg in src.get("sdg",[])], # Convert to SdgItem objects
             targets=src.get("target",[]),
             up=src.get("up",0),

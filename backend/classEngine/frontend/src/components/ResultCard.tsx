@@ -8,7 +8,7 @@ export default function ResultCard({
   category
 }: {
   hit: any;
-  category: "sdgs"|"targets";
+  category: "sdg"|"target";
 }) {
   const list = hit[category] as string[];
 
@@ -27,7 +27,7 @@ export default function ResultCard({
       }}
     >
       <Typography variant="h6">{hit.title}</Typography>
-      <Typography variant="body2" mt={1}>{hit.extracted_text}</Typography>
+      <Typography variant="body2" mt={1}>{hit.cleaned_text}</Typography>
 
       <Box mt={1}>
         {list.map(val => (

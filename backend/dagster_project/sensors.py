@@ -3,7 +3,7 @@ from dagster import (
     define_asset_job, AssetSelection, DefaultSensorStatus
 )
 # Assuming your assets are in 'assets.py' in the same directory/package
-from .assets import training_set_creation # Adjust if your project structure is different
+from assets import training_set_creation # Adjust if your project structure is different
 # from datetime import datetime # Not strictly needed if ES timestamps are ISO strings
 from elasticsearch import Elasticsearch # For type hinting
 

@@ -1,8 +1,8 @@
 from dagster import Definitions, load_assets_from_modules,ResourceDefinition, EnvVar
 
-from .sensors import file_update_sensor, my_job, elasticsearch_update_sensor, training_set_update_job # Updated imports
+from sensors import file_update_sensor, my_job, elasticsearch_update_sensor, training_set_update_job # Updated imports
 import assets
-from .resources import SBERT, qdrant, es # Using relative import for consistency
+from resources import SBERT, qdrant, es # Using relative import for consistency
 #from example_job import hello_job
 #from my_dagster_project.resources.my_resources import my_resource_defs
 

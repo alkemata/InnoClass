@@ -26,9 +26,9 @@ async def get_next_unvalidated_entry(
 ):
     query_conditions = []
     if filter_validation is not None:
-        query_conditions.append({"term": {"valid": filter_validation}})
+        query_conditions.append({"term": {"validation": filter_validation}})
     else:
-        query_conditions.append({"term": {"valid": False}})  # Default behavior
+        query_conditions.append({"term": {"validation": False}})  # Default behavior
 
     if filter_reference is not None:
         query_conditions.append({"term": {"reference": filter_reference}})
@@ -63,7 +63,7 @@ async def get_next_unvalidated_entry(
             cleaned_text=src.get("cleaned_text", ""),
             sdg=src.get("sdg", []), # Assuming sdg and target are lists of strings
             target=src.get("target", []), # If they are lists of dicts, adjust accordingly
-            valid=src.get("valid", False),
+            valid=src.get("validation", False),
             reference=src.get("reference", False) # Added reference mapping
         )
     else:

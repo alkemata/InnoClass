@@ -127,9 +127,9 @@ class UpdateValidationRequest(BaseModel):
 @router.put("/check/update_validation", response_model=Dict[str, str])
 async def update_entry_validation_status(req: UpdateValidationRequest):
     script_body = {
-        "source": "ctx._source.valid = params.new_valid_status",
+        "source": "ctx._source.validation = params.new_valid_status",
         "params": {
-            "new_valid_status": req.valid
+            "new_valid_status": req.validation
         }
     }
     try:

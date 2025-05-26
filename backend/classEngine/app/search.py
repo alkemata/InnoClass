@@ -84,11 +84,12 @@ async def search(req: SearchRequest):
         hits.append(Hit(
             id=h["_id"],
             title=src["title"],
-            cleaned_text=src.get("cleaned_text",""),
+            cleaned_text=src.get("cleaned_text","")[:100],
             sdgs=[SdgItem(**sdg) for sdg in src.get("sdg",[])], # Convert to SdgItem objects
             targets=src.get("target",[]),
             up=src.get("up",0),
             down=src.get("down",0)
         ))
+        print(sdgs)
     print(str(len(hits)))
     return SearchResponse(hits=hits, total=res["hits"]["total"]["value"])

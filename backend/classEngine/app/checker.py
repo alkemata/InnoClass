@@ -15,7 +15,7 @@ class CheckPageDataResponse(BaseModel):
     title: str
     cleaned_text: str
     sdg: List[SdgItem] # This should ideally be List[SdgItem] if we want to return the full structure
-    target: List[SdgItem] # Assuming target is still a list of strings
+    target: List[SdgItem] # 
     valid: bool
     reference: bool
 
@@ -55,8 +55,6 @@ async def get_entry_by_offset( # Renamed function
 
     try:
         # 1. Get total count
-        print("counting")
-        print(query_dict)
         count_res = await es.count(index="main_table", body={"query": query_dict})
         total_hits = count_res.get('count', 0)
         print(total_hits)
@@ -67,18 +65,16 @@ async def get_entry_by_offset( # Renamed function
                 "from": offset,
                 "size": 1
             }
-            print(search_query_body)
+
             res = await es.search(index="main_table", body=search_query_body)
             if res["hits"]["hits"]:
                 hit = res["hits"]["hits"][0]
                 src = hit["_source"]
-                print(src)
+                print(src["sdg"])
                 entry_data = CheckPageDataResponse(
                     id=hit["_id"],
                     title=src.get("title", ""),
                     cleaned_text=src.get("cleaned_text", ""),
-                    # Assuming sdg in ES is List of strings. If it's List of dicts, this needs adjustment
-                    # or CheckPageDataResponse.sdg needs to be List[SdgItem]
                     sdg=src.get("sdg", []), 
                     target=src.get("target", []),
                     valid=src.get("valid", False),
@@ -99,7 +95,7 @@ async def get_entry_by_offset( # Renamed function
 
 class UpdateSdgRequest(BaseModel):
     doc_id: str
-    sdgs: List[SdgItem] # Changed from List[str]
+    sdgs: List[SdgItem] 
 
 @router.put("/check/update_sdgs", response_model=Dict[str, str])
 async def update_entry_sdgs(req: UpdateSdgRequest):

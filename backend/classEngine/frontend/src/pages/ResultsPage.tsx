@@ -233,10 +233,10 @@ function ResultsPage() {
                                 variant="body2"
                                 color="text.primary"
                               >
-                                Extracted Text: {hit.extracted_text || 'N/A'}
+                                Extracted Text: {hit.cleaned_text || 'N/A'}
                               </Typography>
                               <Typography component="span" variant="body2" color="text.secondary">
-                                SDGs: {hit.sdgs.join(', ') || 'N/A'} | Targets: {hit.targets.join(', ') || 'N/A'}
+                                SDGs: {hit.sdg.join(', ') || 'N/A'} | Targets: {hit.targets.join(', ') || 'N/A'}
                               </Typography>
                               <Typography component="span" variant="body2" color="text.secondary">
                                 <br />Up Votes: {hit.up} | Down Votes: {hit.down}

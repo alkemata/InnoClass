@@ -31,7 +31,7 @@ interface Hit {
   id: string;
   title: string;
   extracted_text: string;
-  sdgs: string[];
+  sdgs: SdgItem[];
   targets: string[];
   up: number;
   down: number;

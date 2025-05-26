@@ -82,3 +82,22 @@ def elasticsearch_update_sensor(context: SensorEvaluationContext):
         # Use context.log.exception for full traceback if preferred
         context.log.error(f"Error during Elasticsearch sensor execution: {e}")
         return SkipReason(f"Error querying Elasticsearch for sensor: {e}")
+
+        my_job = define_asset_job("my_job", selection=[raw_file_asset])
+
+@sensor(minimum_interval_seconds=5,
+    default_status=DefaultSensorStatus.RUNNING,)
+def file_update_sensor(context: SensorEvaluationContext):
+    file_name = "/opt/project_data/raw_data.dat.gz"
+
+    if not os.path.exists(file_name):
+        return SkipReason(f"File does not exist: {file_name}")
+
+    mtime = os.path.getmtime(file_name)
+    last_mtime = float(context.cursor or "0")
+
+    if mtime > last_mtime:
+        context.update_cursor(str(mtime))
+        return RunRequest(job_name="my_job")
+    
+    return SkipReason("No changes detected.")

@@ -83,7 +83,7 @@ def elasticsearch_update_sensor(context: SensorEvaluationContext):
         context.log.error(f"Error during Elasticsearch sensor execution: {e}")
         return SkipReason(f"Error querying Elasticsearch for sensor: {e}")
 
-        my_job = define_asset_job("my_job", selection=[raw_file_asset])
+my_job = define_asset_job("my_job", selection=[raw_file_asset])
 
 @sensor(minimum_interval_seconds=5,
     default_status=DefaultSensorStatus.RUNNING,)

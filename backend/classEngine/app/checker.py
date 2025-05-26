@@ -16,7 +16,7 @@ class CheckPageDataResponse(BaseModel):
     cleaned_text: str
     sdg: List[SdgItem] # This should ideally be List[SdgItem] if we want to return the full structure
     target: List[SdgItem] # 
-    valid: bool
+    validation: bool
     reference: bool
 
 class PaginatedCheckPageDataResponse(BaseModel):
@@ -77,7 +77,7 @@ async def get_entry_by_offset( # Renamed function
                     cleaned_text=src.get("cleaned_text", ""),
                     sdg=src.get("sdg", []), 
                     target=src.get("target", []),
-                    valid=src.get("valid", False),
+                    validation=src.get("validation", False),
                     reference=src.get("reference", False)
                 )
         elif offset >= total_hits and total_hits > 0 : # Offset out of bounds but there are documents
@@ -122,7 +122,7 @@ async def update_entry_sdgs(req: UpdateSdgRequest):
 
 class UpdateValidationRequest(BaseModel):
     doc_id: str
-    valid: bool
+    validation: bool
 
 @router.put("/check/update_validation", response_model=Dict[str, str])
 async def update_entry_validation_status(req: UpdateValidationRequest):

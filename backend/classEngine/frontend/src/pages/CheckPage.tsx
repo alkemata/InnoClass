@@ -30,7 +30,7 @@ interface EntryData {
   cleaned_text: string;
   sdg: Array<{ value: string; score: number }>; // Updated sdg type
   target: string[]; // Assuming target might also need this structure later
-  valid: boolean;
+  validation: boolean;
   reference: boolean;
 }
 
@@ -160,8 +160,8 @@ const CheckPage: React.FC = () => {
       return;
     }
 
-    const originalValidStatus = entry.valid;
-    setEntry(prevEntry => prevEntry ? { ...prevEntry, valid: isChecked } : null); // Optimistic update
+    const originalValidStatus = entry.validation;
+    setEntry(prevEntry => prevEntry ? { ...prevEntry, validation: isChecked } : null); // Optimistic update
 
     setUpdatingValidation(true);
     setValidationUpdateError(null);
@@ -169,13 +169,13 @@ const CheckPage: React.FC = () => {
     try {
       await api.put(`/check/update_validation`, {
         doc_id: entry.id,
-        valid: isChecked,
+        validation: isChecked,
       });
       // Success: Optimistic update is now confirmed
     } catch (err) {
       console.error("Failed to update validation status:", err);
       setValidationUpdateError("Failed to update validation status. Please try again.");
-      setEntry(prevEntry => prevEntry ? { ...prevEntry, valid: originalValidStatus } : null); // Revert
+      setEntry(prevEntry => prevEntry ? { ...prevEntry, validation: originalValidStatus } : null); // Revert
     } finally {
       setUpdatingValidation(false);
     }
@@ -309,7 +309,7 @@ const CheckPage: React.FC = () => {
         <FormControlLabel
           control={
             <Checkbox
-              checked={entry?.valid || false}
+              checked={entry?.validation || false}
               onChange={(event) => handleValidationChange(event.target.checked)}
               disabled={!entry || updatingValidation}
             />

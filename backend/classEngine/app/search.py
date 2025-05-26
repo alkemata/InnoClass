@@ -35,7 +35,7 @@ async def search(req: SearchRequest):
     filters = []
     if req.selections:
         # Construct a terms query for 'sdgs.value' to match any of the selected SDG values
-        filters.append({ "terms": { "sdgs.value": req.selections}})
+        filters.append({ "terms": { "sdg.value": req.selections}})
     
     must = []
     if req.keywords:
@@ -54,7 +54,7 @@ async def search(req: SearchRequest):
             }
         },
         "sort": [
-            { "sdgs.score": { "order": "desc" }} # Sort by sdgs.score in descending order
+            { "sdg.score": { "order": "desc" }} # Sort by sdgs.score in descending order
         ],
         "from": (req.page-1)*req.size,
         "size": req.size

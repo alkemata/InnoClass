@@ -54,7 +54,12 @@ async def search(req: SearchRequest):
             }
         },
         "sort": [
-            { "sdg.score": { "order": "desc" }} # Sort by sdgs.score in descending order
+            { "sdg.score": { "order": "desc",                 "nested": {  # <--- ADD THIS NESTED CONTEXT
+                        "path": "sdgs",
+                        # You might also want to add a mode here if you have multiple matching SDGs
+                        # For example, "mode": "max" to sort by the highest score among all SDGs
+                        # "mode": "max" 
+                    } }} # Sort by sdgs.score in descending order
         ],
         "from": (req.page-1)*req.size,
         "size": req.size

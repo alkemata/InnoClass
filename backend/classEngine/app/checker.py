@@ -1,85 +1,108 @@
 from fastapi import APIRouter, HTTPException
 from typing import List, Optional, Dict
 from pydantic import BaseModel
-from elastic import es # Assuming elastic.py is in the same directory
+from .elastic import es # Assuming elastic.py is in the same directory
 from elasticsearch import NotFoundError # For specific error handling
 
 router = APIRouter()
-
-class SdgItem(BaseModel):
-    value: str
-    score: int
 
 class CheckPageDataResponse(BaseModel):
     id: str
     title: str
     cleaned_text: str
-    sdg: List[SdgItem]
-    target: List[str]
+    sdg: List[str] # This should ideally be List[SdgItem] if we want to return the full structure
+    target: List[str] # Assuming target is still a list of strings
     valid: bool
     reference: bool
 
-@router.get("/check/next_entry", response_model=CheckPageDataResponse)
-async def get_next_unvalidated_entry(
+class PaginatedCheckPageDataResponse(BaseModel):
+    entry: Optional[CheckPageDataResponse] = None
+    total: int
+    offset: int
+
+@router.get("/check/entry", response_model=PaginatedCheckPageDataResponse) # Renamed route and response model
+async def get_entry_by_offset( # Renamed function
+    offset: int = 0, # Added offset parameter
     filter_validation: Optional[bool] = None,
     filter_reference: Optional[bool] = None
 ):
     query_conditions = []
     if filter_validation is not None:
-        query_conditions.append({"term": {"validation": filter_validation}})
+        query_conditions.append({"term": {"valid": filter_validation}})
     else:
-        query_conditions.append({"term": {"validation": False}})  # Default behavior
+        # Default behavior: if no validation filter is specified, 
+        # it implies no preference on validation status, so don't add a default term.
+        # If you always want to filter by "valid: False" by default, uncomment the next line.
+        # query_conditions.append({"term": {"valid": False}}) 
+        pass
+
 
     if filter_reference is not None:
         query_conditions.append({"term": {"reference": filter_reference}})
 
-    query_body = {
-        "query": {
-            "bool": {
-                "must": query_conditions
-            }
-        },
-        "size": 1
-    }
-    try:
-        print(query_body)
-        res = await es.search(index="main_table", body=query_body)
-    except Exception as e:
-        # Log the error e for debugging
-        # print(f"Elasticsearch query failed: {e}")
-        raise HTTPException(status_code=500, detail="Elasticsearch query failed")
-
-    if res["hits"]["hits"]:
-        hit = res["hits"]["hits"][0]
-        src = hit["_source"]
- # Process sdg field to be List[SdgItem]
-        sdg_data = src.get("sdg", [])
-        sdg_items = [SdgItem(**item) for item in sdg_data if isinstance(item, dict)]
-        print(sdg_data)
-        print(sdg_items)
-        return CheckPageDataResponse(
-            id=hit["_id"],
-            title=src.get("title", ""),
-            cleaned_text=src.get("cleaned_text", ""),
-            sdg=src.get("sdg", []), # Assuming sdg and target are lists of strings
-            target=src.get("target", []), # If they are lists of dicts, adjust accordingly
-            valid=src.get("validation", False),
-            reference=src.get("reference", False) # Added reference mapping
-        )
+    # If there are no conditions, match all documents. Otherwise, use bool must.
+    if not query_conditions:
+        query_dict = {"match_all": {}}
     else:
-        raise HTTPException(status_code=404, detail="No unvalidated entries found.")
+        query_dict = {"bool": {"must": query_conditions}}
 
+    entry_data: Optional[CheckPageDataResponse] = None
+    total_hits = 0
+
+    try:
+        # 1. Get total count
+        count_res = await es.count(index="reference", body={"query": query_dict})
+        total_hits = count_res.get('count', 0)
+
+        # 2. Get the specific entry if offset is valid and total_hits > 0
+        if total_hits > 0 and offset < total_hits:
+            search_query_body = {
+                "query": query_dict,
+                "from": offset,
+                "size": 1
+            }
+            res = await es.search(index="reference", body=search_query_body)
+            if res["hits"]["hits"]:
+                hit = res["hits"]["hits"][0]
+                src = hit["_source"]
+                entry_data = CheckPageDataResponse(
+                    id=hit["_id"],
+                    title=src.get("title", ""),
+                    cleaned_text=src.get("cleaned_text", ""),
+                    # Assuming sdg in ES is List of strings. If it's List of dicts, this needs adjustment
+                    # or CheckPageDataResponse.sdg needs to be List[SdgItem]
+                    sdg=src.get("sdg", []), 
+                    target=src.get("target", []),
+                    valid=src.get("valid", False),
+                    reference=src.get("reference", False)
+                )
+        elif offset >= total_hits and total_hits > 0 : # Offset out of bounds but there are documents
+             # It's a valid scenario to request an offset beyond the total hits.
+             # In this case, entry_data remains None, and total_hits is reported.
+             # No HTTPException 404 should be raised here.
+             pass
+
+
+    except Exception as e:
+        # print(f"Elasticsearch operation failed: {e}") # Log error
+        raise HTTPException(status_code=500, detail="Elasticsearch operation failed")
+
+    return PaginatedCheckPageDataResponse(entry=entry_data, total=total_hits, offset=offset)
+
+class SdgItem(BaseModel):
+    value: str
+    score: float
 
 class UpdateSdgRequest(BaseModel):
     doc_id: str
-    sdgs: List[str]
+    sdgs: List[SdgItem] # Changed from List[str]
 
 @router.put("/check/update_sdgs", response_model=Dict[str, str])
 async def update_entry_sdgs(req: UpdateSdgRequest):
     script_body = {
         "source": "ctx._source.sdg = params.new_sdgs",
         "params": {
-           # Use model_dump() for Pydantic v2+ to convert SdgItem objects to dicts
+            # Use model_dump() for Pydantic v2+ to convert SdgItem objects to dicts
             "new_sdgs": [sdg.model_dump() for sdg in req.sdgs] 
         }
     }

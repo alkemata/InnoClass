@@ -12,11 +12,14 @@ import {
   Paper,
   FormControlLabel,
   Button, // Added Button
-  Select, // Added Select
-  MenuItem, // Added MenuItem
-  FormControl, // Added FormControl
-  InputLabel, // Added InputLabel
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  IconButton, // Added IconButton
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // Added ArrowBackIcon
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'; // Added ArrowForwardIcon
 import { AxiosError } from 'axios';
 import api from '../api';
 import sdgsData from '../data/sdgs.json';
@@ -28,7 +31,14 @@ interface EntryData {
   sdg: Array<{ value: string; score: number }>; // Updated sdg type
   target: string[]; // Assuming target might also need this structure later
   valid: boolean;
-  reference: boolean; // Added reference field
+  reference: boolean;
+}
+
+// Define the new paginated response interface
+interface PaginatedCheckPageDataResponse {
+  entry: EntryData | null;
+  total: number;
+  offset: number;
 }
 
 interface SdgDefinition {
@@ -41,25 +51,28 @@ const CheckPage: React.FC = () => {
   const [entry, setEntry] = useState<EntryData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSdgs, setSelectedSdgs] = useState<Array<{ value: string; score: number }>>([]); // Updated state type
+  const [selectedSdgs, setSelectedSdgs] = useState<Array<{ value: string; score: number }>>([]);
   const [updatingSdgs, setUpdatingSdgs] = useState<boolean>(false);
   const [sdgUpdateError, setSdgUpdateError] = useState<string | null>(null);
   const [updatingValidation, setUpdatingValidation] = useState<boolean>(false);
   const [validationUpdateError, setValidationUpdateError] = useState<string | null>(null);
-  // New state variables for reference handling
   const [updatingReference, setUpdatingReference] = useState<boolean>(false);
   const [referenceUpdateError, setReferenceUpdateError] = useState<string | null>(null);
-  // New state variables for filters
-  const [validationFilter, setValidationFilter] = useState<string>("false"); // 'all', 'true', 'false'
-  const [referenceFilter, setReferenceFilter] = useState<string>("all");   // 'all', 'true', 'false'
+  const [validationFilter, setValidationFilter] = useState<string>("false");
+  const [referenceFilter, setReferenceFilter] = useState<string>("all");
+  
+  // New state variables for pagination
+  const [currentPage, setCurrentPage] = useState<number>(0); // 0-indexed
+  const [totalEntries, setTotalEntries] = useState<number>(0);
 
-  const fetchEntry = async () => {
+  const fetchEntry = async (requestedPage: number) => {
     try {
       setLoading(true);
       setError(null);
-      setEntry(null); // Clear previous entry
+      // Do not clear entry immediately to allow smoother transition if only total/offset updates
+      // setEntry(null); 
 
-      let queryParams = [];
+      let queryParams = [`offset=${requestedPage}`];
       if (validationFilter !== "all") {
         queryParams.push(`filter_validation=${validationFilter}`);
       }
@@ -68,25 +81,41 @@ const CheckPage: React.FC = () => {
       }
       const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
       
-      const response = await api.get<EntryData>(`/check/next_entry${queryString}`);
-      setEntry(response.data);
-      setSelectedSdgs(response.data.sdg || []);
+      const response = await api.get<PaginatedCheckPageDataResponse>(`/check/entry${queryString}`);
+      
+      setEntry(response.data.entry);
+      setSelectedSdgs(response.data.entry?.sdg || []);
+      setTotalEntries(response.data.total);
+      setCurrentPage(response.data.offset); // The backend returns the offset it used
+
+      if (!response.data.entry && response.data.total > 0 && requestedPage < response.data.total) {
+        // This case might indicate an issue or simply that the specific offset didn't return an entry
+        // but there are entries in total. Could be an error or just end of a specific filtered list.
+        setError('No entry found at this specific page, though matching entries exist.');
+      } else if (!response.data.entry && response.data.total === 0) {
+        setError('No entries found matching your filter criteria.');
+      }
+
       setLoading(false);
     } catch (err) {
       const axiosError = err as AxiosError;
       if (axiosError.isAxiosError && axiosError.response?.status === 404) {
-        setError('No entries found matching your filter criteria.');
+        // This 404 from the backend's perspective usually means the endpoint itself wasn't found,
+        // or a document ID in an update operation was not found.
+        // For fetching, a 404 might be less common if the backend handles "no results" with an empty entry list.
+        // The logic above (response.data.entry being null) is preferred for "no results".
+        setError('Error fetching data (404). The requested resource was not found.');
       } else {
         setError('Failed to fetch data. Please try again later.');
         console.error("Fetch error:", err);
       }
       setLoading(false);
-      setEntry(null);
+      // setEntry(null); // Clear entry on error to avoid displaying stale data
     }
   };
   
   useEffect(() => {
-    fetchEntry(); // Initial fetch using default filters
+    fetchEntry(0); // Initial fetch for the first page (offset 0)
   }, []); // Keep dependency array minimal for initial load
 
   const handleSdgChange = async (sdgKey: string, isChecked: boolean) => {
@@ -180,14 +209,14 @@ const CheckPage: React.FC = () => {
     }
   };
   
-  if (loading && !entry) { // Show loading only if no entry is displayed yet
+  if (loading && !entry && totalEntries === 0) { // Show initial loading message only if no entry and no total known
     return <Typography>Loading...</Typography>;
   }
   
   return (
     <Box sx={{ p: 2 }}>
-      {/* Filter Controls */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
+      {/* Filter and Navigation Controls */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <FormControl size="small" sx={{ minWidth: 180 }}>
           <InputLabel id="validation-filter-label">Filter by Validation</InputLabel>
           <Select
@@ -215,12 +244,21 @@ const CheckPage: React.FC = () => {
             <MenuItem value="true">Reference</MenuItem>
           </Select>
         </FormControl>
-        <Button variant="contained" onClick={fetchEntry} disabled={loading}>
-          {loading ? 'Fetching...' : 'Apply Filters & Fetch Next'}
+        <Button variant="contained" onClick={() => fetchEntry(0)} disabled={loading}>
+          {loading ? 'Fetching...' : 'Apply Filters & Fetch First'}
         </Button>
+        <IconButton onClick={() => fetchEntry(currentPage - 1)} disabled={currentPage <= 0 || loading}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography sx={{ minWidth: 100, textAlign: 'center' }}>
+          {totalEntries > 0 && entry ? `Item ${currentPage + 1} of ${totalEntries}` : totalEntries === 0 && !loading ? 'No Items' : ''}
+        </Typography>
+        <IconButton onClick={() => fetchEntry(currentPage + 1)} disabled={!entry || (currentPage + 1) >= totalEntries || loading}>
+          <ArrowForwardIcon />
+        </IconButton>
       </Box>
 
-      {/* Display Area */}
+      {/* Display Area for the current entry */}
       {loading && <Typography>Loading next entry...</Typography>}
       {error && !loading && <Typography color="error">{error}</Typography>}
       {!entry && !loading && !error && <Typography>No entry loaded or available for checking with current filters.</Typography>}

@@ -37,6 +37,8 @@ def raw_file_asset(config: MyAssetConfig):
     # Load file
     try:
         metadata,data = fu.load_list(file_name)
+        for item in data:
+            print(item["sdg"])
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise the exception to fail the asset
@@ -90,6 +92,8 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     tracker.start()
     try:
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
+        for item in extracte:
+            print(item["sdg"])
     finally:
         emissions_data = tracker.stop()
        # metadata["carbon_emissions_report"] = MetadataValue.md(str(emissions_data))

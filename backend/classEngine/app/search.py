@@ -42,10 +42,10 @@ async def search(req: SearchRequest):
         # Use a nested query to filter on sdgs.value
         filters.append({
             "nested": {
-                "path": "sdgs",
+                "path": "sdg",
                 "query": {
                     "terms": {
-                        "sdgs.value": req.selections
+                        "sdg.value": req.selections
                     }
                 }
             }

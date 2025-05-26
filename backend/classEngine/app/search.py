@@ -11,11 +11,15 @@ class SearchRequest(BaseModel):
     page: int = 1
     size: int = 20
 
+class SdgItem(BaseModel):
+    value: str
+    score: float
+
 class Hit(BaseModel):
     id: str
     title: str
     extracted_text: str
-    sdgs: List[str]
+    sdgs: List[SdgItem]
     targets: List[str]
     up: int
     down: int
@@ -28,10 +32,12 @@ class SearchResponse(BaseModel):
 async def search(req: SearchRequest):
     print("request received!")
     # build ES bool query
-    filters = [{ "terms": { "sdg": req.selections}}] if req.selections else []
+    filters = []
+    if req.selections:
+        # Construct a terms query for 'sdgs.value' to match any of the selected SDG values
+        filters.append({ "terms": { "sdgs.value": req.selections}})
+    
     must = []
-#    if selections:
-#        must.append({"terms": {"sdg": selected_sdg}})
     if req.keywords:
         must.append({
             "multi_match": {
@@ -39,6 +45,7 @@ async def search(req: SearchRequest):
                 "fields": ["title", "full_text"]
             }
         })
+    
     body = {
         "query": {
             "bool": {
@@ -46,6 +53,9 @@ async def search(req: SearchRequest):
                 "must": must
             }
         },
+        "sort": [
+            { "sdgs.score": { "order": "desc" }} # Sort by sdgs.score in descending order
+        ],
         "from": (req.page-1)*req.size,
         "size": req.size
     }
@@ -58,7 +68,7 @@ async def search(req: SearchRequest):
             id=h["_id"],
             title=src["title"],
             extracted_text=src.get("extracted_text",""),
-            sdgs=src.get("sdgs",[]),
+            sdgs=[SdgItem(**sdg) for sdg in src.get("sdgs",[])], # Convert to SdgItem objects
             targets=src.get("targets",[]),
             up=src.get("up",0),
             down=src.get("down",0)

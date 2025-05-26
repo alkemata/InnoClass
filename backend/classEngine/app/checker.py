@@ -53,7 +53,7 @@ async def get_entry_by_offset( # Renamed function
         # 1. Get total count
         print("counting")
         print(query_dict)
-        count_res = await es.count(index="reference", body={"query": query_dict})
+        count_res = await es.count(index="main_table", body={"query": query_dict})
         total_hits = count_res.get('count', 0)
         print(total_hits)
         # 2. Get the specific entry if offset is valid and total_hits > 0

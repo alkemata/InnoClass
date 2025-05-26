@@ -42,6 +42,7 @@ async def get_next_unvalidated_entry(
         "size": 1
     }
     try:
+        print(query_body)
         res = await es.search(index="main_table", body=query_body)
     except Exception as e:
         # Log the error e for debugging

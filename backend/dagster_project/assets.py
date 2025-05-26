@@ -40,7 +40,6 @@ def raw_file_asset(config: MyAssetConfig):
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise the exception to fail the asset
-    for item in data:
         print(item["sdg"])
     metadata = {
         "num_rows": MetadataValue.int(len(data)),
@@ -91,8 +90,6 @@ def extracted_data_asset(raw_file_asset, config: MyAssetConfig) -> Output[List[d
     tracker.start()
     try:
         extracted = fu.process_texts(raw_file_asset, fu.keyword1, fu.keyword2)
-        for item in extracted:
-            print(item["sdg"])
     finally:
         emissions_data = tracker.stop()
        # metadata["carbon_emissions_report"] = MetadataValue.md(str(emissions_data))
@@ -336,7 +333,7 @@ def es_patent_light(context: AssetExecutionContext,extracted_data_asset, config:
             "title": text["title"],
             "sdg": text.get("sdg", []),
             "target": text.get("target", []),
-            "reference": text.get("ref"), # Added reference field
+            "reference": text.get("reference"), # Added reference field
             "validation": text.get("validation"), # Corrected validation field
             "thumbsup":0,
             "thumbsdown":0

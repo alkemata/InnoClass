@@ -20,6 +20,12 @@ import {
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'; // Up arrow icon
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'; // Down arrow icon
 
+// Define TypeScript interface for SdgItem
+interface SdgItem {
+  value: string;
+  score: number;
+}
+
 // Define TypeScript interfaces for the FastAPI response models
 interface Hit {
   id: string;
@@ -236,7 +242,7 @@ function ResultsPage() {
                                 Extracted Text: {hit.cleaned_text || 'N/A'}
                               </Typography>
                               <Typography component="span" variant="body2" color="text.secondary">
-                                SDGs: {hit.sdg.join(', ') || 'N/A'} | Targets: {hit.targets.join(', ') || 'N/A'}
+                              SDGs: {hit.sdgs.map(sdg => `${sdg.value} (Score: ${sdg.score.toFixed(2)})`).join(', ') || 'N/A'} | Targets: {hit.targets.join(', ') || 'N/A'}
                               </Typography>
                               <Typography component="span" variant="body2" color="text.secondary">
                                 <br />Up Votes: {hit.up} | Down Votes: {hit.down}

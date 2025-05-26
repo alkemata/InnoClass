@@ -28,7 +28,7 @@ async def get_entry_by_offset( # Renamed function
 ):
     query_conditions = []
     if filter_validation is not None:
-        query_conditions.append({"term": {"valid": filter_validation}})
+        query_conditions.append({"term": {"validation": filter_validation}})
     else:
         # Default behavior: if no validation filter is specified, 
         # it implies no preference on validation status, so don't add a default term.

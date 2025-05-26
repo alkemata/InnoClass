@@ -53,7 +53,7 @@ async def get_entry_by_offset( # Renamed function
         # 1. Get total count
         print("counting")
         print(query_dict)
-        count_res = await es.count(index="test2", body={"query": query_dict})
+        count_res = await es.count(index="main_table", body={"query": query_dict})
         total_hits = count_res.get('count', 0)
         print(total_hits)
         # 2. Get the specific entry if offset is valid and total_hits > 0
@@ -64,7 +64,7 @@ async def get_entry_by_offset( # Renamed function
                 "size": 1
             }
             print(search_query_body)
-            res = await es.search(index="test2", body=search_query_body)
+            res = await es.search(index="main_table", body=search_query_body)
             if res["hits"]["hits"]:
                 hit = res["hits"]["hits"][0]
                 src = hit["_source"]
@@ -111,7 +111,7 @@ async def update_entry_sdgs(req: UpdateSdgRequest):
     }
     try:
         await es.update(
-            index="test2",
+            index="main_table",
             id=req.doc_id,
             body={"script": script_body}
         )
@@ -137,7 +137,7 @@ async def update_entry_validation_status(req: UpdateValidationRequest):
     }
     try:
         await es.update(
-            index="test2",
+            index="main_table",
             id=req.doc_id,
             body={"script": script_body}
         )
@@ -163,7 +163,7 @@ async def update_entry_reference_status(req: UpdateReferenceRequest):
     }
     try:
         await es.update(
-            index="test2", 
+            index="main_table", 
             id=req.doc_id,
             body={"script": script_body}
         )

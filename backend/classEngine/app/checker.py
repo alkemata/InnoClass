@@ -10,8 +10,8 @@ class CheckPageDataResponse(BaseModel):
     id: str
     title: str
     cleaned_text: str
-    sdg: List[str] # This should ideally be List[SdgItem] if we want to return the full structure
-    target: List[str] # Assuming target is still a list of strings
+    sdg: List[SdgItem] # This should ideally be List[SdgItem] if we want to return the full structure
+    target: List[SdgItem] # Assuming target is still a list of strings
     valid: bool
     reference: bool
 

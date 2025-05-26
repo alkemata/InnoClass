@@ -55,7 +55,8 @@ async def get_next_unvalidated_entry(
  # Process sdg field to be List[SdgItem]
         sdg_data = src.get("sdg", [])
         sdg_items = [SdgItem(**item) for item in sdg_data if isinstance(item, dict)]
-
+        print(sdg_data)
+        print(sdg_items)
         return CheckPageDataResponse(
             id=hit["_id"],
             title=src.get("title", ""),

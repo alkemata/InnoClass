@@ -40,6 +40,8 @@ def raw_file_asset(config: MyAssetConfig):
     except Exception as e:
         print(f"Error loading File: {e}")
         raise  # Re-raise the exception to fail the asset
+    for item in data:
+        print(item[sdg])
     metadata = {
         "num_rows": MetadataValue.int(len(data)),
         "file_name": MetadataValue.text(file_name),

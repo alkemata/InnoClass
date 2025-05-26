@@ -84,8 +84,8 @@ async def search(req: SearchRequest):
             id=h["_id"],
             title=src["title"],
             extracted_text=src.get("extracted_text",""),
-            sdgs=[SdgItem(**sdg) for sdg in src.get("sdgs",[])], # Convert to SdgItem objects
-            targets=src.get("targets",[]),
+            sdgs=[SdgItem(**sdg) for sdg in src.get("sdg",[])], # Convert to SdgItem objects
+            targets=src.get("target",[]),
             up=src.get("up",0),
             down=src.get("down",0)
         ))

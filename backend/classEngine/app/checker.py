@@ -68,6 +68,7 @@ async def get_entry_by_offset( # Renamed function
             if res["hits"]["hits"]:
                 hit = res["hits"]["hits"][0]
                 src = hit["_source"]
+                print(src)
                 entry_data = CheckPageDataResponse(
                     id=hit["_id"],
                     title=src.get("title", ""),

@@ -128,7 +128,7 @@ function ResultsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id, feedback_type: feedbackType }),
+        body: JSON.stringify({ id, feedback: feedbackType }),
       });
 
       if (!response.ok) {

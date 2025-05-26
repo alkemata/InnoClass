@@ -106,6 +106,7 @@ async def update_entry_sdgs(req: UpdateSdgRequest):
             "new_sdgs": [sdg.model_dump() for sdg in req.sdgs] 
         }
     }
+    print(script_body)
     try:
         await es.update(
             index="main_table",

@@ -52,6 +52,7 @@ async def get_entry_by_offset( # Renamed function
     try:
         # 1. Get total count
         print("counting")
+        print(query_dict)
         count_res = await es.count(index="reference", body={"query": query_dict})
         total_hits = count_res.get('count', 0)
         print(total_hits)
@@ -86,7 +87,7 @@ async def get_entry_by_offset( # Renamed function
 
 
     except Exception as e:
-        # print(f"Elasticsearch operation failed: {e}") # Log error
+        print(f"Elasticsearch operation failed: {e}") # Log error
         raise HTTPException(status_code=500, detail="Elasticsearch operation failed")
 
     return PaginatedCheckPageDataResponse(entry=entry_data, total=total_hits, offset=offset)

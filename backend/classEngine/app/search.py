@@ -18,7 +18,7 @@ class SdgItem(BaseModel):
 class Hit(BaseModel):
     id: str
     title: str
-    extracted_text: str
+    cleaned_text: str
     sdgs: List[SdgItem]
     targets: List[str]
     up: int

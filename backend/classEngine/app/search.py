@@ -90,6 +90,6 @@ async def search(req: SearchRequest):
             up=src.get("up",0),
             down=src.get("down",0)
         ))
-        print(sdgs)
+        print(src.get("sdg",[]))
     print(str(len(hits)))
     return SearchResponse(hits=hits, total=res["hits"]["total"]["value"])

@@ -55,7 +55,7 @@ async def search(req: SearchRequest):
         },
         "sort": [
             { "sdg.score": { "order": "desc",                 "nested": {  # <--- ADD THIS NESTED CONTEXT
-                        "path": "sdgs",
+                        "path": "sdg",
                         # You might also want to add a mode here if you have multiple matching SDGs
                         # For example, "mode": "max" to sort by the highest score among all SDGs
                         # "mode": "max" 

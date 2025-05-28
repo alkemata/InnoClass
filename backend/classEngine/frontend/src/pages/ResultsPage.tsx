@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'; // Up arrow icon
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'; // Down arrow icon
+import { Link } from 'react-router-dom';
 
 // Define TypeScript interface for SdgItem
 interface SdgItem {
@@ -169,12 +170,15 @@ function ResultsPage() {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            InnoClass
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          InnoClass
           </Typography>
-        </Toolbar>
-      </AppBar>
+        <Link to="/menu" style={{ textDecoration: 'none', color: 'white', marginLeft: '16px' }}>
+        Menu
+      </Link>
+      </Toolbar>
+    </AppBar>
 
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" component="h2" gutterBottom>

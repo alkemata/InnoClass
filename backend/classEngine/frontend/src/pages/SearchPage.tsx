@@ -78,7 +78,7 @@ function SearchPage() {
           InnoClass
           </Typography>
         <Link to="/menu" style={{ textDecoration: 'none', color: 'white', marginLeft: '16px' }}>
-        MenuPage
+        Menu
       </Link>
       </Toolbar>
     </AppBar>

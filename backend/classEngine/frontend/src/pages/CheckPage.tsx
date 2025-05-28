@@ -23,6 +23,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'; // Added ArrowF
 import { AxiosError } from 'axios';
 import api from '../api';
 import sdgsData from '../data/sdgs.json';
+import { Link } from 'react-router-dom';
 
 interface EntryData {
   id: string;
@@ -215,6 +216,16 @@ const CheckPage: React.FC = () => {
   
   return (
     <Box sx={{ p: 2 }}>
+            <AppBar position="static">
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          InnoClass
+          </Typography>
+        <Link to="/menu" style={{ textDecoration: 'none', color: 'white', marginLeft: '16px' }}>
+        Menu
+      </Link>
+      </Toolbar>
+    </AppBar>
       {/* Filter and Navigation Controls */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <FormControl size="small" sx={{ minWidth: 180 }}>

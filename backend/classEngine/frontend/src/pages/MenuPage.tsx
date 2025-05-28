@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, List, ListItem, ListItemButton, ListItemText, Typography, Paper, CssBaseline } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import Link from '@mui/material/Link';
 
 // Define a custom Material-UI theme for consistent styling, including Inter font.
 const theme = createTheme({

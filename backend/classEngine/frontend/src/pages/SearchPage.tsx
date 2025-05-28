@@ -72,12 +72,15 @@ function SearchPage() {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            InnoClass
-          </Typography>
-        </Toolbar>
-      </AppBar>
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          InnoClass
+          <Link href="/Menu" color="inherit" underline="none" sx={{ ml: 2 }}> {/* Add the Link component */}
+            Menu
+          </Link>
+        </Typography>
+      </Toolbar>
+    </AppBar>
 
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" component="h2" gutterBottom>

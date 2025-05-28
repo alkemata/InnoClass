@@ -19,7 +19,7 @@ import {
 import { SelectChangeEvent } from '@mui/material/Select'; // Import SelectChangeEvent
 
 import sdgsData from '../data/sdgs.json'; // Import JSON data
-import Link from '@mui/material/Link';
+import { Link } from 'react-router-dom';
 
 // Define the type for the SDG data for better type safety
 interface SdgsDataType {
@@ -76,9 +76,9 @@ function SearchPage() {
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           InnoClass
-          <Link href="/Menu" color="inherit" underline="none" sx={{ ml: 2 }}> {/* Add the Link component */}
-            Menu
-          </Link>
+          <Link to="/Menu" style={{ textDecoration: 'none', color: 'inherit', marginLeft: '16px' }}>
+        MenuPage
+      </Link>
         </Typography>
       </Toolbar>
     </AppBar>

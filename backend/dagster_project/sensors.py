@@ -6,6 +6,7 @@ from dagster import (
 from assets import training_set_creation, raw_file_asset # Adjust if your project structure is different
 # from datetime import datetime # Not strictly needed if ES timestamps are ISO strings
 from elasticsearch import Elasticsearch # For type hinting
+import os
 
 # 1. Define the job that the sensor will trigger
 training_set_update_job = define_asset_job(
@@ -57,7 +58,7 @@ def elasticsearch_update_sensor(context: SensorEvaluationContext):
             most_recent_update_ts = hits[0]["_source"]["last_updated"]
             
             # Log the number of new/updated documents found based on the query size
-            # For total count, you might inspect response['hits']['total']['value']
+            # For total count, inspect response['hits']['total']['value']
             # but for cursor purposes, the timestamp of the latest document is key.
             num_new_or_updated_in_batch = len(hits) 
             context.log.info(

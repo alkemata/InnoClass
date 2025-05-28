@@ -1,26 +1,114 @@
-# InnoClass
+## Project Description
 
-## What is working right now
+InnoClass is a system designed to process patent documents by extracting relevant text and generating embeddings using SBERT. It leverages Elasticsearch for efficient searching and matching of these patents, potentially against Sustainable Development Goals (SDGs), and provides an API and UI for user interaction.
 
-1 - notebook (TIP)
-A notebook in the repository Innotebook, to be used in the platform TIP
-it makes it possible to load some patents and to extract interesting parts. It is saved in a file which has to be copied on our server
-The extraction is based on regex and keywords, so maybe not the most performant 
+## Key Components
 
-2- backend (OVH server)
-elasticsearch, SBERT and fastapi are installed in docker containers in the directory backend
-to start elasticsearch:
-docker-compose -f docker-compose.python.yml up -d elasticsearch
-there is a test file called test.py that can be ran in the following way:
-docker-compose -f docker-compose.python.yml up fastapi-app
-This testfile connects to elasticsearch, embeds the data from two files: sdg-test1.dat (which contains some text of the SDGs) and test1.dat.gz (which contains some extracted parts of the patent coming from the notebook above). It uses sbert to embed the data and runs a knn search with elastic search and displays the result: for each SDG, the 5 first results and the associated score.
-This is a very basic test to be sure that all components connect well.
+**InnoNotebooks: Patent Processing Notebook in TIP:** A Jupyter notebook designed for the TIP platform to load patents, extract key information using regex and keywords, and save the results. The current extraction method relies on regex and keywords, which may benefit from future performance enhancements.
 
-## What is to do in the near future
+**Backend Services (OVH Server):** Dockerized backend components including Elasticsearch for data storage and search, SBERT for text embeddings, and a FastAPI application for API services. These are located in the `backend` directory (see "Getting Started" for setup).
+To start Elasticsearch independently: `docker-compose up -d elasticsearch` (within the `backend` directory).
+The system's integration (e.g., API connecting to Elasticsearch, embedding processes) can be verified by running the services (like `api-server` or `embedsearch`) and testing their interactions as described in "Getting Started". For example, the `api-server` is designed to connect to Elasticsearch, utilize SBERT embeddings (via `embedsearch` or integrated logic), and perform search operations.
 
-There are two big tasks to achieve in parallel
-1 - optimizing the text extraction, the embedding and the search parameters: we need a very simple interface to change the data, visualize and process the data. Ideally a notebook from TIP would have been fine, but it requires too much transfers of data between the OVH server and the TIP platform. So, we need an interface provided by the ovh server to define the embedding parameters, display the results of the search and validate the result (classification ok, not ok). But we cannot spend too much time on it, because the priority is to have the best parameters as soon as possible,
-2 - preparing the production server: it concerns fastpi for the backend and react for the frontend. We have to set up authentication and authorization, define the routes for the API, define an ergonomical interface. It is on the longer timescale, but we already have to work on it and it can be done in parallel 
+## Getting Started
 
-## How to work
-I have created in github four branches in the repository InnoClass, each corresponding to a package of the proposal. A clone is created on the local server and a new branch made from it. The modifications will be done on this branch. Once the modifications commited, the branch will be pushed to github and used as pull request to merge it with the initial package. 
+This section guides you through setting up and running the InnoClass application locally.
+
+### Prerequisites
+
+*   **Docker and Docker Compose:** Ensure you have Docker and Docker Compose installed on your system. Visit the official Docker website for installation instructions.
+*   **Git:** Required for cloning the repository.
+*   **Linux-based Environment:** The system is primarily designed for a Linux-based environment, and some scripts or commands might rely on `bash`.
+*   **Environment File (.env):**
+    Create a file named `.env` in the `backend/` directory. This file will store necessary credentials for the services. Add the following content to it, replacing `<your_strong_password>` with a secure password:
+    ```bash
+    ELASTIC_PASSWORD=<your_strong_password>
+    ELASTICSEARCH_USER=elastic
+    ELASTICSEARCH_PASSWORD=<your_strong_password>
+    DAGSTER_UI_USER=<user_name>
+    DAGSTER_UI_PASSWORD_HASH=<hashed_password>
+    TRAEFIK_PASSWORD=<hashed_password>
+    TRAEFIK_USER=<user_name>
+    ```
+    The hash is obtained with the following command:
+    ```bash
+    echo $(htpasswd -nb youruser yourpassword) | sed -e 's/\$/\$\$/g'
+    ```
+    
+    *Note: Ensure `ELASTICSEARCH_PASSWORD` is the same as `ELASTIC_PASSWORD` for the services to connect correctly.*
+    
+
+### Installation & Setup
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/your-username/InnoClass.git # Replace with the actual repository URL
+    ```
+2.  **Navigate to the Backend Directory:**
+    ```bash
+    cd InnoClass/backend
+    ```
+    *(Assuming `InnoClass` is the root folder of the cloned repository).*
+
+### Running the Application
+
+The `docker-compose.yml` file in the `backend/` directory is configured to manage and run the entire application stack.
+
+**1. Full Stack:**
+
+*   To build and start all services (Elasticsearch, API server, frontend, etc.):
+    ```bash
+    docker-compose up -d
+    ```
+*   On the first run, Docker will download the necessary base images and build the application images, which might take some time.
+*   This command starts the following key services:
+    *   **Elasticsearch:** Database for storing and searching patent data.
+    *   **api-server:** Backend API for application logic.
+    *   **embedsearch:** Service for processing and embedding patent text (works in conjunction with the API).
+    *   **frontend-server:** Serves the user interface.
+    *   **traefik:** Reverse proxy for routing traffic (primarily for deployed environments but included in the compose).
+
+**2. Accessing the Services:**
+
+The services are running on an OVH server and accessible through:
+
+*   **webapp:** `https://innoclass.alkemata.com`
+
+Username and code for the demonstrator: epo and codechallenge25
+
+**3. Development / Specific Services (Optional):**
+
+You can also start specific services if needed:
+
+*   To start only Elasticsearch:
+    ```bash
+    docker-compose up -d elasticsearch
+    ```
+*   To start only the API server (ensure Elasticsearch is already running):
+    ```bash
+    docker-compose up -d api-server
+    ```
+*   To start the text embedding service (ensure Elasticsearch is already running):
+    ```bash
+    docker-compose up -d embedsearch
+    ```
+
+**4. Stopping the Application:**
+
+*   To stop all running services managed by Docker Compose:
+    ```bash
+    docker-compose down
+    ```
+    This command will stop and remove the containers.
+
+### Structure of the files
+
+- Source code
+        -> classEngine
+            -> app: the fastapi server to provide the interface between the web app and the dagster pipeline
+            -> data: store data transfered from and to TIP via scp
+            -> frontend
+                -> src React pages
+            -> dagster_home: the code to create the pipelines for Dagster specific to the SDG classification
+            -> InnoNotebooks: the notebooks for querying data and finetuning LLMs
+

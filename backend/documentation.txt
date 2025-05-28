@@ -1,9 +1,0 @@
-docker network create es_network before starting docker-compose: global view from docker
-
-echo $(htpasswd -nb youruser yourpassword) | sed -e 's/\$/\$\$/g'
-
-change notebook env from TEST to PROD
-
-explain how to create passkey for ssh
-
-entrypoint.sh : +x

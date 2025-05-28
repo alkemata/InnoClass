@@ -77,10 +77,10 @@ function SearchPage() {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           InnoClass
           </Typography>
-          </Toolbar>
-        <Link to="/menu" style={{ textDecoration: 'none', color: 'inherit', marginLeft: '16px' }}>
+        <Link to="/menu" style={{ textDecoration: 'none', color: 'white', marginLeft: '16px' }}>
         MenuPage
       </Link>
+      </Toolbar>
     </AppBar>
 
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>

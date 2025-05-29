@@ -63,7 +63,8 @@ async def get_entry_by_offset( # Renamed function
             search_query_body = {
                 "query": query_dict,
                 "from": offset,
-                "size": 1
+                "size": 1,
+                "sort": [{"_id": "asc"}]
             }
 
             res = await es.search(index="main_table", body=search_query_body)
